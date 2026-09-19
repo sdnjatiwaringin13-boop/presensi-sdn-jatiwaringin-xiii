@@ -4,90 +4,370 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Presensi Siswa - Presensi</title>
+  <title>Presensi Siswa - SD Negeri Jatiwaringin XIII</title>
 
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="crud-style.css">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #333;
+    }
+
+    .container {
+      width: 95%;
+      max-width: 1100px;
+      margin: 30px auto;
+    }
+
+    .header {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0 0 5px;
+      font-size: 26px;
+    }
+
+    .header p {
+      margin: 5px 0;
+      color: #666;
+    }
+
+    .user-info {
+      margin-top: 15px;
+      padding: 12px 15px;
+      background: #f1f5f9;
+      border-radius: 10px;
+    }
+
+    .toolbar {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .toolbar label {
+      font-weight: bold;
+    }
+
+    input,
+    select {
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 11px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-success {
+      background: #16a34a;
+      color: white;
+    }
+
+    .btn-warning {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .btn-danger {
+      background: #dc2626;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #64748b;
+      color: white;
+    }
+
+    .btn-qr {
+      background: #7c3aed;
+      color: white;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .summary-card {
+      background: white;
+      padding: 18px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+    }
+
+    .summary-card .number {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .summary-card .label {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .total .number {
+      color: #2563eb;
+    }
+
+    .hadir .number {
+      color: #16a34a;
+    }
+
+    .izin .number {
+      color: #f59e0b;
+    }
+
+    .sakit .number {
+      color: #8b5cf6;
+    }
+
+    .alpa .number {
+      color: #dc2626;
+    }
+
+    .actions {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+
+    .actions-title {
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .actions-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .table-container {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 750px;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: bold;
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .status-select {
+      min-width: 110px;
+    }
+
+    .footer-actions {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 30px;
+      color: #777;
+    }
+
+    .message {
+      display: none;
+      padding: 12px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .message.success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .message.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    @media (max-width: 768px) {
+
+      .container {
+        width: 92%;
+        margin: 15px auto;
+      }
+
+      .header h1 {
+        font-size: 21px;
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .summary-card:last-child {
+        grid-column: span 2;
+      }
+
+      .toolbar-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .toolbar-row input,
+      .toolbar-row select,
+      .toolbar-row button {
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .actions-buttons {
+        flex-direction: column;
+      }
+
+      .actions-buttons button {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 450px) {
+
+      .summary {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .summary-card {
+        padding: 13px 8px;
+      }
+
+      .summary-card .number {
+        font-size: 23px;
+      }
+    }
+  </style>
 </head>
 
-<body class="dashboard-body">
+<body>
 
-  <!-- =========================
-       TOPBAR
-  ========================== -->
-  <header class="topbar">
+  <div class="container">
 
-    <div>
+    <!-- HEADER -->
+    <div class="header">
+
       <h1>Presensi Sekolah</h1>
-      <span>SD Negeri Jatiwaringin XIII</span>
-    </div>
 
-    <div class="topbar-actions">
-      <button
-        id="refreshButton"
-        class="secondary-button"
-        type="button">
-        ↻ Refresh
-      </button>
-
-      <button
-        id="logoutButton"
-        class="logout-button"
-        type="button">
-        Logout
-      </button>
-    </div>
-
-  </header>
-
-
-  <!-- =========================
-       MAIN
-  ========================== -->
-  <main class="dashboard-container">
-
-    <!-- IDENTITAS GURU -->
-    <section class="welcome">
-
-      <h2>Presensi Siswa</h2>
-
-      <p id="guruInfo">
-        Memuat data guru...
+      <p>
+        <strong>SD Negeri Jatiwaringin XIII</strong>
       </p>
 
-    </section>
+      <p>
+        Presensi Siswa
+      </p>
+
+      <div class="user-info">
+        <strong>Guru</strong>
+        <br>
+        <span id="guruInfo">
+          Memuat informasi guru...
+        </span>
+      </div>
+
+    </div>
 
 
-    <!-- PANEL PRESENSI -->
-    <section class="panel">
+    <!-- MESSAGE -->
+    <div id="message" class="message"></div>
 
-      <!-- =========================
-           INFORMASI PRESENSI
-      ========================== -->
-      <div class="form-grid">
 
-        <!-- TANGGAL -->
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+
+      <div class="toolbar-row">
+
         <div>
           <label for="tanggal">
-            Tanggal Presensi
+            Tanggal
           </label>
 
           <input
             type="date"
             id="tanggal"
-            required>
+          >
         </div>
 
 
-        <!-- KELAS -->
         <div>
-          <label for="kelasSelect">
+          <label for="kelas">
             Kelas
           </label>
 
-          <select
-            id="kelasSelect"
-            required>
+          <select id="kelas">
 
             <option value="">
               Memuat kelas...
@@ -96,160 +376,224 @@
           </select>
         </div>
 
-      </div>
-
-
-      <!-- =========================
-           STATUS INFO
-      ========================== -->
-      <div
-        id="statusMessage"
-        class="message"
-        style="display:none;">
-      </div>
-
-
-      <!-- =========================
-           RINGKASAN
-      ========================== -->
-      <div
-        id="summary"
-        class="attendance-summary"
-        style="display:none;">
-
-        <div>
-          <strong id="totalSiswa">0</strong>
-          <span>Total</span>
-        </div>
-
-        <div>
-          <strong id="totalHadir">0</strong>
-          <span>Hadir</span>
-        </div>
-
-        <div>
-          <strong id="totalIzin">0</strong>
-          <span>Izin</span>
-        </div>
-
-        <div>
-          <strong id="totalSakit">0</strong>
-          <span>Sakit</span>
-        </div>
-
-        <div>
-          <strong id="totalAlpa">0</strong>
-          <span>Alpa</span>
-        </div>
-
-      </div>
-
-
-      <!-- =========================
-           AKSI
-      ========================== -->
-      <div
-        class="page-actions"
-        style="margin-top:20px;">
 
         <button
+          type="button"
+          class="btn-primary"
+          id="loadButton"
+        >
+          🔄 Tampilkan Siswa
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- SUMMARY -->
+    <div class="summary">
+
+      <div class="summary-card total">
+        <div
+          class="number"
+          id="totalCount"
+        >
+          0
+        </div>
+
+        <div class="label">
+          Total
+        </div>
+      </div>
+
+
+      <div class="summary-card hadir">
+        <div
+          class="number"
+          id="hadirCount"
+        >
+          0
+        </div>
+
+        <div class="label">
+          Hadir
+        </div>
+      </div>
+
+
+      <div class="summary-card izin">
+        <div
+          class="number"
+          id="izinCount"
+        >
+          0
+        </div>
+
+        <div class="label">
+          Izin
+        </div>
+      </div>
+
+
+      <div class="summary-card sakit">
+        <div
+          class="number"
+          id="sakitCount"
+        >
+          0
+        </div>
+
+        <div class="label">
+          Sakit
+        </div>
+      </div>
+
+
+      <div class="summary-card alpa">
+        <div
+          class="number"
+          id="alpaCount"
+        >
+          0
+        </div>
+
+        <div class="label">
+          Alpa
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ACTIONS -->
+    <div class="actions">
+
+      <div class="actions-title">
+        Aksi Presensi
+      </div>
+
+      <div class="actions-buttons">
+
+        <!-- SCAN QR -->
+        <button
+          type="button"
+          class="btn-qr"
+          id="scanQRButton"
+          onclick="window.location.href='scan.html'"
+        >
+          📷 Scan QR Siswa
+        </button>
+
+
+        <!-- HADIR SEMUA -->
+        <button
+          type="button"
+          class="btn-success"
           id="hadirSemuaButton"
-          class="secondary-button"
-          type="button">
-
+        >
           ✓ Hadir Semua
-
         </button>
 
+
+        <!-- RESET -->
         <button
+          type="button"
+          class="btn-secondary"
           id="resetButton"
-          class="secondary-button"
-          type="button">
-
+        >
           ↻ Reset
-
         </button>
 
       </div>
 
+    </div>
 
-      <!-- =========================
-           TABEL SISWA
-      ========================== -->
+
+    <!-- TABLE -->
+    <div class="table-container">
+
       <div
-        class="table-wrapper"
-        style="margin-top:20px;">
-
-        <table>
-
-          <thead>
-
-            <tr>
-
-              <th>No</th>
-
-              <th>NISN</th>
-
-              <th>Nama Siswa</th>
-
-              <th>Kelas</th>
-
-              <th>Status Presensi</th>
-
-            </tr>
-
-          </thead>
-
-
-          <tbody id="siswaTable">
-
-            <tr>
-
-              <td
-                colspan="5"
-                class="loading">
-
-                Pilih kelas untuk menampilkan siswa.
-
-              </td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
+        id="tableLoading"
+        class="loading"
+      >
+        Silakan pilih kelas untuk menampilkan siswa.
       </div>
 
 
-      <!-- =========================
-           SIMPAN
-      ========================== -->
-      <div
-        class="form-actions"
-        style="margin-top:20px;">
+      <table
+        id="presensiTable"
+        style="display:none;"
+      >
 
-        <button
-          id="simpanButton"
-          class="primary-button"
-          type="button">
+        <thead>
 
-          💾 Simpan Presensi
+          <tr>
 
-        </button>
+            <th>
+              No
+            </th>
 
-      </div>
+            <th>
+              NISN
+            </th>
 
-    </section>
+            <th>
+              Nama Siswa
+            </th>
 
-  </main>
+            <th>
+              Kelas
+            </th>
+
+            <th>
+              JK
+            </th>
+
+            <th>
+              Status Presensi
+            </th>
+
+          </tr>
+
+        </thead>
 
 
-  <!-- =========================
-       JAVASCRIPT
-  ========================== -->
+        <tbody id="presensiBody">
 
-  <script src="./presensi.js"></script>
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <!-- FOOTER ACTION -->
+    <div class="footer-actions">
+
+      <button
+        type="button"
+        class="btn-danger"
+        onclick="window.location.href='index.html'"
+      >
+        Keluar
+      </button>
+
+
+      <button
+        type="button"
+        class="btn-primary"
+        id="simpanButton"
+      >
+        💾 Simpan Presensi
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- JAVASCRIPT -->
+  <script src="presensi.js"></script>
 
 </body>
 </html>
