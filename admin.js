@@ -12,16 +12,61 @@ const userData =
   localStorage.getItem("presensiUser");
 
 
+const userData =
+  localStorage.getItem("presensiUser");
+
+
 if (!userData) {
 
   window.location.href =
     "index.html";
 
+} else {
+
+  try {
+
+    const user =
+      JSON.parse(userData);
+
+    if (user.role !== "ADMIN") {
+
+      alert(
+        "Anda tidak mempunyai akses ke halaman Admin."
+      );
+
+      localStorage.removeItem(
+        "presensiUser"
+      );
+
+      window.location.href =
+        "index.html";
+
+    } else {
+
+      document.getElementById(
+        "adminName"
+      ).textContent =
+        "Login sebagai: " +
+        (user.username || "Admin");
+
+      loadDashboard();
+
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    localStorage.removeItem(
+      "presensiUser"
+    );
+
+    window.location.href =
+      "index.html";
+
+  }
+
 }
-
-
-const user =
-  JSON.parse(userData);
 
 
 /*
