@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Presensi Siswa - Presensi</title>
+
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="crud-style.css">
+</head>
+
+<body class="dashboard-body">
+
+  <!-- =========================
+       TOPBAR
+  ========================== -->
+  <header class="topbar">
+
+    <div>
+      <h1>Presensi Sekolah</h1>
+      <span>SD Negeri Jatiwaringin XIII</span>
+    </div>
+
+    <div class="topbar-actions">
+      <button
+        id="refreshButton"
+        class="secondary-button"
+        type="button">
+        ↻ Refresh
+      </button>
+
+      <button
+        id="logoutButton"
+        class="logout-button"
+        type="button">
+        Logout
+      </button>
+    </div>
+
+  </header>
+
+
+  <!-- =========================
+       MAIN
+  ========================== -->
+  <main class="dashboard-container">
+
+    <!-- IDENTITAS GURU -->
+    <section class="welcome">
+
+      <h2>Presensi Siswa</h2>
+
+      <p id="guruInfo">
+        Memuat data guru...
+      </p>
+
+    </section>
+
+
+    <!-- PANEL PRESENSI -->
+    <section class="panel">
+
+      <!-- =========================
+           INFORMASI PRESENSI
+      ========================== -->
+      <div class="form-grid">
+
+        <!-- TANGGAL -->
+        <div>
+          <label for="tanggal">
+            Tanggal Presensi
+          </label>
+
+          <input
+            type="date"
+            id="tanggal"
+            required>
+        </div>
+
+
+        <!-- KELAS -->
+        <div>
+          <label for="kelasSelect">
+            Kelas
+          </label>
+
+          <select
+            id="kelasSelect"
+            required>
+
+            <option value="">
+              Memuat kelas...
+            </option>
+
+          </select>
+        </div>
+
+      </div>
+
+
+      <!-- =========================
+           STATUS INFO
+      ========================== -->
+      <div
+        id="statusMessage"
+        class="message"
+        style="display:none;">
+      </div>
+
+
+      <!-- =========================
+           RINGKASAN
+      ========================== -->
+      <div
+        id="summary"
+        class="attendance-summary"
+        style="display:none;">
+
+        <div>
+          <strong id="totalSiswa">0</strong>
+          <span>Total</span>
+        </div>
+
+        <div>
+          <strong id="totalHadir">0</strong>
+          <span>Hadir</span>
+        </div>
+
+        <div>
+          <strong id="totalIzin">0</strong>
+          <span>Izin</span>
+        </div>
+
+        <div>
+          <strong id="totalSakit">0</strong>
+          <span>Sakit</span>
+        </div>
+
+        <div>
+          <strong id="totalAlpa">0</strong>
+          <span>Alpa</span>
+        </div>
+
+      </div>
+
+
+      <!-- =========================
+           AKSI
+      ========================== -->
+      <div
+        class="page-actions"
+        style="margin-top:20px;">
+
+        <button
+          id="hadirSemuaButton"
+          class="secondary-button"
+          type="button">
+
+          ✓ Hadir Semua
+
+        </button>
+
+        <button
+          id="resetButton"
+          class="secondary-button"
+          type="button">
+
+          ↻ Reset
+
+        </button>
+
+      </div>
+
+
+      <!-- =========================
+           TABEL SISWA
+      ========================== -->
+      <div
+        class="table-wrapper"
+        style="margin-top:20px;">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>No</th>
+
+              <th>NISN</th>
+
+              <th>Nama Siswa</th>
+
+              <th>Kelas</th>
+
+              <th>Status Presensi</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody id="siswaTable">
+
+            <tr>
+
+              <td
+                colspan="5"
+                class="loading">
+
+                Pilih kelas untuk menampilkan siswa.
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+
+      <!-- =========================
+           SIMPAN
+      ========================== -->
+      <div
+        class="form-actions"
+        style="margin-top:20px;">
+
+        <button
+          id="simpanButton"
+          class="primary-button"
+          type="button">
+
+          💾 Simpan Presensi
+
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- =========================
+       JAVASCRIPT
+  ========================== -->
+
+  <script src="./presensi.js"></script>
+
+</body>
+</html>
