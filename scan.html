@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Scan QR Siswa</title>
+
+  <link
+    rel="stylesheet"
+    href="./style.css"
+  >
+
+  <style>
+
+    .scan-container {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    .scanner-box {
+      background: white;
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,.1);
+    }
+
+    #reader {
+      width: 100%;
+    }
+
+    .result-box {
+      margin-top: 20px;
+      padding: 20px;
+      border-radius: 12px;
+      background: #f5f5f5;
+      text-align: center;
+    }
+
+    .success {
+      background: #e8f5e9;
+      color: #1b5e20;
+    }
+
+    .error {
+      background: #ffebee;
+      color: #b71c1c;
+    }
+
+    .student-name {
+      font-size: 25px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    .student-id {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+  <div class="scan-container">
+
+    <h1>📷 Scan QR Siswa</h1>
+
+    <p>
+      Arahkan kamera ke QR Code kartu siswa.
+    </p>
+
+
+    <div class="scanner-box">
+
+      <div id="reader"></div>
+
+    </div>
+
+
+    <div
+      id="result"
+      class="result-box"
+    >
+      Menunggu QR Code...
+    </div>
+
+
+    <button onclick="kembali()">
+      ← Kembali
+    </button>
+
+  </div>
+
+
+  <!-- Library QR Scanner -->
+  <script
+    src="https://unpkg.com/html5-qrcode"
+    type="text/javascript">
+  </script>
+
+
+  <script src="./scan.js"></script>
+
+</body>
+
+</html>
