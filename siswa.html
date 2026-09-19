@@ -23,174 +23,344 @@
 <body class="dashboard-body">
 
 
-  <!-- HEADER -->
+<header class="topbar">
 
-  <header class="topbar">
+  <div>
 
-    <div>
+    <h1>
+      Data Siswa
+    </h1>
 
-      <h1>
-        Data Siswa
-      </h1>
+    <span>
+      SD Negeri Jatiwaringin XIII
+    </span>
 
-      <span>
-        SD Negeri Jatiwaringin XIII
-      </span>
+  </div>
+
+
+  <div>
+
+    <button
+      class="back-button"
+      onclick="location.href='admin.html'"
+    >
+      Dashboard
+    </button>
+
+
+    <button
+      id="logoutButton"
+      class="logout-button"
+    >
+      Logout
+    </button>
+
+  </div>
+
+</header>
+
+
+
+<main class="dashboard-container">
+
+
+  <!-- FORM SISWA -->
+
+  <section
+    id="formSiswa"
+    class="panel"
+    style="display:none;"
+  >
+
+    <div class="panel-header">
+
+      <h2 id="formTitle">
+        Tambah Siswa
+      </h2>
 
     </div>
 
 
-    <div>
-
-      <button
-        class="back-button"
-        onclick="location.href='admin.html'"
-      >
-        Dashboard
-      </button>
+    <form id="siswaForm">
 
 
-      <button
-        id="logoutButton"
-        class="logout-button"
-      >
-        Logout
-      </button>
+      <div class="form-grid">
 
-    </div>
-
-  </header>
-
-
-  <!-- CONTENT -->
-
-  <main class="dashboard-container">
-
-
-    <section class="panel">
-
-
-      <div class="page-header">
 
         <div>
 
-          <h2>
-            Daftar Siswa
-          </h2>
+          <label for="inputID">
+            ID Siswa
+          </label>
 
-          <p>
-            Data siswa dari Google Spreadsheet
-          </p>
+          <input
+            type="text"
+            id="inputID"
+            placeholder="Contoh: S005"
+            required
+          >
 
         </div>
 
 
-        <div
+        <div>
+
+          <label for="inputNISN">
+            NISN
+          </label>
+
+          <input
+            type="text"
+            id="inputNISN"
+            placeholder="Masukkan NISN"
+            required
+          >
+
+        </div>
+
+
+        <div>
+
+          <label for="inputNama">
+            Nama Siswa
+          </label>
+
+          <input
+            type="text"
+            id="inputNama"
+            placeholder="Nama lengkap"
+            required
+          >
+
+        </div>
+
+
+        <div>
+
+          <label for="inputKelas">
+            Kelas
+          </label>
+
+          <input
+            type="text"
+            id="inputKelas"
+            placeholder="Contoh: 1A"
+            required
+          >
+
+        </div>
+
+
+        <div>
+
+          <label for="inputJK">
+            Jenis Kelamin
+          </label>
+
+          <select id="inputJK" required>
+
+            <option value="">
+              Pilih
+            </option>
+
+            <option value="L">
+              Laki-laki
+            </option>
+
+            <option value="P">
+              Perempuan
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <div>
+
+          <label for="inputStatus">
+            Status
+          </label>
+
+          <select id="inputStatus" required>
+
+            <option value="AKTIF">
+              AKTIF
+            </option>
+
+            <option value="NONAKTIF">
+              NONAKTIF
+            </option>
+
+          </select>
+
+        </div>
+
+
+      </div>
+
+
+      <div class="form-actions">
+
+        <button
+          type="submit"
+          class="primary-button"
+        >
+          Simpan
+        </button>
+
+
+        <button
+          type="button"
+          id="cancelButton"
+          class="secondary-button"
+        >
+          Batal
+        </button>
+
+      </div>
+
+
+    </form>
+
+  </section>
+
+
+
+  <!-- DATA SISWA -->
+
+  <section class="panel">
+
+
+    <div class="page-header">
+
+      <div>
+
+        <h2>
+          Daftar Siswa
+        </h2>
+
+        <p>
+          Data siswa dari Google Spreadsheet
+        </p>
+
+      </div>
+
+
+      <div>
+
+        <span
           id="jumlahSiswa"
           class="jumlah-data"
         >
           0 siswa
-        </div>
-
-      </div>
+        </span>
 
 
-      <!-- FILTER -->
-
-      <div class="filter-area">
-
-
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Cari nama atau NISN..."
+        <button
+          id="tambahButton"
+          class="primary-button"
         >
-
-
-        <select id="kelasFilter">
-
-          <option value="">
-            Semua Kelas
-          </option>
-
-        </select>
-
+          + Tambah Siswa
+        </button>
 
       </div>
 
-
-      <!-- TABLE -->
-
-      <div class="table-wrapper">
-
-        <table>
-
-          <thead>
-
-            <tr>
-
-              <th>
-                No
-              </th>
-
-              <th>
-                ID
-              </th>
-
-              <th>
-                NISN
-              </th>
-
-              <th>
-                Nama
-              </th>
-
-              <th>
-                Kelas
-              </th>
-
-              <th>
-                Jenis Kelamin
-              </th>
-
-              <th>
-                Status
-              </th>
-
-            </tr>
-
-          </thead>
+    </div>
 
 
-          <tbody id="siswaTable">
 
-            <tr>
+    <!-- FILTER -->
 
-              <td
-                colspan="7"
-                class="loading"
-              >
-                Memuat data siswa...
-              </td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
+    <div class="filter-area">
 
 
-    </section>
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Cari nama atau NISN..."
+      >
 
 
-  </main>
+      <select id="kelasFilter">
+
+        <option value="">
+          Semua Kelas
+        </option>
+
+      </select>
 
 
-  <!-- JAVASCRIPT -->
+      <button
+        id="refreshButton"
+        class="secondary-button"
+      >
+        🔄 Refresh
+      </button>
 
-  <script src="./siswa.js"></script>
+
+    </div>
+
+
+
+    <!-- TABLE -->
+
+    <div class="table-wrapper">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>No</th>
+
+            <th>ID</th>
+
+            <th>NISN</th>
+
+            <th>Nama</th>
+
+            <th>Kelas</th>
+
+            <th>JK</th>
+
+            <th>Status</th>
+
+            <th>Aksi</th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="siswaTable">
+
+          <tr>
+
+            <td
+              colspan="8"
+              class="loading"
+            >
+              Memuat data siswa...
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+  </section>
+
+
+</main>
+
+
+<script src="./siswa.js"></script>
 
 
 </body>
