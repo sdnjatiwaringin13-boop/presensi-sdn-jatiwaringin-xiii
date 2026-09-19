@@ -6,7 +6,9 @@ let semuaSiswa = [];
 
 let scanner = null;
 
-let sudahScan = false;
+let sedangMemproses = false;
+
+let kameraAktif = false;
 
 
 // ==========================================
@@ -52,17 +54,42 @@ async function callAPI(payload) {
   }
 
 
-  if (!result.success) {
+  return result;
 
-    throw new Error(
-      result.message ||
-      "Terjadi kesalahan."
-    );
+}
 
+
+// ==========================================
+// VOICE
+// ==========================================
+
+function speak(text) {
+
+  if (!("speechSynthesis" in window)) {
+    return;
   }
 
 
-  return result;
+  // Hentikan suara sebelumnya
+  window.speechSynthesis.cancel();
+
+
+  const voice =
+    new SpeechSynthesisUtterance(text);
+
+
+  voice.lang = "id-ID";
+
+  voice.rate = 0.9;
+
+  voice.pitch = 1;
+
+  voice.volume = 1;
+
+
+  window.speechSynthesis.speak(
+    voice
+  );
 
 }
 
@@ -73,6 +100,12 @@ async function callAPI(payload) {
 
 async function loadSiswa() {
 
+  tampilkanStatus(
+    "Memuat data siswa...",
+    ""
+  );
+
+
   try {
 
     const result =
@@ -81,218 +114,65 @@ async function loadSiswa() {
       });
 
 
+    if (!result.success) {
+
+      throw new Error(
+        result.message ||
+        "Gagal mengambil data siswa."
+      );
+
+    }
+
+
     semuaSiswa =
       result.data || [];
+
+
+    tampilkanStatus(
+      "Silakan scan QR siswa.",
+      ""
+    );
 
 
     mulaiScanner();
 
   } catch (error) {
 
+    console.error(error);
+
+
     tampilkanError(
       "Gagal memuat data siswa: " +
       error.message
     );
 
+
+    speak(
+      "Gagal memuat data siswa."
+    );
+
   }
 
 }
 
 
 // ==========================================
-// MULAI SCANNER
+// MULAI KAMERA
 // ==========================================
 
-function mulaiScanner() {
+async function mulaiScanner() {
 
-  scanner =
-    new Html5Qrcode("reader");
-
-
-  const config = {
-
-    fps: 10,
-
-    qrbox: {
-      width: 250,
-      height: 250
-    }
-
-  };
-
-
-  scanner.start(
-
-    {
-      facingMode: "environment"
-    },
-
-    config,
-
-    onScanSuccess,
-
-    onScanError
-
-  ).catch(error => {
-
-    console.error(error);
-
-    tampilkanError(
-      "Kamera tidak dapat digunakan. " +
-      "Pastikan izin kamera diberikan."
-    );
-
-  });
-
-}
-
-
-// ==========================================
-// HASIL SCAN
-// ==========================================
-
-async function onScanSuccess(
-  decodedText,
-  decodedResult
-) {
-
-  if (sudahScan) {
+  if (kameraAktif) {
     return;
   }
 
 
-  sudahScan = true;
+  if (!scanner) {
 
-
-  console.log(
-    "QR terbaca:",
-    decodedText
-  );
-
-
-  const idSiswa =
-    String(decodedText).trim();
-
-
-  const siswa =
-    semuaSiswa.find(s => {
-
-      return String(s.ID).trim() ===
-        idSiswa;
-
-    });
-
-
-  if (!siswa) {
-
-    tampilkanError(
-      "QR tidak terdaftar: " +
-      idSiswa
-    );
-
-
-    setTimeout(() => {
-
-      sudahScan = false;
-
-    }, 2000);
-
-
-    return;
+    scanner =
+      new Html5Qrcode("reader");
 
   }
-
-
-  tampilkanSiswa(siswa);
-
-
-  // Berhenti sementara
-  try {
-
-    await scanner.stop();
-
-  } catch (error) {
-
-    console.log(error);
-
-  }
-
-
-}
-
-
-// ==========================================
-// TAMPILKAN SISWA
-// ==========================================
-
-function tampilkanSiswa(siswa) {
-
-  const result =
-    document.getElementById(
-      "result"
-    );
-
-
-  result.className =
-    "result-box success";
-
-
-  result.innerHTML = `
-
-    <div>
-      ✓ QR BERHASIL DIBACA
-    </div>
-
-    <div class="student-name">
-      ${escapeHTML(siswa.NAMA)}
-    </div>
-
-    <div>
-      Kelas:
-      <strong>
-        ${escapeHTML(siswa.KELAS)}
-      </strong>
-    </div>
-
-    <div>
-      NISN:
-      ${escapeHTML(siswa.NISN)}
-    </div>
-
-    <div class="student-id">
-      ID: ${escapeHTML(siswa.ID)}
-    </div>
-
-    <button onclick="scanLagi()">
-      📷 Scan Siswa Berikutnya
-    </button>
-
-  `;
-
-}
-
-
-// ==========================================
-// SCAN LAGI
-// ==========================================
-
-async function scanLagi() {
-
-  sudahScan = false;
-
-
-  const result =
-    document.getElementById(
-      "result"
-    );
-
-
-  result.className =
-    "result-box";
-
-
-  result.innerHTML =
-    "Menunggu QR Code...";
 
 
   try {
@@ -300,8 +180,7 @@ async function scanLagi() {
     await scanner.start(
 
       {
-        facingMode:
-          "environment"
+        facingMode: "environment"
       },
 
       {
@@ -320,12 +199,30 @@ async function scanLagi() {
 
     );
 
+
+    kameraAktif = true;
+
+
+    tampilkanStatus(
+      "📷 Kamera aktif — silakan scan QR siswa.",
+      ""
+    );
+
+
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Kamera gagal:",
+      error
+    );
+
+
+    kameraAktif = false;
+
 
     tampilkanError(
-      "Kamera gagal dimulai kembali."
+      "Kamera tidak dapat digunakan. " +
+      "Pastikan izin kamera diberikan."
     );
 
   }
@@ -334,18 +231,333 @@ async function scanLagi() {
 
 
 // ==========================================
-// ERROR
+// STOP KAMERA
 // ==========================================
 
-function onScanError(errorMessage) {
+async function stopScanner() {
 
-  // Tidak perlu menampilkan error
-  // setiap frame kamera.
+  if (!scanner || !kameraAktif) {
+    return;
+  }
+
+
+  try {
+
+    await scanner.stop();
+
+  } catch (error) {
+
+    console.log(
+      "Stop scanner:",
+      error
+    );
+
+  }
+
+
+  kameraAktif = false;
+
 }
 
 
 // ==========================================
-// TAMPILKAN ERROR
+// QR BERHASIL TERBACA
+// ==========================================
+
+async function onScanSuccess(
+  decodedText,
+  decodedResult
+) {
+
+  // Cegah scanner membaca QR yang sama
+  // berkali-kali secara bersamaan.
+  if (sedangMemproses) {
+    return;
+  }
+
+
+  sedangMemproses = true;
+
+
+  const idSiswa =
+    String(decodedText).trim();
+
+
+  console.log(
+    "QR terbaca:",
+    idSiswa
+  );
+
+
+  // ========================================
+  // CARI SISWA
+  // ========================================
+
+  const siswa =
+    semuaSiswa.find(s => {
+
+      return String(s.ID).trim() ===
+        idSiswa;
+
+    });
+
+
+  if (!siswa) {
+
+    await prosesGagal(
+      "QR siswa tidak terdaftar."
+    );
+
+
+    sedangMemproses = false;
+
+    return;
+
+  }
+
+
+  // ========================================
+  // TAMPILKAN PROSES
+  // ========================================
+
+  tampilkanStatus(
+    "⏳ Menyimpan presensi " +
+    siswa.NAMA +
+    "...",
+    ""
+  );
+
+
+  // ========================================
+  // SIMPAN PRESENSI
+  // ========================================
+
+  try {
+
+    const result =
+      await callAPI({
+
+        action:
+          "simpanPresensi",
+
+        id:
+          siswa.ID,
+
+        nisn:
+          siswa.NISN,
+
+        nama:
+          siswa.NAMA,
+
+        kelas:
+          siswa.KELAS,
+
+        status:
+          "HADIR",
+
+        idGuru:
+          ""
+
+      });
+
+
+    // ======================================
+    // BERHASIL
+    // ======================================
+
+    if (result.success) {
+
+      tampilkanBerhasil(
+        siswa,
+        result
+      );
+
+
+      speak(
+        "Terima kasih, " +
+        siswa.NAMA
+      );
+
+
+      // Tunggu sebentar agar hasil
+      // terlihat oleh operator
+      await tunggu(1800);
+
+
+      // Bersihkan status
+      tampilkanStatus(
+        "📷 Silakan scan siswa berikutnya.",
+        ""
+      );
+
+
+      sedangMemproses = false;
+
+
+      return;
+
+    }
+
+
+    // ======================================
+    // GAGAL
+    // ======================================
+
+    await prosesGagal(
+      result.message ||
+      "Presensi gagal."
+    );
+
+
+  } catch (error) {
+
+    console.error(error);
+
+
+    await prosesGagal(
+      "Gagal terhubung ke server."
+    );
+
+  }
+
+
+  sedangMemproses = false;
+
+}
+
+
+// ==========================================
+// PRESENSI BERHASIL
+// ==========================================
+
+function tampilkanBerhasil(
+  siswa,
+  result
+) {
+
+  const resultBox =
+    document.getElementById(
+      "result"
+    );
+
+
+  resultBox.className =
+    "result-box success";
+
+
+  const jam =
+    result.data &&
+    result.data.jam
+      ? result.data.jam
+      : "";
+
+
+  resultBox.innerHTML = `
+
+    <div style="font-size:40px;">
+      ✓
+    </div>
+
+    <div style="font-size:20px;">
+      PRESENSI BERHASIL
+    </div>
+
+    <div class="student-name">
+      ${escapeHTML(siswa.NAMA)}
+    </div>
+
+    <div>
+      Kelas:
+      <strong>
+        ${escapeHTML(siswa.KELAS)}
+      </strong>
+    </div>
+
+    <div>
+      Status:
+      <strong>
+        HADIR
+      </strong>
+    </div>
+
+    ${
+      jam
+        ? `<div>Jam: ${escapeHTML(jam)}</div>`
+        : ""
+    }
+
+  `;
+
+}
+
+
+// ==========================================
+// GAGAL
+// ==========================================
+
+async function prosesGagal(message) {
+
+  tampilkanError(
+    message +
+    "<br><br>Silakan coba lagi."
+  );
+
+
+  speak(
+    "Gagal, coba lagi"
+  );
+
+
+  // Beri waktu suara/error terlihat
+  await tunggu(1500);
+
+
+  tampilkanStatus(
+    "📷 Silakan scan siswa berikutnya.",
+    ""
+  );
+
+}
+
+
+// ==========================================
+// STATUS NORMAL
+// ==========================================
+
+function tampilkanStatus(
+  message,
+  extra
+) {
+
+  const result =
+    document.getElementById(
+      "result"
+    );
+
+
+  result.className =
+    "result-box";
+
+
+  result.innerHTML = `
+
+    <div>
+      ${message}
+    </div>
+
+    ${
+      extra
+        ? `<div>${extra}</div>`
+        : ""
+    }
+
+  `;
+
+}
+
+
+// ==========================================
+// ERROR
 // ==========================================
 
 function tampilkanError(message) {
@@ -361,8 +573,22 @@ function tampilkanError(message) {
 
 
   result.innerHTML = `
-    ❌ ${escapeHTML(message)}
+    ❌ ${message}
   `;
+
+}
+
+
+// ==========================================
+// DELAY
+// ==========================================
+
+function tunggu(ms) {
+
+  return new Promise(
+    resolve =>
+      setTimeout(resolve, ms)
+  );
 
 }
 
@@ -384,17 +610,25 @@ function escapeHTML(value) {
 
 
 // ==========================================
+// ERROR SCANNER
+// ==========================================
+
+function onScanError(errorMessage) {
+
+  // Jangan tampilkan error scanner
+  // karena callback ini dipanggil
+  // berkali-kali ketika QR belum ditemukan.
+
+}
+
+
+// ==========================================
 // KEMBALI
 // ==========================================
 
-function kembali() {
+async function kembali() {
 
-  if (scanner) {
-
-    scanner.stop()
-      .catch(() => {});
-
-  }
+  await stopScanner();
 
 
   window.location.href =
@@ -404,7 +638,7 @@ function kembali() {
 
 
 // ==========================================
-// START
+// MULAI
 // ==========================================
 
 loadSiswa();
