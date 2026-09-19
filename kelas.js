@@ -97,19 +97,38 @@ async function loadGuru() {
 
     const result = await callAPI("getGuru");
 
+    console.log("HASIL getGuru:", result);
+
     semuaGuru = result.data || [];
+
+    console.log("DATA GURU:", semuaGuru);
 
     select.innerHTML =
       `<option value="">-- Pilih Wali Kelas --</option>`;
 
+    if (semuaGuru.length === 0) {
+
+      select.innerHTML =
+        `<option value="">Belum ada data guru</option>`;
+
+      return;
+    }
+
     semuaGuru.forEach(guru => {
 
-      const option = document.createElement("option");
+      const idGuru =
+        String(guru.ID_GURU || "").trim();
 
-      option.value = guru.ID_GURU;
+      const namaGuru =
+        String(guru.NAMA || "").trim();
+
+      const option =
+        document.createElement("option");
+
+      option.value = idGuru;
 
       option.textContent =
-        `${guru.NAMA} (${guru.ID_GURU})`;
+        `${namaGuru} (${idGuru})`;
 
       select.appendChild(option);
 
@@ -117,11 +136,13 @@ async function loadGuru() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "ERROR LOAD GURU:",
+      error
+    );
 
     select.innerHTML =
       `<option value="">Gagal memuat guru</option>`;
-
   }
 }
 
@@ -175,14 +196,27 @@ async function loadKelas() {
 
 function getNamaGuru(idGuru) {
 
-  const guru =
-    semuaGuru.find(
-      item => String(item.ID_GURU) === String(idGuru)
-    );
+  const id =
+    String(idGuru || "")
+      .trim()
+      .toUpperCase();
 
-  return guru
-    ? guru.NAMA
-    : idGuru || "-";
+  const guru =
+    semuaGuru.find(item => {
+
+      const idGuruData =
+        String(item.ID_GURU || "")
+          .trim()
+          .toUpperCase();
+
+      return idGuruData === id;
+    });
+
+  if (guru) {
+    return guru.NAMA || guru.ID_GURU;
+  }
+
+  return idGuru || "-";
 }
 
 
