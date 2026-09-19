@@ -2,37 +2,36 @@ const API_URL =
   "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
 
-/* =====================================================
-   USER LOGIN
-===================================================== */
+const user =
+  JSON.parse(
+    localStorage.getItem(
+      "presensiUser"
+    ) || "null"
+  );
 
-const user = JSON.parse(
-  localStorage.getItem("presensiUser") || "null"
-);
 
+if (
+  !user ||
+  String(
+    user.role || ""
+  ).toUpperCase()
+  !== "GURU"
+) {
 
-if (!user) {
-  window.location.href = "index.html";
+  window.location.href =
+    "index.html";
+
 }
 
 
 const idGuru =
-  String(user?.idGuru || "").trim();
-
-
-const namaGuru =
-  user?.nama ||
-  user?.namaGuru ||
-  "Guru";
+  String(
+    user.idGuru || ""
+  ).trim();
 
 
 let kelasGuru = "";
-let nipGuru = "";
 
-
-/* =====================================================
-   BULAN
-===================================================== */
 
 const namaBulan = [
   "",
@@ -51,38 +50,31 @@ const namaBulan = [
 ];
 
 
-/* =====================================================
-   API
-===================================================== */
-
 async function callAPI(data) {
 
-  const response = await fetch(
-    API_URL,
-    {
-      method: "POST",
+  const response =
+    await fetch(
+      API_URL,
+      {
+        method: "POST",
 
-      headers: {
-        "Content-Type":
-          "text/plain;charset=utf-8"
-      },
+        headers: {
+          "Content-Type":
+            "text/plain;charset=utf-8"
+        },
 
-      body: JSON.stringify(data)
-    }
-  );
+        body:
+          JSON.stringify(data)
+      }
+    );
 
 
   const text =
     await response.text();
 
 
-  console.log(
-    "API:",
-    text
-  );
-
-
   let result;
+
 
   try {
 
@@ -92,7 +84,7 @@ async function callAPI(data) {
   } catch (error) {
 
     throw new Error(
-      "Server tidak mengembalikan JSON."
+      "Response server bukan JSON."
     );
 
   }
@@ -103,19 +95,18 @@ async function callAPI(data) {
 }
 
 
-/* =====================================================
-   INIT
-===================================================== */
-
 document.addEventListener(
   "DOMContentLoaded",
-  async function () {
+  async function() {
 
     isiTahun();
 
-    isiBulan();
+    document.getElementById(
+      "bulan"
+    ).value =
+      new Date()
+        .getMonth() + 1;
 
-    tampilkanIdentitas();
 
     await loadKelasGuru();
 
@@ -123,131 +114,56 @@ document.addEventListener(
 );
 
 
-/* =====================================================
-   TAHUN
-===================================================== */
-
 function isiTahun() {
 
   const select =
-    document.getElementById("tahun");
+    document.getElementById(
+      "tahun"
+    );
 
 
-  const tahunSekarang =
-    new Date().getFullYear();
+  const tahun =
+    new Date()
+      .getFullYear();
 
 
   for (
-    let tahun = tahunSekarang - 2;
-    tahun <= tahunSekarang + 1;
-    tahun++
+    let i = tahun - 3;
+    i <= tahun + 1;
+    i++
   ) {
 
     const option =
-      document.createElement("option");
+      document.createElement(
+        "option"
+      );
 
 
     option.value =
-      tahun;
-
+      i;
 
     option.textContent =
-      tahun;
+      i;
 
 
     if (
-      tahun === tahunSekarang
+      i === tahun
     ) {
 
-      option.selected = true;
+      option.selected =
+        true;
 
     }
 
 
-    select.appendChild(option);
+    select.appendChild(
+      option
+    );
 
   }
 
 }
 
-
-/* =====================================================
-   BULAN SEKARANG
-===================================================== */
-
-function isiBulan() {
-
-  const bulan =
-    new Date().getMonth() + 1;
-
-
-  document.getElementById(
-    "bulan"
-  ).value =
-    bulan;
-
-}
-
-
-/* =====================================================
-   IDENTITAS
-===================================================== */
-
-function tampilkanIdentitas() {
-
-  document.getElementById(
-    "namaGuru"
-  ).textContent =
-    namaGuru;
-
-
-  document.getElementById(
-    "namaGuruSignature"
-  ).textContent =
-    "( " + namaGuru + " )";
-
-
-  document.getElementById(
-    "nipGuru"
-  ).textContent =
-    nipGuru ||
-    "__________________________";
-
-
-  const sekarang =
-    new Date();
-
-
-  const tanggal =
-    sekarang.getDate();
-
-
-  const bulan =
-    namaBulan[
-      sekarang.getMonth() + 1
-    ];
-
-
-  const tahun =
-    sekarang.getFullYear();
-
-
-  document.getElementById(
-    "tanggalCetak"
-  ).textContent =
-    "Jakarta, " +
-    tanggal +
-    " " +
-    bulan +
-    " " +
-    tahun;
-
-}
-
-
-/* =====================================================
-   KELAS GURU
-===================================================== */
 
 async function loadKelasGuru() {
 
@@ -256,7 +172,7 @@ async function loadKelasGuru() {
     if (!idGuru) {
 
       throw new Error(
-        "ID Guru tidak ditemukan pada data login."
+        "ID Guru tidak ditemukan."
       );
 
     }
@@ -274,29 +190,19 @@ async function loadKelasGuru() {
       });
 
 
-    console.log(
-      "Kelas Guru:",
-      result
-    );
-
-
     if (!result.success) {
 
       throw new Error(
-        result.message ||
-        "Gagal mengambil kelas guru."
+        result.message
       );
 
     }
 
 
-    const data =
-      Array.isArray(result.data)
-        ? result.data
-        : [];
-
-
-    if (data.length === 0) {
+    if (
+      !result.data ||
+      result.data.length === 0
+    ) {
 
       throw new Error(
         "Guru belum memiliki kelas."
@@ -305,27 +211,9 @@ async function loadKelasGuru() {
     }
 
 
-    /*
-      Guru bisa mempunyai lebih dari
-      satu kelas, tetapi untuk wali kelas
-      kita ambil kelas aktif pertama.
-    */
-
-    const kelas =
-      data[0];
-
-
     kelasGuru =
-      kelas.NAMA_KELAS ||
-      kelas.nama_kelas ||
-      kelas.namaKelas ||
-      "";
-
-
-    nipGuru =
-      kelas.NIP ||
-      kelas.nip ||
-      "";
+      result.data[0]
+        .NAMA_KELAS;
 
 
     document.getElementById(
@@ -335,24 +223,16 @@ async function loadKelasGuru() {
 
 
     document.getElementById(
-      "kelasSignature"
+      "kelasTtd"
     ).textContent =
-      " " + kelasGuru;
-
-
-    document.getElementById(
-      "nipGuru"
-    ).textContent =
-      nipGuru ||
-      "__________________________";
+      " " +
+      kelasGuru;
 
 
     await tampilkanAbsen();
 
 
   } catch (error) {
-
-    console.error(error);
 
     tampilkanError(
       error.message
@@ -363,43 +243,28 @@ async function loadKelasGuru() {
 }
 
 
-/* =====================================================
-   TAMPILKAN ABSEN
-===================================================== */
-
 async function tampilkanAbsen() {
 
-  if (!kelasGuru) {
-
-    tampilkanError(
-      "Kelas wali kelas belum ditemukan."
-    );
-
-    return;
-
-  }
-
-
-  const bulan =
-    Number(
-      document.getElementById(
-        "bulan"
-      ).value
-    );
-
-
-  const tahun =
-    Number(
-      document.getElementById(
-        "tahun"
-      ).value
-    );
-
-
-  tampilkanLoading();
-
-
   try {
+
+    tampilkanLoading();
+
+
+    const bulan =
+      Number(
+        document.getElementById(
+          "bulan"
+        ).value
+      );
+
+
+    const tahun =
+      Number(
+        document.getElementById(
+          "tahun"
+        ).value
+      );
+
 
     const result =
       await callAPI({
@@ -422,20 +287,18 @@ async function tampilkanAbsen() {
       });
 
 
-    console.log(
-      "Rekap:",
-      result
-    );
-
-
     if (!result.success) {
 
       throw new Error(
-        result.message ||
-        "Gagal mengambil data absensi."
+        result.message
       );
 
     }
+
+
+    renderHeader(
+      result.data
+    );
 
 
     renderTabel(
@@ -444,8 +307,6 @@ async function tampilkanAbsen() {
 
 
   } catch (error) {
-
-    console.error(error);
 
     tampilkanError(
       error.message
@@ -456,9 +317,101 @@ async function tampilkanAbsen() {
 }
 
 
-/* =====================================================
-   RENDER TABEL
-===================================================== */
+function renderHeader(data) {
+
+  const guru =
+    data.guru || {};
+
+
+  const sekolah =
+    data.sekolah || {};
+
+
+  document.getElementById(
+    "namaSekolah"
+  ).textContent =
+    sekolah.namaSekolah ||
+    "SD Negeri Jatiwaringin XIII";
+
+
+  document.getElementById(
+    "namaGuru"
+  ).textContent =
+    guru.nama || "-";
+
+
+  document.getElementById(
+    "namaGuruTtd"
+  ).textContent =
+    guru.nama || "________________";
+
+
+  document.getElementById(
+    "nipGuru"
+  ).textContent =
+    guru.nip ||
+    "________________";
+
+
+  document.getElementById(
+    "namaKepala"
+  ).textContent =
+    sekolah.namaKepala ||
+    "________________";
+
+
+  document.getElementById(
+    "nipKepala"
+  ).textContent =
+    sekolah.nipKepala ||
+    "________________";
+
+
+  document.getElementById(
+    "periode"
+  ).textContent =
+    namaBulan[
+      data.bulan
+    ] +
+    " " +
+    data.tahun;
+
+
+  document.getElementById(
+    "tanggalCetak"
+  ).textContent =
+    buatTanggalCetak(
+      data.bulan,
+      data.tahun
+    );
+
+}
+
+
+function buatTanggalCetak(
+  bulan,
+  tahun
+) {
+
+  const hariTerakhir =
+    new Date(
+      tahun,
+      bulan,
+      0
+    ).getDate();
+
+
+  return (
+    "Jakarta, " +
+    hariTerakhir +
+    " " +
+    namaBulan[bulan] +
+    " " +
+    tahun
+  );
+
+}
+
 
 function renderTabel(data) {
 
@@ -471,58 +424,18 @@ function renderTabel(data) {
 
 
   const jumlahHari =
-    Number(
-      data.jumlahHari || 30
-    );
+    data.jumlahHari;
 
 
-  const bulan =
-    Number(
-      document.getElementById(
-        "bulan"
-      ).value
-    );
-
-
-  const tahun =
-    Number(
-      document.getElementById(
-        "tahun"
-      ).value
-    );
-
-
-  /*
-    UPDATE PERIODE
-  */
-
-  document.getElementById(
-    "periode"
-  ).textContent =
-    namaBulan[bulan] +
-    " " +
-    tahun;
-
-
-  /*
-    HEADER
-  */
-
-  let head = `
+  let header = `
 
     <tr>
 
-      <th
-        class="no"
-        rowspan="2"
-      >
+      <th class="no">
         No
       </th>
 
-      <th
-        class="nama"
-        rowspan="2"
-      >
+      <th class="nama">
         Nama Siswa
       </th>
 
@@ -535,12 +448,9 @@ function renderTabel(data) {
     hari++
   ) {
 
-    head += `
+    header += `
 
-      <th
-        class="hari"
-        rowspan="2"
-      >
+      <th class="hari">
         ${hari}
       </th>
 
@@ -549,33 +459,21 @@ function renderTabel(data) {
   }
 
 
-  head += `
+  header += `
 
-      <th
-        class="total"
-        rowspan="2"
-      >
+      <th class="total">
         H
       </th>
 
-      <th
-        class="total"
-        rowspan="2"
-      >
+      <th class="total">
         I
       </th>
 
-      <th
-        class="total"
-        rowspan="2"
-      >
+      <th class="total">
         S
       </th>
 
-      <th
-        class="total"
-        rowspan="2"
-      >
+      <th class="total">
         A
       </th>
 
@@ -587,26 +485,22 @@ function renderTabel(data) {
   document.getElementById(
     "tableHead"
   ).innerHTML =
-    head;
+    header;
 
-
-  /*
-    BODY
-  */
 
   let body = "";
 
 
   siswa.forEach(
-    function (siswaItem, index) {
+    function(s, index) {
 
       const id =
         String(
-          siswaItem.ID || ""
-        ).trim();
+          s.ID || ""
+        );
 
 
-      const dataSiswa =
+      const absen =
         presensi[id] || {};
 
 
@@ -625,9 +519,7 @@ function renderTabel(data) {
           </td>
 
           <td class="nama">
-            ${escapeHTML(
-              siswaItem.NAMA
-            )}
+            ${escapeHTML(s.NAMA)}
           </td>
 
       `;
@@ -641,12 +533,12 @@ function renderTabel(data) {
 
         const status =
           String(
-            dataSiswa[hari] || ""
+            absen[hari] || ""
           ).toUpperCase();
 
 
         let simbol = "";
-        let className = "";
+        let cls = "";
 
 
         if (
@@ -654,49 +546,40 @@ function renderTabel(data) {
         ) {
 
           simbol = "H";
-
-          className =
-            "status-HADIR";
-
+          cls = "hadir";
           hadir++;
 
         }
 
-        else if (
+
+        if (
           status === "IZIN"
         ) {
 
           simbol = "I";
-
-          className =
-            "status-IZIN";
-
+          cls = "izin";
           izin++;
 
         }
 
-        else if (
+
+        if (
           status === "SAKIT"
         ) {
 
           simbol = "S";
-
-          className =
-            "status-SAKIT";
-
+          cls = "sakit";
           sakit++;
 
         }
 
-        else if (
+
+        if (
           status === "ALPA"
         ) {
 
           simbol = "A";
-
-          className =
-            "status-ALPA";
-
+          cls = "alpa";
           alpa++;
 
         }
@@ -704,7 +587,7 @@ function renderTabel(data) {
 
         body += `
 
-          <td class="${className}">
+          <td class="${cls}">
             ${simbol}
           </td>
 
@@ -715,19 +598,19 @@ function renderTabel(data) {
 
       body += `
 
-          <td class="total">
+          <td>
             ${hadir}
           </td>
 
-          <td class="total">
+          <td>
             ${izin}
           </td>
 
-          <td class="total">
+          <td>
             ${sakit}
           </td>
 
-          <td class="total">
+          <td>
             ${alpa}
           </td>
 
@@ -765,10 +648,6 @@ function renderTabel(data) {
 }
 
 
-/* =====================================================
-   LOADING
-===================================================== */
-
 function tampilkanLoading() {
 
   document.getElementById(
@@ -784,24 +663,22 @@ function tampilkanLoading() {
 
 
   document.getElementById(
-    "error"
+    "hasil"
   ).style.display =
     "none";
 
 
   document.getElementById(
-    "hasil"
+    "error"
   ).style.display =
     "none";
 
 }
 
 
-/* =====================================================
-   ERROR
-===================================================== */
-
-function tampilkanError(message) {
+function tampilkanError(
+  message
+) {
 
   document.getElementById(
     "loading"
@@ -809,33 +686,32 @@ function tampilkanError(message) {
     "none";
 
 
-  const error =
-    document.getElementById(
-      "error"
-    );
-
-
-  error.textContent =
-    "❌ " + message;
-
-
-  error.style.display =
-    "block";
-
-
   document.getElementById(
     "hasil"
   ).style.display =
     "none";
 
+
+  const el =
+    document.getElementById(
+      "error"
+    );
+
+
+  el.style.display =
+    "block";
+
+
+  el.textContent =
+    "❌ " +
+    message;
+
 }
 
 
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
-
-function escapeHTML(value) {
+function escapeHTML(
+  value
+) {
 
   return String(
     value ?? ""
