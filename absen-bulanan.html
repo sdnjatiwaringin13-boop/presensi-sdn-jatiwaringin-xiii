@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Daftar Absensi Siswa</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f1f3f5;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #111;
+    }
+
+    .container {
+      max-width: 1500px;
+      margin: auto;
+    }
+
+    /* =====================================
+       HEADER
+    ===================================== */
+
+    .header {
+      background: white;
+      padding: 25px 30px 15px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    .school-title {
+      text-align: center;
+    }
+
+    .school-title h1 {
+      margin: 0;
+      font-family: "Times New Roman", serif;
+      font-size: 34px;
+      font-weight: bold;
+      letter-spacing: .5px;
+    }
+
+    .school-title h2 {
+      margin: 5px 0 15px;
+      font-family: "Times New Roman", serif;
+      font-size: 25px;
+    }
+
+    .header-line {
+      border-top: 3px solid #111;
+      margin-top: 15px;
+    }
+
+    .identitas {
+      margin-top: 18px;
+      font-size: 17px;
+      line-height: 1.65;
+    }
+
+    .identitas-row {
+      display: grid;
+      grid-template-columns: 130px 15px auto;
+    }
+
+    .identitas-label {
+      font-weight: bold;
+    }
+
+    /* =====================================
+       TOOLBAR
+    ===================================== */
+
+    .toolbar {
+      background: white;
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 15px;
+    }
+
+    .toolbar-row {
+      display: flex;
+      gap: 12px;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .form-group label {
+      font-weight: bold;
+    }
+
+    select,
+    button {
+      padding: 10px 14px;
+      border-radius: 7px;
+      border: 1px solid #bbb;
+      font-size: 14px;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: bold;
+      border: none;
+    }
+
+    .btn-blue {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-green {
+      background: #16a34a;
+      color: white;
+    }
+
+    .btn-gray {
+      background: #64748b;
+      color: white;
+    }
+
+    /* =====================================
+       PRINT AREA
+    ===================================== */
+
+    .print-area {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 16px;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+      margin-bottom: 15px;
+    }
+
+    .report-header {
+      display: none;
+    }
+
+    /* =====================================
+       TABLE
+    ===================================== */
+
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 1150px;
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      border: 1px solid #333;
+      text-align: center;
+      padding: 6px 3px;
+      font-size: 12px;
+    }
+
+    thead th {
+      background: #e8edf2;
+      font-weight: bold;
+    }
+
+    th.no,
+    td.no {
+      width: 42px;
+    }
+
+    th.nama,
+    td.nama {
+      width: 190px;
+      text-align: left;
+      padding-left: 10px;
+    }
+
+    th.hari,
+    td.hari {
+      width: 27px;
+    }
+
+    th.total,
+    td.total {
+      width: 35px;
+    }
+
+    td.nama {
+      font-weight: normal;
+    }
+
+    .status-HADIR {
+      color: #008a43;
+      font-weight: bold;
+    }
+
+    .status-IZIN {
+      color: #f59e0b;
+      font-weight: bold;
+    }
+
+    .status-SAKIT {
+      color: #7c3aed;
+      font-weight: bold;
+    }
+
+    .status-ALPA {
+      color: #dc2626;
+      font-weight: bold;
+    }
+
+    /* =====================================
+       KETERANGAN
+    ===================================== */
+
+    .legend {
+      margin-top: 25px;
+      border: 1px solid #94a3b8;
+      border-radius: 8px;
+      padding: 12px 20px;
+      display: inline-block;
+      font-size: 14px;
+      background: #f8fafc;
+    }
+
+    .legend-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .legend-item {
+      display: inline-block;
+      margin-right: 28px;
+    }
+
+    .legend-h {
+      color: #008a43;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .legend-i {
+      color: #f59e0b;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .legend-s {
+      color: #7c3aed;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .legend-a {
+      color: #dc2626;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    /* =====================================
+       TANDA TANGAN
+    ===================================== */
+
+    .signature-area {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 55px;
+      padding: 0 60px;
+      gap: 100px;
+    }
+
+    .signature-box {
+      width: 300px;
+      text-align: center;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .signature-space {
+      height: 75px;
+    }
+
+    .signature-line {
+      border-top: 1px solid #111;
+      padding-top: 6px;
+      text-align: left;
+    }
+
+    .signature-name {
+      font-weight: bold;
+      text-decoration: underline;
+    }
+
+    .nip {
+      text-align: left;
+      margin-top: 5px;
+    }
+
+    /* =====================================
+       PRINT
+    ===================================== */
+
+    @media print {
+
+      @page {
+        size: landscape;
+        margin: 8mm;
+      }
+
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .container {
+        max-width: none;
+        width: 100%;
+      }
+
+      .header {
+        padding: 0;
+        margin: 0;
+        border-radius: 0;
+      }
+
+      .print-area {
+        padding: 0;
+        border-radius: 0;
+      }
+
+      .school-title h1 {
+        font-size: 28px;
+      }
+
+      .school-title h2 {
+        font-size: 21px;
+      }
+
+      .identitas {
+        font-size: 14px;
+      }
+
+      .report-header {
+        display: block;
+      }
+
+      .table-wrapper {
+        overflow: visible;
+      }
+
+      table {
+        width: 100%;
+        min-width: 0;
+        font-size: 9px;
+      }
+
+      th,
+      td {
+        padding: 3px 2px;
+        font-size: 9px;
+      }
+
+      th.nama,
+      td.nama {
+        width: 150px;
+      }
+
+      th.hari,
+      td.hari {
+        width: auto;
+      }
+
+      th.total,
+      td.total {
+        width: 25px;
+      }
+
+      .legend {
+        font-size: 11px;
+        margin-top: 12px;
+      }
+
+      .legend-item {
+        margin-right: 15px;
+      }
+
+      .signature-area {
+        margin-top: 30px;
+        padding: 0 30px;
+      }
+
+      .signature-box {
+        font-size: 12px;
+        width: 250px;
+      }
+
+      .signature-space {
+        height: 55px;
+      }
+
+      .error,
+      .loading {
+        display: none !important;
+      }
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+  <!-- =====================================
+       TOOLBAR
+  ====================================== -->
+
+  <div class="toolbar no-print">
+
+    <div class="toolbar-row">
+
+      <div class="form-group">
+
+        <label>
+          Bulan
+        </label>
+
+        <select id="bulan">
+
+          <option value="1">Januari</option>
+          <option value="2">Februari</option>
+          <option value="3">Maret</option>
+          <option value="4">April</option>
+          <option value="5">Mei</option>
+          <option value="6">Juni</option>
+          <option value="7">Juli</option>
+          <option value="8">Agustus</option>
+          <option value="9">September</option>
+          <option value="10">Oktober</option>
+          <option value="11">November</option>
+          <option value="12">Desember</option>
+
+        </select>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label>
+          Tahun
+        </label>
+
+        <select id="tahun"></select>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="btn-blue"
+        onclick="tampilkanAbsen()"
+      >
+        🔍 Tampilkan
+      </button>
+
+
+      <button
+        type="button"
+        class="btn-green"
+        onclick="window.print()"
+      >
+        🖨️ Cetak Absen
+      </button>
+
+
+      <button
+        type="button"
+        class="btn-gray"
+        onclick="window.location.href='presensi.html'"
+      >
+        ← Kembali
+      </button>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================
+       HEADER CETAK
+  ====================================== -->
+
+  <div class="header">
+
+    <div class="school-title">
+
+      <h1>
+        DAFTAR ABSENSI SISWA
+      </h1>
+
+      <h2>
+        SD NEGERI JATIWARINGIN XIII
+      </h2>
+
+    </div>
+
+
+    <div class="header-line"></div>
+
+
+    <div class="identitas">
+
+      <div class="identitas-row">
+
+        <div class="identitas-label">
+          Kelas
+        </div>
+
+        <div>:</div>
+
+        <div id="kelasGuru">
+          -
+        </div>
+
+      </div>
+
+
+      <div class="identitas-row">
+
+        <div class="identitas-label">
+          Wali Kelas
+        </div>
+
+        <div>:</div>
+
+        <div id="namaGuru">
+          -
+        </div>
+
+      </div>
+
+
+      <div class="identitas-row">
+
+        <div class="identitas-label">
+          Bulan
+        </div>
+
+        <div>:</div>
+
+        <div id="periode">
+          -
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- =====================================
+       AREA CETAK
+  ====================================== -->
+
+  <div class="print-area">
+
+
+    <div
+      id="loading"
+      class="loading"
+    >
+      ⏳ Memuat data absensi...
+    </div>
+
+
+    <div
+      id="error"
+      class="error"
+    ></div>
+
+
+    <div
+      id="hasil"
+      style="display:none;"
+    >
+
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead id="tableHead"></thead>
+
+          <tbody id="tableBody"></tbody>
+
+        </table>
+
+      </div>
+
+
+      <!-- KETERANGAN -->
+
+      <div class="legend">
+
+        <div class="legend-title">
+          Keterangan:
+        </div>
+
+        <span class="legend-item">
+          <span class="legend-h">H</span>
+          = Hadir
+        </span>
+
+        <span class="legend-item">
+          <span class="legend-i">I</span>
+          = Izin
+        </span>
+
+        <span class="legend-item">
+          <span class="legend-s">S</span>
+          = Sakit
+        </span>
+
+        <span class="legend-item">
+          <span class="legend-a">A</span>
+          = Alpa
+        </span>
+
+      </div>
+
+
+      <!-- =====================================
+           TANDA TANGAN
+      ====================================== -->
+
+      <div class="signature-area">
+
+
+        <!-- KEPALA SEKOLAH -->
+
+        <div class="signature-box">
+
+          <div>
+            Mengetahui,
+          </div>
+
+          <div>
+            Kepala Sekolah
+          </div>
+
+          <div class="signature-space"></div>
+
+          <div class="signature-line">
+
+            <span class="signature-name">
+              ( __________________________ )
+            </span>
+
+          </div>
+
+          <div class="nip">
+            NIP. __________________________
+          </div>
+
+        </div>
+
+
+        <!-- WALI KELAS -->
+
+        <div class="signature-box">
+
+          <div id="tanggalCetak">
+            Jakarta, -
+          </div>
+
+          <div>
+            Wali Kelas
+            <span id="kelasSignature"></span>
+          </div>
+
+          <div class="signature-space"></div>
+
+          <div class="signature-line">
+
+            <span
+              class="signature-name"
+              id="namaGuruSignature"
+            >
+              ( __________________________ )
+            </span>
+
+          </div>
+
+          <div class="nip">
+            NIP.
+            <span id="nipGuru">
+              __________________________
+            </span>
+          </div>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script src="absen-bulanan.js"></script>
+
+</body>
+
+</html>
