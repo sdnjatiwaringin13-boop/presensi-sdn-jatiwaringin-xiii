@@ -1,92 +1,204 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Data Kelas - Presensi</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="crud-style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Data Kelas - Presensi</title>
+
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="dashboard-body">
+
 <header class="topbar">
   <div>
     <h1>Presensi Sekolah</h1>
     <span>SD Negeri Jatiwaringin XIII</span>
   </div>
-  <div class="topbar-actions">
-    <button class="secondary-button" onclick="location.href='admin.html'">Dashboard</button>
-    <button id="logoutButton" class="logout-button">Logout</button>
+
+  <div>
+    <button
+      class="logout-button"
+      onclick="location.href='admin.html'">
+      Dashboard
+    </button>
+
+    <button
+      id="logoutButton"
+      class="logout-button">
+      Logout
+    </button>
   </div>
 </header>
 
 <main class="dashboard-container">
+
   <section class="welcome">
     <h2>Data Kelas</h2>
-    <p id="kelasCount">Memuat data...</p>
+    <p id="adminName">Memuat data...</p>
   </section>
 
+
+  <!-- FORM TAMBAH / EDIT -->
   <section class="panel">
-    <div class="page-actions">
-      <button id="addButton" class="primary-button">+ Tambah Kelas</button>
-      <button id="refreshButton" class="secondary-button">↻ Refresh</button>
+
+    <div class="panel-header">
+      <h2 id="formTitle">Tambah Kelas</h2>
     </div>
 
-    <div class="filter-row">
-      <input id="searchInput" type="search" placeholder="Cari nama kelas atau wali...">
-      <select id="statusFilter">
-        <option value="">Semua Status</option>
-        <option value="AKTIF">AKTIF</option>
-        <option value="NONAKTIF">NONAKTIF</option>
-      </select>
-    </div>
+    <form id="kelasForm">
 
-    <form id="kelasForm" class="crud-form hidden">
-      <input type="hidden" id="editMode" value="tambah">
+      <input
+        type="hidden"
+        id="mode"
+        value="tambah">
+
       <div class="form-grid">
+
         <div>
-          <label for="idKelas">ID Kelas</label>
-          <input id="idKelas" required placeholder="Contoh: K001">
+          <label>ID Kelas</label>
+          <input
+            type="text"
+            id="idKelas"
+            placeholder="Contoh: KLS01"
+            required>
         </div>
+
         <div>
-          <label for="namaKelas">Nama Kelas</label>
-          <input id="namaKelas" required placeholder="Contoh: 1A">
+          <label>Nama Kelas</label>
+          <input
+            type="text"
+            id="namaKelas"
+            placeholder="Contoh: 1A"
+            required>
         </div>
+
         <div>
-          <label for="idGuru">Wali Kelas</label>
-          <select id="idGuru">
-            <option value="">-- Pilih Guru --</option>
+          <label>Wali Kelas</label>
+
+          <select id="idGuru" required>
+            <option value="">Memuat guru...</option>
           </select>
+
         </div>
+
         <div>
-          <label for="tahunAjaran">Tahun Ajaran</label>
-          <input id="tahunAjaran" required placeholder="Contoh: 2026/2027">
+          <label>Tahun Ajaran</label>
+
+          <input
+            type="text"
+            id="tahunAjaran"
+            placeholder="Contoh: 2026/2027"
+            required>
+
         </div>
+
         <div>
-          <label for="status">Status</label>
+          <label>Status</label>
+
           <select id="status" required>
             <option value="AKTIF">AKTIF</option>
             <option value="NONAKTIF">NONAKTIF</option>
           </select>
+
         </div>
+
       </div>
-      <div class="form-actions">
-        <button type="submit" class="primary-button">Simpan</button>
-        <button type="button" id="cancelButton" class="secondary-button">Batal</button>
+
+      <div style="margin-top:20px">
+
+        <button
+          type="submit"
+          class="login-button"
+          id="saveButton">
+          Simpan
+        </button>
+
+        <button
+          type="button"
+          class="logout-button"
+          id="cancelButton">
+          Batal
+        </button>
+
       </div>
+
+      <p id="formMessage"></p>
+
     </form>
 
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr><th>No</th><th>ID Kelas</th><th>Nama Kelas</th><th>Wali Kelas</th><th>Tahun Ajaran</th><th>Status</th><th>Aksi</th></tr>
-        </thead>
-        <tbody id="kelasTable">
-          <tr><td colspan="7" class="loading">Memuat data...</td></tr>
-        </tbody>
-      </table>
-    </div>
   </section>
+
+
+  <!-- DATA KELAS -->
+  <section class="panel">
+
+    <div class="panel-header">
+
+      <h2>Daftar Kelas</h2>
+
+      <button
+        type="button"
+        class="login-button"
+        id="refreshButton">
+        Refresh
+      </button>
+
+    </div>
+
+
+    <div style="margin-bottom:20px">
+
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Cari kelas / wali kelas..."
+        style="width:100%;max-width:400px;padding:10px">
+
+    </div>
+
+
+    <div class="table-wrapper">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>No</th>
+            <th>ID Kelas</th>
+            <th>Nama Kelas</th>
+            <th>Wali Kelas</th>
+            <th>Tahun Ajaran</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+
+        </thead>
+
+        <tbody id="kelasTable">
+
+          <tr>
+            <td
+              colspan="7"
+              class="loading">
+              Memuat data...
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
 </main>
+
+
 <script src="./kelas.js"></script>
+
 </body>
 </html>
