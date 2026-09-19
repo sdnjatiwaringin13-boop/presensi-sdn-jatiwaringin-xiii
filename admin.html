@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Dashboard Admin - Presensi
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+</head>
+
+
+<body class="dashboard-body">
+
+  <header class="topbar">
+
+    <div>
+
+      <h1>
+        Presensi Sekolah
+      </h1>
+
+      <span>
+        SD Negeri Jatiwaringin XIII
+      </span>
+
+    </div>
+
+
+    <button
+      id="logoutButton"
+      class="logout-button"
+    >
+      Logout
+    </button>
+
+  </header>
+
+
+  <main class="dashboard-container">
+
+    <div class="welcome">
+
+      <h2>
+        Dashboard Admin
+      </h2>
+
+      <p id="adminName">
+        Memuat data...
+      </p>
+
+    </div>
+
+
+    <!-- STATISTIK -->
+
+    <section class="stats-grid">
+
+
+      <div class="stat-card">
+
+        <div class="stat-title">
+          Total Siswa
+        </div>
+
+        <div
+          id="totalSiswa"
+          class="stat-number"
+        >
+          -
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div class="stat-title">
+          Total Guru
+        </div>
+
+        <div
+          id="totalGuru"
+          class="stat-number"
+        >
+          -
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div class="stat-title">
+          Total Kelas
+        </div>
+
+        <div
+          id="totalKelas"
+          class="stat-number"
+        >
+          -
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div class="stat-title">
+          Presensi Hari Ini
+        </div>
+
+        <div
+          id="totalPresensi"
+          class="stat-number"
+        >
+          -
+        </div>
+
+      </div>
+
+
+    </section>
+
+
+    <!-- MENU -->
+
+    <section class="menu-grid">
+
+
+      <div
+        class="menu-card"
+        onclick="window.location.href='siswa.html'"
+      >
+
+        <h3>
+          👨‍🎓 Data Siswa
+        </h3>
+
+        <p>
+          Melihat dan mengelola data siswa.
+        </p>
+
+      </div>
+
+
+      <div
+        class="menu-card"
+        onclick="window.location.href='guru.html'"
+      >
+
+        <h3>
+          👨‍🏫 Data Guru
+        </h3>
+
+        <p>
+          Melihat data guru dan wali kelas.
+        </p>
+
+      </div>
+
+
+      <div
+        class="menu-card"
+        onclick="window.location.href='kelas.html'"
+      >
+
+        <h3>
+          🏫 Data Kelas
+        </h3>
+
+        <p>
+          Melihat kelas dan wali kelas.
+        </p>
+
+      </div>
+
+
+      <div
+        class="menu-card"
+        onclick="window.location.href='rekap.html'"
+      >
+
+        <h3>
+          📊 Rekap Presensi
+        </h3>
+
+        <p>
+          Melihat laporan presensi siswa.
+        </p>
+
+      </div>
+
+
+    </section>
+
+
+    <!-- PRESENSI HARI INI -->
+
+    <section class="panel">
+
+      <div class="panel-header">
+
+        <h2>
+          Presensi Hari Ini
+        </h2>
+
+      </div>
+
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>
+                No
+              </th>
+
+              <th>
+                Nama
+              </th>
+
+              <th>
+                Kelas
+              </th>
+
+              <th>
+                Jam
+              </th>
+
+              <th>
+                Status
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody id="presensiTable">
+
+            <tr>
+
+              <td
+                colspan="5"
+                class="loading"
+              >
+                Memuat data...
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+    </section>
+
+
+  </main>
+
+
+  <script src="admin.js"></script>
+
+</body>
+
+</html>
