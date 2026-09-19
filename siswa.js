@@ -2,175 +2,205 @@ const API_URL =
   "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
 
-document.addEventListener("DOMContentLoaded", () => {
-
-  /* =====================================
-     CEK LOGIN
-  ===================================== */
-
-  const userData =
-    localStorage.getItem("presensiUser");
-
-  if (!userData) {
-    window.location.href = "index.html";
-    return;
-  }
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
 
 
-  let user;
+    /* =====================================
+       CEK LOGIN
+    ===================================== */
 
-  try {
-
-    user = JSON.parse(userData);
-
-  } catch (error) {
-
-    localStorage.removeItem("presensiUser");
-    window.location.href = "index.html";
-    return;
-
-  }
-
-
-  /* =====================================
-     CEK ADMIN
-  ===================================== */
-
-  if (user.role !== "ADMIN") {
-
-    alert(
-      "Halaman ini hanya dapat diakses Admin."
-    );
-
-    window.location.href = "index.html";
-    return;
-
-  }
-
-
-  /* =====================================
-     VARIABEL
-  ===================================== */
-
-  let semuaSiswa = [];
-
-
-  /* =====================================
-     API
-  ===================================== */
-
-  async function callAPI(data) {
-
-    const response = await fetch(
-      API_URL,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "text/plain;charset=utf-8"
-        },
-
-        body: JSON.stringify(data)
-      }
-    );
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        "HTTP " + response.status
+    const userData =
+      localStorage.getItem(
+        "presensiUser"
       );
+
+
+    if (!userData) {
+
+      window.location.href =
+        "index.html";
+
+      return;
 
     }
 
 
-    const text =
-      await response.text();
+    let user;
 
-
-    let result;
 
     try {
 
-      result = JSON.parse(text);
+      user =
+        JSON.parse(userData);
 
     } catch (error) {
 
-      console.error(
-        "Response dari server:",
-        text
+      localStorage.removeItem(
+        "presensiUser"
       );
 
-      throw new Error(
-        "Server tidak mengirim JSON yang valid."
-      );
+      window.location.href =
+        "index.html";
+
+      return;
 
     }
 
 
-    return result;
+    /* =====================================
+       CEK ADMIN
+    ===================================== */
 
-  }
+    if (
+      user.role !== "ADMIN"
+    ) {
+
+      alert(
+        "Halaman ini hanya dapat diakses Admin."
+      );
+
+      window.location.href =
+        "index.html";
+
+      return;
+
+    }
 
 
-  /* =====================================
-     LOAD SISWA
-  ===================================== */
+    /* =====================================
+       VARIABEL
+    ===================================== */
 
-  async function loadSiswa() {
+    let semuaSiswa = [];
 
-    try {
-
-      const result =
-        await callAPI({
-          action: "getSiswa"
-        });
+    let modeForm = "tambah";
 
 
-      if (!result.success) {
+    /* =====================================
+       ELEMENT
+    ===================================== */
+
+    const formSiswa =
+      document.getElementById(
+        "formSiswa"
+      );
+
+    const siswaForm =
+      document.getElementById(
+        "siswaForm"
+      );
+
+    const formTitle =
+      document.getElementById(
+        "formTitle"
+      );
+
+    const inputID =
+      document.getElementById(
+        "inputID"
+      );
+
+    const inputNISN =
+      document.getElementById(
+        "inputNISN"
+      );
+
+    const inputNama =
+      document.getElementById(
+        "inputNama"
+      );
+
+    const inputKelas =
+      document.getElementById(
+        "inputKelas"
+      );
+
+    const inputJK =
+      document.getElementById(
+        "inputJK"
+      );
+
+    const inputStatus =
+      document.getElementById(
+        "inputStatus"
+      );
+
+
+    /* =====================================
+       API
+    ===================================== */
+
+    async function callAPI(data) {
+
+      const response =
+        await fetch(
+          API_URL,
+          {
+
+            method: "POST",
+
+            headers: {
+
+              "Content-Type":
+                "text/plain;charset=utf-8"
+
+            },
+
+            body:
+              JSON.stringify(data)
+
+          }
+        );
+
+
+      if (!response.ok) {
 
         throw new Error(
-          result.message ||
-          "Gagal mengambil data siswa."
+          "HTTP " +
+          response.status
         );
 
       }
 
 
-      semuaSiswa =
-        result.data || [];
+      const text =
+        await response.text();
 
 
-      const jumlahSiswa =
-        document.getElementById(
-          "jumlahSiswa"
+      let result;
+
+
+      try {
+
+        result =
+          JSON.parse(text);
+
+      } catch (error) {
+
+        console.error(
+          "Response server:",
+          text
         );
 
-
-      if (jumlahSiswa) {
-
-        jumlahSiswa.textContent =
-          semuaSiswa.length +
-          " siswa";
+        throw new Error(
+          "Server tidak mengirim JSON yang valid."
+        );
 
       }
 
 
-      buatFilterKelas();
+      return result;
 
-      tampilkanSiswa(
-        semuaSiswa
-      );
+    }
 
 
-    } catch (error) {
+    /* =====================================
+       LOAD SISWA
+    ===================================== */
 
-      console.error(
-        "Gagal load siswa:",
-        error
-      );
-
+    async function loadSiswa() {
 
       const table =
         document.getElementById(
@@ -178,14 +208,75 @@ document.addEventListener("DOMContentLoaded", () => {
         );
 
 
-      if (table) {
+      table.innerHTML = `
+
+        <tr>
+
+          <td
+            colspan="8"
+            class="loading"
+          >
+
+            Memuat data siswa...
+
+          </td>
+
+        </tr>
+
+      `;
+
+
+      try {
+
+        const result =
+          await callAPI({
+
+            action:
+              "getSiswa"
+
+          });
+
+
+        if (!result.success) {
+
+          throw new Error(
+            result.message ||
+            "Gagal mengambil data siswa."
+          );
+
+        }
+
+
+        semuaSiswa =
+          result.data || [];
+
+
+        document.getElementById(
+          "jumlahSiswa"
+        ).textContent =
+          semuaSiswa.length +
+          " siswa";
+
+
+        buatFilterKelas();
+
+
+        tampilkanSiswa(
+          semuaSiswa
+        );
+
+
+      } catch (error) {
+
+        console.error(error);
+
 
         table.innerHTML = `
 
           <tr>
 
             <td
-              colspan="7"
+              colspan="8"
               class="empty"
             >
 
@@ -205,321 +296,715 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-  }
 
+    /* =====================================
+       FILTER KELAS
+    ===================================== */
 
-  /* =====================================
-     FILTER KELAS
-  ===================================== */
+    function buatFilterKelas() {
 
-  function buatFilterKelas() {
-
-    const select =
-      document.getElementById(
-        "kelasFilter"
-      );
-
-
-    if (!select) return;
-
-
-    select.innerHTML =
-      '<option value="">Semua Kelas</option>';
-
-
-    const daftarKelas =
-      [
-        ...new Set(
-
-          semuaSiswa
-
-            .map(
-              siswa => siswa.KELAS
-            )
-
-            .filter(Boolean)
-
-        )
-      ];
-
-
-    daftarKelas.sort();
-
-
-    daftarKelas.forEach(
-      kelas => {
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-
-        option.value =
-          kelas;
-
-
-        option.textContent =
-          kelas;
-
-
-        select.appendChild(
-          option
+      const select =
+        document.getElementById(
+          "kelasFilter"
         );
 
-      }
-    );
 
-  }
+      select.innerHTML = `
 
-
-  /* =====================================
-     TAMPILKAN SISWA
-  ===================================== */
-
-  function tampilkanSiswa(data) {
-
-    const table =
-      document.getElementById(
-        "siswaTable"
-      );
-
-
-    if (!table) return;
-
-
-    table.innerHTML = "";
-
-
-    if (data.length === 0) {
-
-      table.innerHTML = `
-
-        <tr>
-
-          <td
-            colspan="7"
-            class="empty"
-          >
-
-            Data siswa tidak ditemukan.
-
-          </td>
-
-        </tr>
+        <option value="">
+          Semua Kelas
+        </option>
 
       `;
 
-      return;
+
+      const daftarKelas =
+        [
+          ...new Set(
+
+            semuaSiswa
+
+              .map(
+                siswa =>
+                  siswa.KELAS
+              )
+
+              .filter(Boolean)
+
+          )
+        ];
+
+
+      daftarKelas.sort();
+
+
+      daftarKelas.forEach(
+        kelas => {
+
+          const option =
+            document.createElement(
+              "option"
+            );
+
+
+          option.value =
+            kelas;
+
+
+          option.textContent =
+            kelas;
+
+
+          select.appendChild(
+            option
+          );
+
+        }
+      );
 
     }
 
 
-    data.forEach(
-      (siswa, index) => {
+    /* =====================================
+       TAMPILKAN SISWA
+    ===================================== */
 
-        const row =
-          document.createElement(
-            "tr"
-          );
+    function tampilkanSiswa(
+      data
+    ) {
+
+      const table =
+        document.getElementById(
+          "siswaTable"
+        );
 
 
-        row.innerHTML = `
+      table.innerHTML = "";
 
-          <td>
-            ${index + 1}
-          </td>
 
-          <td>
-            ${siswa.ID || "-"}
-          </td>
+      if (
+        data.length === 0
+      ) {
 
-          <td>
-            ${siswa.NISN || "-"}
-          </td>
+        table.innerHTML = `
 
-          <td>
-            ${siswa.NAMA || "-"}
-          </td>
+          <tr>
 
-          <td>
-            ${siswa.KELAS || "-"}
-          </td>
+            <td
+              colspan="8"
+              class="empty"
+            >
 
-          <td>
-            ${siswa.JK || "-"}
-          </td>
+              Data siswa tidak ditemukan.
 
-          <td>
+            </td>
 
-            <span class="status-badge">
-
-              ${siswa.STATUS || "-"}
-
-            </span>
-
-          </td>
+          </tr>
 
         `;
 
-
-        table.appendChild(row);
+        return;
 
       }
-    );
-
-  }
 
 
-  /* =====================================
-     FILTER DATA
-  ===================================== */
+      data.forEach(
+        (siswa, index) => {
 
-  function filterData() {
-
-    const searchInput =
-      document.getElementById(
-        "searchInput"
-      );
+          const row =
+            document.createElement(
+              "tr"
+            );
 
 
-    const kelasFilter =
-      document.getElementById(
-        "kelasFilter"
-      );
+          row.innerHTML = `
+
+            <td>
+              ${index + 1}
+            </td>
+
+            <td>
+              ${siswa.ID || "-"}
+            </td>
+
+            <td>
+              ${siswa.NISN || "-"}
+            </td>
+
+            <td>
+              ${siswa.NAMA || "-"}
+            </td>
+
+            <td>
+              ${siswa.KELAS || "-"}
+            </td>
+
+            <td>
+              ${siswa.JK || "-"}
+            </td>
+
+            <td>
+
+              <span class="status-badge">
+
+                ${siswa.STATUS || "-"}
+
+              </span>
+
+            </td>
+
+            <td>
+
+              <button
+                class="edit-button"
+                data-id="${siswa.ID}"
+              >
+                ✏️
+              </button>
+
+              <button
+                class="delete-button"
+                data-id="${siswa.ID}"
+              >
+                🗑️
+              </button>
+
+            </td>
+
+          `;
 
 
-    const keyword =
-      searchInput
-        ? searchInput.value
-            .toLowerCase()
-            .trim()
-        : "";
-
-
-    const kelas =
-      kelasFilter
-        ? kelasFilter.value
-        : "";
-
-
-    const hasil =
-      semuaSiswa.filter(
-        siswa => {
-
-          const cocokKeyword =
-
-            String(
-              siswa.NAMA || ""
-            )
-              .toLowerCase()
-              .includes(keyword)
-
-            ||
-
-            String(
-              siswa.NISN || ""
-            )
-              .toLowerCase()
-              .includes(keyword);
-
-
-          const cocokKelas =
-
-            !kelas ||
-
-            String(
-              siswa.KELAS || ""
-            ) === kelas;
-
-
-          return (
-            cocokKeyword &&
-            cocokKelas
+          table.appendChild(
+            row
           );
 
         }
       );
 
 
-    tampilkanSiswa(hasil);
+      /* EVENT EDIT */
 
-  }
+      document
+        .querySelectorAll(
+          ".edit-button"
+        )
+        .forEach(
+          button => {
 
+            button.addEventListener(
+              "click",
+              () => {
 
-  /* =====================================
-     EVENT SEARCH
-  ===================================== */
+                editSiswa(
+                  button.dataset.id
+                );
 
-  const searchInput =
-    document.getElementById(
-      "searchInput"
-    );
+              }
+            );
 
-
-  if (searchInput) {
-
-    searchInput.addEventListener(
-      "input",
-      filterData
-    );
-
-  }
-
-
-  /* =====================================
-     EVENT KELAS
-  ===================================== */
-
-  const kelasFilter =
-    document.getElementById(
-      "kelasFilter"
-    );
-
-
-  if (kelasFilter) {
-
-    kelasFilter.addEventListener(
-      "change",
-      filterData
-    );
-
-  }
-
-
-  /* =====================================
-     LOGOUT
-  ===================================== */
-
-  const logoutButton =
-    document.getElementById(
-      "logoutButton"
-    );
-
-
-  if (logoutButton) {
-
-    logoutButton.addEventListener(
-      "click",
-      function () {
-
-        localStorage.removeItem(
-          "presensiUser"
+          }
         );
 
-        window.location.href =
-          "index.html";
+
+      /* EVENT DELETE */
+
+      document
+        .querySelectorAll(
+          ".delete-button"
+        )
+        .forEach(
+          button => {
+
+            button.addEventListener(
+              "click",
+              () => {
+
+                hapusSiswa(
+                  button.dataset.id
+                );
+
+              }
+            );
+
+          }
+        );
+
+    }
+
+
+    /* =====================================
+       SEARCH + FILTER
+    ===================================== */
+
+    function filterData() {
+
+      const keyword =
+        document.getElementById(
+          "searchInput"
+        )
+          .value
+          .toLowerCase()
+          .trim();
+
+
+      const kelas =
+        document.getElementById(
+          "kelasFilter"
+        ).value;
+
+
+      const hasil =
+        semuaSiswa.filter(
+          siswa => {
+
+            const cocokKeyword =
+
+              String(
+                siswa.NAMA || ""
+              )
+                .toLowerCase()
+                .includes(
+                  keyword
+                )
+
+              ||
+
+              String(
+                siswa.NISN || ""
+              )
+                .toLowerCase()
+                .includes(
+                  keyword
+                );
+
+
+            const cocokKelas =
+
+              !kelas ||
+
+              String(
+                siswa.KELAS || ""
+              ) === kelas;
+
+
+            return (
+              cocokKeyword &&
+              cocokKelas
+            );
+
+          }
+        );
+
+
+      tampilkanSiswa(
+        hasil
+      );
+
+    }
+
+
+    /* =====================================
+       BUKA FORM TAMBAH
+    ===================================== */
+
+    function bukaFormTambah() {
+
+      modeForm =
+        "tambah";
+
+
+      formTitle.textContent =
+        "Tambah Siswa";
+
+
+      siswaForm.reset();
+
+
+      inputID.disabled =
+        false;
+
+
+      inputStatus.value =
+        "AKTIF";
+
+
+      formSiswa.style.display =
+        "block";
+
+
+      inputID.focus();
+
+    }
+
+
+    /* =====================================
+       BUKA FORM EDIT
+    ===================================== */
+
+    function editSiswa(id) {
+
+      const siswa =
+        semuaSiswa.find(
+          item =>
+            String(item.ID) ===
+            String(id)
+        );
+
+
+      if (!siswa) {
+
+        alert(
+          "Data siswa tidak ditemukan."
+        );
+
+        return;
+
+      }
+
+
+      modeForm =
+        "edit";
+
+
+      formTitle.textContent =
+        "Edit Siswa";
+
+
+      inputID.value =
+        siswa.ID || "";
+
+
+      inputNISN.value =
+        siswa.NISN || "";
+
+
+      inputNama.value =
+        siswa.NAMA || "";
+
+
+      inputKelas.value =
+        siswa.KELAS || "";
+
+
+      inputJK.value =
+        siswa.JK || "";
+
+
+      inputStatus.value =
+        siswa.STATUS || "AKTIF";
+
+
+      inputID.disabled =
+        true;
+
+
+      formSiswa.style.display =
+        "block";
+
+
+      inputNISN.focus();
+
+    }
+
+
+    /* =====================================
+       SIMPAN SISWA
+    ===================================== */
+
+    siswaForm.addEventListener(
+      "submit",
+      async event => {
+
+        event.preventDefault();
+
+
+        const data = {
+
+          action:
+            modeForm === "tambah"
+              ? "tambahSiswa"
+              : "updateSiswa",
+
+          id:
+            inputID.value.trim(),
+
+          nisn:
+            inputNISN.value.trim(),
+
+          nama:
+            inputNama.value.trim(),
+
+          kelas:
+            inputKelas.value.trim(),
+
+          jk:
+            inputJK.value,
+
+          status:
+            inputStatus.value
+
+        };
+
+
+        if (
+          !data.id ||
+          !data.nisn ||
+          !data.nama ||
+          !data.kelas ||
+          !data.jk ||
+          !data.status
+        ) {
+
+          alert(
+            "Semua data wajib diisi."
+          );
+
+          return;
+
+        }
+
+
+        const submitButton =
+          siswaForm.querySelector(
+            'button[type="submit"]'
+          );
+
+
+        submitButton.disabled =
+          true;
+
+
+        submitButton.textContent =
+          "Menyimpan...";
+
+
+        try {
+
+          const result =
+            await callAPI(data);
+
+
+          if (!result.success) {
+
+            throw new Error(
+              result.message ||
+              "Gagal menyimpan data."
+            );
+
+          }
+
+
+          alert(
+            result.message
+          );
+
+
+          tutupForm();
+
+
+          await loadSiswa();
+
+
+        } catch (error) {
+
+          console.error(error);
+
+
+          alert(
+            "Gagal: " +
+            error.message
+          );
+
+
+        } finally {
+
+          submitButton.disabled =
+            false;
+
+          submitButton.textContent =
+            "Simpan";
+
+        }
 
       }
     );
 
+
+    /* =====================================
+       HAPUS SISWA
+    ===================================== */
+
+    async function hapusSiswa(id) {
+
+      const siswa =
+        semuaSiswa.find(
+          item =>
+            String(item.ID) ===
+            String(id)
+        );
+
+
+      if (!siswa) return;
+
+
+      const yakin =
+        confirm(
+          "Hapus siswa berikut?\n\n" +
+          siswa.NAMA +
+          " (" +
+          siswa.ID +
+          ")\n\n" +
+          "Data yang dihapus tidak dapat dikembalikan."
+        );
+
+
+      if (!yakin) return;
+
+
+      try {
+
+        const result =
+          await callAPI({
+
+            action:
+              "hapusSiswa",
+
+            id:
+              id
+
+          });
+
+
+        if (!result.success) {
+
+          throw new Error(
+            result.message ||
+            "Gagal menghapus siswa."
+          );
+
+        }
+
+
+        alert(
+          result.message
+        );
+
+
+        await loadSiswa();
+
+
+      } catch (error) {
+
+        console.error(error);
+
+
+        alert(
+          "Gagal menghapus: " +
+          error.message
+        );
+
+      }
+
+    }
+
+
+    /* =====================================
+       TUTUP FORM
+    ===================================== */
+
+    function tutupForm() {
+
+      formSiswa.style.display =
+        "none";
+
+
+      siswaForm.reset();
+
+
+      inputID.disabled =
+        false;
+
+    }
+
+
+    /* =====================================
+       EVENT
+    ===================================== */
+
+    document
+      .getElementById(
+        "searchInput"
+      )
+      .addEventListener(
+        "input",
+        filterData
+      );
+
+
+    document
+      .getElementById(
+        "kelasFilter"
+      )
+      .addEventListener(
+        "change",
+        filterData
+      );
+
+
+    document
+      .getElementById(
+        "tambahButton"
+      )
+      .addEventListener(
+        "click",
+        bukaFormTambah
+      );
+
+
+    document
+      .getElementById(
+        "cancelButton"
+      )
+      .addEventListener(
+        "click",
+        tutupForm
+      );
+
+
+    document
+      .getElementById(
+        "refreshButton"
+      )
+      .addEventListener(
+        "click",
+        loadSiswa
+      );
+
+
+    document
+      .getElementById(
+        "logoutButton"
+      )
+      .addEventListener(
+        "click",
+        () => {
+
+          localStorage.removeItem(
+            "presensiUser"
+          );
+
+          window.location.href =
+            "index.html";
+
+        }
+      );
+
+
+    /* =====================================
+       MULAI
+    ===================================== */
+
+    loadSiswa();
+
   }
-
-
-  /* =====================================
-     MULAI
-  ===================================== */
-
-  loadSiswa();
-
-});
+);
