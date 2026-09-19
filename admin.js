@@ -3,14 +3,10 @@ const API_URL =
 
 
 /*
- * ============================
+ * ==========================================
  * CEK LOGIN
- * ============================
+ * ==========================================
  */
-
-const userData =
-  localStorage.getItem("presensiUser");
-
 
 const userData =
   localStorage.getItem("presensiUser");
@@ -21,62 +17,32 @@ if (!userData) {
   window.location.href =
     "index.html";
 
-} else {
-
-  try {
-
-    const user =
-      JSON.parse(userData);
-
-    if (user.role !== "ADMIN") {
-
-      alert(
-        "Anda tidak mempunyai akses ke halaman Admin."
-      );
-
-      localStorage.removeItem(
-        "presensiUser"
-      );
-
-      window.location.href =
-        "index.html";
-
-    } else {
-
-      document.getElementById(
-        "adminName"
-      ).textContent =
-        "Login sebagai: " +
-        (user.username || "Admin");
-
-      loadDashboard();
-
-    }
-
-  } catch (error) {
-
-    console.error(error);
-
-    localStorage.removeItem(
-      "presensiUser"
-    );
-
-    window.location.href =
-      "index.html";
-
-  }
-
 }
 
 
 /*
- * Pastikan yang masuk adalah ADMIN
+ * ==========================================
+ * BACA DATA USER
+ * ==========================================
  */
 
-if (user.role !== "ADMIN") {
+let user;
 
-  alert(
-    "Anda tidak mempunyai akses ke halaman Admin."
+try {
+
+  user =
+    JSON.parse(userData);
+
+}
+catch (error) {
+
+  console.error(
+    "Data login tidak valid:",
+    error
+  );
+
+  localStorage.removeItem(
+    "presensiUser"
   );
 
   window.location.href =
@@ -86,47 +52,100 @@ if (user.role !== "ADMIN") {
 
 
 /*
- * Tampilkan nama admin
+ * ==========================================
+ * CEK ROLE ADMIN
+ * ==========================================
  */
 
-document.getElementById(
-  "adminName"
-).textContent =
-  "Login sebagai: " + user.username;
+if (!user || user.role !== "ADMIN") {
 
+  alert(
+    "Anda tidak mempunyai akses ke halaman Admin."
+  );
 
-/*
- * ============================
- * AMBIL DATA API
- * ============================
- */
+  localStorage.removeItem(
+    "presensiUser"
+  );
 
-async function callAPI(data) {
-
-  const response =
-    await fetch(API_URL, {
-
-      method: "POST",
-
-      headers: {
-        "Content-Type":
-          "text/plain;charset=utf-8"
-      },
-
-      body: JSON.stringify(data)
-
-    });
-
-
-  return await response.json();
+  window.location.href =
+    "index.html";
 
 }
 
 
 /*
- * ============================
- * LOAD DATA
- * ============================
+ * ==========================================
+ * TAMPILKAN NAMA ADMIN
+ * ==========================================
+ */
+
+const adminName =
+  document.getElementById(
+    "adminName"
+  );
+
+
+if (adminName) {
+
+  adminName.textContent =
+    "Login sebagai: " +
+    (user.username || "Admin");
+
+}
+
+
+/*
+ * ==========================================
+ * FUNGSI API
+ * ==========================================
+ */
+
+async function callAPI(data) {
+
+  const response =
+    await fetch(
+      API_URL,
+      {
+
+        method: "POST",
+
+        headers: {
+
+          "Content-Type":
+            "text/plain;charset=utf-8"
+
+        },
+
+        body:
+          JSON.stringify(data)
+
+      }
+    );
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      "HTTP Error: " +
+      response.status
+    );
+
+  }
+
+
+  const result =
+    await response.json();
+
+
+  return result;
+
+}
+
+
+/*
+ * ==========================================
+ * LOAD DASHBOARD
+ * ==========================================
  */
 
 async function loadDashboard() {
@@ -134,82 +153,132 @@ async function loadDashboard() {
   try {
 
     /*
-     * Ambil siswa
+     * ==============================
+     * TOTAL SISWA
+     * ==============================
      */
 
     const siswaResult =
       await callAPI({
 
-        action: "getSiswa"
+        action:
+          "getSiswa"
 
       });
 
 
-    if (siswaResult.success) {
+    console.log(
+      "Hasil getSiswa:",
+      siswaResult
+    );
 
-      document.getElementById(
-        "totalSiswa"
-      ).textContent =
-        siswaResult.jumlah;
+
+    if (
+      siswaResult.success
+    ) {
+
+      const totalSiswa =
+        document.getElementById(
+          "totalSiswa"
+        );
+
+
+      if (totalSiswa) {
+
+        totalSiswa.textContent =
+          siswaResult.jumlah || 0;
+
+      }
 
     }
 
 
     /*
-     * Ambil kelas
+     * ==============================
+     * TOTAL KELAS
+     * ==============================
      */
 
     const kelasResult =
       await callAPI({
 
-        action: "getKelas"
+        action:
+          "getKelas"
 
       });
 
 
-    if (kelasResult.success) {
+    console.log(
+      "Hasil getKelas:",
+      kelasResult
+    );
 
-      document.getElementById(
-        "totalKelas"
-      ).textContent =
-        kelasResult.jumlah;
+
+    if (
+      kelasResult.success
+    ) {
+
+      const totalKelas =
+        document.getElementById(
+          "totalKelas"
+        );
+
+
+      if (totalKelas) {
+
+        totalKelas.textContent =
+          kelasResult.jumlah || 0;
+
+      }
 
     }
 
 
     /*
-     * Guru dihitung dari data
-     * kelas / nanti kita buat API guru.
-     *
-     * Untuk sementara:
-     * ambil data guru langsung
+     * ==============================
+     * TOTAL GURU
+     * ==============================
      */
 
     const guruResult =
       await getGuru();
 
 
-    document.getElementById(
-      "totalGuru"
-    ).textContent =
-      guruResult;
+    const totalGuru =
+      document.getElementById(
+        "totalGuru"
+      );
+
+
+    if (totalGuru) {
+
+      totalGuru.textContent =
+        guruResult;
+
+    }
 
 
     /*
-     * Ambil presensi hari ini
+     * ==============================
+     * PRESENSI HARI INI
+     * ==============================
      */
 
     await loadPresensiHariIni();
 
 
   }
-
   catch (error) {
 
-    console.error(error);
+    console.error(
+      "ERROR DASHBOARD:",
+      error
+    );
+
 
     alert(
-      "Gagal mengambil data dashboard."
+      "Gagal mengambil data dashboard.\n\n" +
+      error.message
     );
 
   }
@@ -218,165 +287,294 @@ async function loadDashboard() {
 
 
 /*
- * ============================
- * GET GURU
- * ============================
+ * ==========================================
+ * HITUNG GURU
+ * ==========================================
  */
 
 async function getGuru() {
 
-  /*
-   * Versi sementara menggunakan
-   * jumlah ID_GURU unik dari kelas.
-   *
-   * Nanti kita buat API guru
-   * khusus untuk halaman Guru.
-   */
+  try {
 
-  const kelasResult =
-    await callAPI({
+    const kelasResult =
+      await callAPI({
 
-      action: "getKelas"
+        action:
+          "getKelas"
 
-    });
+      });
 
 
-  if (
-    !kelasResult.success
-  ) {
+    if (
+      !kelasResult.success ||
+      !Array.isArray(
+        kelasResult.data
+      )
+    ) {
+
+      return 0;
+
+    }
+
+
+    const guruIds =
+      kelasResult.data
+
+        .map(
+          kelas =>
+            kelas.ID_GURU
+        )
+
+        .filter(
+          id =>
+            id !== "" &&
+            id !== null &&
+            id !== undefined
+        );
+
+
+    const guruUnik =
+      [
+        ...new Set(guruIds)
+      ];
+
+
+    return guruUnik.length;
+
+
+  }
+  catch (error) {
+
+    console.error(
+      "Gagal menghitung guru:",
+      error
+    );
 
     return 0;
 
   }
 
+}
 
-  const guruIds =
-    kelasResult.data
 
-      .map(
-        kelas => kelas.ID_GURU
-      )
+/*
+ * ==========================================
+ * PRESENSI HARI INI
+ * ==========================================
+ */
 
-      .filter(
-        id => id
+async function loadPresensiHariIni() {
+
+  try {
+
+    const today =
+      new Date()
+        .toLocaleDateString(
+          "en-CA",
+          {
+            timeZone:
+              "Asia/Jakarta"
+          }
+        );
+
+
+    console.log(
+      "Tanggal presensi:",
+      today
+    );
+
+
+    const result =
+      await callAPI({
+
+        action:
+          "getRekap",
+
+        tanggal:
+          today
+
+      });
+
+
+    console.log(
+      "Hasil getRekap:",
+      result
+    );
+
+
+    if (!result.success) {
+
+      console.warn(
+        "getRekap gagal:",
+        result.message
+      );
+
+      return;
+
+    }
+
+
+    /*
+     * TOTAL PRESENSI
+     */
+
+    const totalPresensi =
+      document.getElementById(
+        "totalPresensi"
       );
 
 
-  return [
-    ...new Set(guruIds)
-  ].length;
+    if (totalPresensi) {
+
+      totalPresensi.textContent =
+        result.jumlah || 0;
+
+    }
+
+
+    /*
+     * TABEL PRESENSI
+     */
+
+    const table =
+      document.getElementById(
+        "presensiTable"
+      );
+
+
+    if (!table) {
+
+      return;
+
+    }
+
+
+    table.innerHTML = "";
+
+
+    /*
+     * BELUM ADA DATA
+     */
+
+    if (
+      !Array.isArray(
+        result.data
+      ) ||
+      result.data.length === 0
+    ) {
+
+      table.innerHTML = `
+
+        <tr>
+
+          <td
+            colspan="5"
+            class="empty"
+          >
+
+            Belum ada presensi hari ini.
+
+          </td>
+
+        </tr>
+
+      `;
+
+      return;
+
+    }
+
+
+    /*
+     * TAMPILKAN DATA
+     */
+
+    result.data.forEach(
+      (item, index) => {
+
+        const row =
+          document.createElement(
+            "tr"
+          );
+
+
+        row.innerHTML = `
+
+          <td>
+            ${index + 1}
+          </td>
+
+          <td>
+            ${item.NAMA || "-"}
+          </td>
+
+          <td>
+            ${item.KELAS || "-"}
+          </td>
+
+          <td>
+            ${item.JAM || "-"}
+          </td>
+
+          <td>
+
+            <span class="status-badge">
+
+              ${item.STATUS || "-"}
+
+            </span>
+
+          </td>
+
+        `;
+
+
+        table.appendChild(
+          row
+        );
+
+      }
+    );
+
+
+  }
+  catch (error) {
+
+    console.error(
+      "ERROR PRESENSI:",
+      error
+    );
+
+  }
 
 }
 
 
 /*
- * ============================
- * PRESENSI HARI INI
- * ============================
+ * ==========================================
+ * LOGOUT
+ * ==========================================
  */
 
-async function loadPresensiHariIni() {
+const logoutButton =
+  document.getElementById(
+    "logoutButton"
+  );
 
-  const today =
-    new Date()
-      .toLocaleDateString(
-        "en-CA",
-        {
-          timeZone:
-            "Asia/Jakarta"
-        }
+
+if (logoutButton) {
+
+  logoutButton.addEventListener(
+    "click",
+    function () {
+
+      localStorage.removeItem(
+        "presensiUser"
       );
 
 
-  const result =
-    await callAPI({
-
-      action: "getRekap",
-
-      tanggal: today
-
-    });
-
-
-  if (!result.success) {
-
-    return;
-
-  }
-
-
-  document.getElementById(
-    "totalPresensi"
-  ).textContent =
-    result.jumlah;
-
-
-  const table =
-    document.getElementById(
-      "presensiTable"
-    );
-
-
-  table.innerHTML = "";
-
-
-  if (result.data.length === 0) {
-
-    table.innerHTML = `
-
-      <tr>
-
-        <td
-          colspan="5"
-          class="empty"
-        >
-          Belum ada presensi hari ini.
-        </td>
-
-      </tr>
-
-    `;
-
-    return;
-
-  }
-
-
-  result.data.forEach(
-    (item, index) => {
-
-      const row =
-        document.createElement("tr");
-
-
-      row.innerHTML = `
-
-        <td>
-          ${index + 1}
-        </td>
-
-        <td>
-          ${item.NAMA || "-"}
-        </td>
-
-        <td>
-          ${item.KELAS || "-"}
-        </td>
-
-        <td>
-          ${item.JAM || "-"}
-        </td>
-
-        <td>
-          <span class="status-badge">
-            ${item.STATUS || "-"}
-          </span>
-        </td>
-
-      `;
-
-
-      table.appendChild(row);
+      window.location.href =
+        "index.html";
 
     }
   );
@@ -385,32 +583,9 @@ async function loadPresensiHariIni() {
 
 
 /*
- * ============================
- * LOGOUT
- * ============================
- */
-
-document.getElementById(
-  "logoutButton"
-).addEventListener(
-  "click",
-  function () {
-
-    localStorage.removeItem(
-      "presensiUser"
-    );
-
-    window.location.href =
-      "index.html";
-
-  }
-);
-
-
-/*
- * ============================
+ * ==========================================
  * JALANKAN DASHBOARD
- * ============================
+ * ==========================================
  */
 
 loadDashboard();
