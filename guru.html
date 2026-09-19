@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Guru - Presensi</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="crud-style.css">
+</head>
+<body class="dashboard-body">
+<header class="topbar">
+  <div>
+    <h1>Presensi Sekolah</h1>
+    <span>SD Negeri Jatiwaringin XIII</span>
+  </div>
+  <div class="topbar-actions">
+    <button class="secondary-button" onclick="location.href='admin.html'">Dashboard</button>
+    <button id="logoutButton" class="logout-button">Logout</button>
+  </div>
+</header>
+
+<main class="dashboard-container">
+  <section class="welcome">
+    <h2>Data Guru</h2>
+    <p id="guruCount">Memuat data...</p>
+  </section>
+
+  <section class="panel">
+    <div class="page-actions">
+      <button id="addButton" class="primary-button">+ Tambah Guru</button>
+      <button id="refreshButton" class="secondary-button">↻ Refresh</button>
+    </div>
+
+    <div class="filter-row">
+      <input id="searchInput" type="search" placeholder="Cari nama atau NIP...">
+      <select id="statusFilter">
+        <option value="">Semua Status</option>
+        <option value="AKTIF">AKTIF</option>
+        <option value="NONAKTIF">NONAKTIF</option>
+      </select>
+    </div>
+
+    <form id="guruForm" class="crud-form hidden">
+      <input type="hidden" id="editMode" value="tambah">
+      <div class="form-grid">
+        <div>
+          <label for="idGuru">ID Guru</label>
+          <input id="idGuru" required placeholder="Contoh: G002">
+        </div>
+        <div>
+          <label for="nip">NIP</label>
+          <input id="nip" required placeholder="NIP">
+        </div>
+        <div>
+          <label for="nama">Nama</label>
+          <input id="nama" required placeholder="Nama lengkap">
+        </div>
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="guru@sekolah.sch.id">
+        </div>
+        <div>
+          <label for="status">Status</label>
+          <select id="status" required>
+            <option value="AKTIF">AKTIF</option>
+            <option value="NONAKTIF">NONAKTIF</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="primary-button">Simpan</button>
+        <button type="button" id="cancelButton" class="secondary-button">Batal</button>
+      </div>
+    </form>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>No</th><th>ID Guru</th><th>NIP</th><th>Nama</th><th>Email</th><th>Status</th><th>Aksi</th></tr>
+        </thead>
+        <tbody id="guruTable">
+          <tr><td colspan="7" class="loading">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script src="./guru.js"></script>
+</body>
+</html>
