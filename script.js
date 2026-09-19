@@ -209,15 +209,15 @@ loginForm.addEventListener(
 
 
       if (
-        result.user.role === "GURU"
-      ) {
+  result.user.role === "GURU"
+) {
 
-        window.location.href =
-          "guru.html";
+  window.location.href =
+    "presensi.html";
 
-        return;
+  return;
 
-      }
+}
 
 
       message.textContent =
