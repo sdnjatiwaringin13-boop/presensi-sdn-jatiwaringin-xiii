@@ -46,46 +46,121 @@ loginForm.addEventListener(
     loginButton.textContent =
       "MEMPROSES...";
 
-    message.textContent = "";
+    message.textContent =
+      "Menghubungkan ke server...";
 
 
     try {
 
+      console.log(
+        "Mengirim login ke:",
+        API_URL
+      );
+
+
       const response =
-        await fetch(API_URL, {
+        await fetch(
+          API_URL,
+          {
 
-          method: "POST",
+            method: "POST",
 
-          headers: {
-            "Content-Type":
-              "text/plain;charset=utf-8"
-          },
+            headers: {
 
-          body: JSON.stringify({
+              "Content-Type":
+                "text/plain;charset=utf-8"
 
-            action: "login",
+            },
 
-            username: username,
+            body:
+              JSON.stringify({
 
-            password: password
+                action: "login",
 
-          })
+                username: username,
 
-        });
+                password: password
+
+              })
+
+          }
+        );
 
 
-      const result =
-        await response.json();
+      console.log(
+        "HTTP Status:",
+        response.status
+      );
 
 
-      console.log(result);
+      /*
+       * Ambil sebagai TEXT dahulu
+       * supaya kita bisa melihat
+       * respons asli Apps Script.
+       */
 
+      const responseText =
+        await response.text();
+
+
+      console.log(
+        "Response dari Apps Script:",
+        responseText
+      );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          "HTTP " +
+          response.status +
+          ": " +
+          responseText
+        );
+
+      }
+
+
+      let result;
+
+
+      try {
+
+        result =
+          JSON.parse(
+            responseText
+          );
+
+      }
+      catch (jsonError) {
+
+        console.error(
+          "Response bukan JSON:",
+          responseText
+        );
+
+        throw new Error(
+          "Server tidak mengembalikan JSON."
+        );
+
+      }
+
+
+      console.log(
+        "Hasil login:",
+        result
+      );
+
+
+      /*
+       * LOGIN GAGAL
+       */
 
       if (!result.success) {
 
         message.textContent =
           result.message ||
-          "Login gagal.";
+          "Username atau password salah.";
 
         return;
 
@@ -93,12 +168,27 @@ loginForm.addEventListener(
 
 
       /*
-       * Simpan data login
+       * LOGIN BERHASIL
+       */
+
+      if (!result.user) {
+
+        throw new Error(
+          "Server tidak mengirim data user."
+        );
+
+      }
+
+
+      /*
+       * Simpan data user
        */
 
       localStorage.setItem(
         "presensiUser",
-        JSON.stringify(result.user)
+        JSON.stringify(
+          result.user
+        )
       );
 
 
@@ -113,36 +203,42 @@ loginForm.addEventListener(
         window.location.href =
           "admin.html";
 
+        return;
+
       }
 
-      else if (
+
+      if (
         result.user.role === "GURU"
       ) {
 
         window.location.href =
           "guru.html";
 
-      }
-
-      else {
-
-        message.textContent =
-          "Role pengguna tidak dikenali.";
+        return;
 
       }
 
-
-    }
-
-    catch (error) {
-
-      console.error(error);
 
       message.textContent =
-        "Tidak dapat terhubung ke server.";
+        "Role pengguna tidak dikenali: " +
+        result.user.role;
+
 
     }
+    catch (error) {
 
+      console.error(
+        "LOGIN ERROR:",
+        error
+      );
+
+
+      message.textContent =
+        "Gagal terhubung ke server: " +
+        error.message;
+
+    }
     finally {
 
       loginButton.disabled = false;
