@@ -347,7 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </td>
 
           <td>
-            ${siswa.JENIS_KELAMIN || "-"}
+            ${siswa.JK || "-"}
           </td>
 
           <td>
