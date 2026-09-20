@@ -4,6 +4,8 @@ const API_URL =
 
 let currentUser = null;
 
+let laporanData = null;
+
 
 const namaBulan = [
   "",
@@ -259,8 +261,24 @@ async function buatLaporan() {
     }
 
 
+    /*
+     * SIMPAN DATA LAPORAN
+     * supaya bisa digunakan
+     * untuk Download Excel
+     */
+
+    laporanData =
+      result.data;
+
+
     renderLaporan(
       result.data
+    );
+
+
+    showMessage(
+      "Laporan berhasil dibuat.",
+      "success"
     );
 
 
@@ -389,7 +407,6 @@ function buatHeader(
       >
         Nama Siswa
       </th>
-
   `;
 
 
@@ -442,11 +459,14 @@ function buatBody(
 
     body.innerHTML = `
       <tr>
+
         <td
           colspan="${jumlahHari + 2}"
         >
           Tidak ada siswa.
+
         </td>
+
       </tr>
     `;
 
@@ -504,6 +524,565 @@ function buatBody(
 
     }
   );
+
+}
+
+
+/* =====================================================
+   DOWNLOAD EXCEL
+===================================================== */
+
+function downloadExcel() {
+
+  if (!laporanData) {
+
+    alert(
+      "Silakan tampilkan laporan terlebih dahulu."
+    );
+
+    return;
+
+  }
+
+
+  const data =
+    laporanData;
+
+
+  /*
+   * Pastikan library XLSX tersedia
+   */
+
+  if (
+    typeof XLSX ===
+    "undefined"
+  ) {
+
+    alert(
+      "Library Excel belum dimuat. Silakan periksa koneksi internet atau script XLSX pada HTML."
+    );
+
+    return;
+
+  }
+
+
+  const jumlahHari =
+    Number(
+      data.jumlahHari
+    );
+
+
+  const namaSekolah =
+    data.sekolah.nama ||
+    "SD NEGERI JATIWARINGIN XIII";
+
+
+  const namaKelas =
+    data.kelas.nama ||
+    "-";
+
+
+  const namaWali =
+    data.guru.nama ||
+    "-";
+
+
+  const nipWali =
+    data.guru.nip ||
+    "-";
+
+
+  const namaKepala =
+    data.kepalaSekolah.nama ||
+    "-";
+
+
+  const nipKepala =
+    data.kepalaSekolah.nip ||
+    "-";
+
+
+  const periode =
+    namaBulan[data.bulan] +
+    " " +
+    data.tahun;
+
+
+  /*
+   * ================================================
+   * DATA EXCEL
+   * ================================================
+   */
+
+  const rows = [];
+
+
+  rows.push([
+    "DAFTAR ABSENSI SISWA"
+  ]);
+
+
+  rows.push([
+    namaSekolah
+  ]);
+
+
+  rows.push([]);
+
+
+  rows.push([
+    "Kelas",
+    namaKelas
+  ]);
+
+
+  rows.push([
+    "Wali Kelas",
+    namaWali
+  ]);
+
+
+  rows.push([
+    "NIP Wali Kelas",
+    nipWali
+  ]);
+
+
+  rows.push([
+    "Bulan",
+    periode
+  ]);
+
+
+  rows.push([]);
+
+
+  /*
+   * HEADER TABEL
+   */
+
+  const header = [
+    "No",
+    "Nama Siswa"
+  ];
+
+
+  for (
+    let d = 1;
+    d <= jumlahHari;
+    d++
+  ) {
+
+    header.push(
+      String(d)
+    );
+
+  }
+
+
+  rows.push(header);
+
+
+  /*
+   * DATA SISWA
+   */
+
+  if (
+    data.siswa &&
+    data.siswa.length > 0
+  ) {
+
+    data.siswa.forEach(
+      function (
+        siswa,
+        index
+      ) {
+
+        const row = [
+          index + 1,
+          siswa.nama || ""
+        ];
+
+
+        for (
+          let d = 1;
+          d <= jumlahHari;
+          d++
+        ) {
+
+          row.push(
+            siswa.hari[d] || ""
+          );
+
+        }
+
+
+        rows.push(row);
+
+      }
+    );
+
+  } else {
+
+    const row = [
+      "",
+      "Tidak ada siswa"
+    ];
+
+
+    for (
+      let d = 1;
+      d <= jumlahHari;
+      d++
+    ) {
+
+      row.push("");
+
+    }
+
+
+    rows.push(row);
+
+  }
+
+
+  /*
+   * KETERANGAN
+   */
+
+  rows.push([]);
+
+  rows.push([
+    "Keterangan",
+    "H = Hadir, I = Izin, S = Sakit, A = Alpa"
+  ]);
+
+
+  rows.push([]);
+
+
+  /*
+   * TANDA TANGAN
+   */
+
+  rows.push([
+    "Kepala Sekolah",
+    "",
+    "",
+    "Wali Kelas"
+  ]);
+
+
+  rows.push([]);
+
+
+  rows.push([
+    namaKepala,
+    "",
+    "",
+    namaWali
+  ]);
+
+
+  rows.push([
+    "NIP. " + nipKepala,
+    "",
+    "",
+    "NIP. " + nipWali
+  ]);
+
+
+  /*
+   * ================================================
+   * BUAT WORKSHEET
+   * ================================================
+   */
+
+  const worksheet =
+    XLSX.utils.aoa_to_sheet(
+      rows
+    );
+
+
+  /*
+   * ================================================
+   * LEBAR KOLOM
+   * ================================================
+   */
+
+  const widths = [];
+
+
+  widths.push({
+    wch: 6
+  });
+
+
+  widths.push({
+    wch: 30
+  });
+
+
+  for (
+    let d = 1;
+    d <= jumlahHari;
+    d++
+  ) {
+
+    widths.push({
+      wch: 5
+    });
+
+  }
+
+
+  worksheet["!cols"] =
+    widths;
+
+
+  /*
+   * ================================================
+   * MERGE JUDUL
+   * ================================================
+   */
+
+  worksheet["!merges"] = [
+
+    {
+      s: {
+        r: 0,
+        c: 0
+      },
+
+      e: {
+        r: 0,
+        c: jumlahHari + 1
+      }
+    },
+
+    {
+      s: {
+        r: 1,
+        c: 0
+      },
+
+      e: {
+        r: 1,
+        c: jumlahHari + 1
+      }
+    }
+
+  ];
+
+
+  /*
+   * ================================================
+   * FORMAT HEADER
+   * ================================================
+   */
+
+  const headerRow =
+    8;
+
+
+  for (
+    let c = 0;
+    c <= jumlahHari + 1;
+    c++
+  ) {
+
+    const cell =
+      XLSX.utils.encode_cell({
+        r: headerRow,
+        c: c
+      });
+
+
+    if (
+      worksheet[cell]
+    ) {
+
+      worksheet[cell].s = {
+
+        font: {
+          bold: true
+        },
+
+        alignment: {
+          horizontal:
+            "center",
+          vertical:
+            "center"
+        },
+
+        border: {
+
+          top: {
+            style: "thin"
+          },
+
+          bottom: {
+            style: "thin"
+          },
+
+          left: {
+            style: "thin"
+          },
+
+          right: {
+            style: "thin"
+          }
+
+        }
+
+      };
+
+    }
+
+  }
+
+
+  /*
+   * ================================================
+   * BORDER DATA
+   * ================================================
+   */
+
+  for (
+    let r = headerRow + 1;
+    r < rows.length;
+    r++
+  ) {
+
+    for (
+      let c = 0;
+      c <= jumlahHari + 1;
+      c++
+    ) {
+
+      const cell =
+        XLSX.utils.encode_cell({
+          r: r,
+          c: c
+        });
+
+
+      if (
+        worksheet[cell]
+      ) {
+
+        worksheet[cell].s = {
+
+          border: {
+
+            top: {
+              style: "thin"
+            },
+
+            bottom: {
+              style: "thin"
+            },
+
+            left: {
+              style: "thin"
+            },
+
+            right: {
+              style: "thin"
+            }
+
+          },
+
+          alignment: {
+
+            horizontal:
+              c === 1
+                ? "left"
+                : "center",
+
+            vertical:
+              "center"
+
+          }
+
+        };
+
+      }
+
+    }
+
+  }
+
+
+  /*
+   * ================================================
+   * BUAT WORKBOOK
+   * ================================================
+   */
+
+  const workbook =
+    XLSX.utils.book_new();
+
+
+  XLSX.utils.book_append_sheet(
+    workbook,
+    worksheet,
+    "Absensi Bulanan"
+  );
+
+
+  /*
+   * ================================================
+   * NAMA FILE
+   * ================================================
+   */
+
+  const namaFile =
+    "Absensi_" +
+    sanitasiNamaFile(
+      namaKelas
+    ) +
+    "_" +
+    namaBulan[data.bulan] +
+    "_" +
+    data.tahun +
+    ".xlsx";
+
+
+  /*
+   * ================================================
+   * DOWNLOAD
+   * ================================================
+   */
+
+  XLSX.writeFile(
+    workbook,
+    namaFile
+  );
+
+}
+
+
+/* =====================================================
+   SANITASI NAMA FILE
+===================================================== */
+
+function sanitasiNamaFile(
+  nama
+) {
+
+  return String(
+    nama || "Kelas"
+  )
+    .replace(
+      /[\\/:*?"<>|]/g,
+      "_"
+    )
+    .replace(
+      /\s+/g,
+      "_"
+    );
 
 }
 
