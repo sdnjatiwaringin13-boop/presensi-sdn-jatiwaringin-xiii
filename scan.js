@@ -1,1276 +1,788 @@
-/*******************************************************
- * SCAN QR PRESENSI SISWA
- * SD NEGERI JATIWARINGIN XIII
- *******************************************************/
+<!DOCTYPE html>
+<html lang="id">
 
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
+<head>
 
+  <meta charset="UTF-8">
 
-/* =====================================================
-   VARIABEL GLOBAL
-===================================================== */
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-let semuaSiswa = [];
-
-let scanner = null;
-
-let sedangMemproses = false;
-
-let kameraAktif = false;
-
-let userLogin = null;
-
-let idGuruLogin = "";
+  <title>
+    Scan QR - Presensi Siswa
+  </title>
 
 
-/* =====================================================
-   SAAT HALAMAN DIBUKA
-===================================================== */
+  <style>
 
-document.addEventListener(
-  "DOMContentLoaded",
-  async function () {
-
-    await init();
-
-  }
-);
-
-
-/* =====================================================
-   AMBIL DATA GURU YANG LOGIN
-===================================================== */
-
-function ambilDataGuru() {
-
-  try {
-
-    const dataUser =
-      localStorage.getItem(
-        "presensiUser"
-      );
-
-
-    if (!dataUser) {
-
-      throw new Error(
-        "Data login tidak ditemukan."
-      );
-
+    * {
+      box-sizing: border-box;
     }
 
 
-    userLogin =
-      JSON.parse(dataUser);
+    body {
 
+      margin: 0;
 
-    if (!userLogin) {
+      min-height: 100vh;
 
-      throw new Error(
-        "Data login tidak valid."
-      );
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
-    }
+      background:
+        #f1f5f9;
 
-
-    const role =
-      String(
-        userLogin.role || ""
-      )
-      .trim()
-      .toUpperCase();
-
-
-    if (role !== "GURU") {
-
-      throw new Error(
-        "Halaman scan QR hanya dapat digunakan oleh GURU."
-      );
+      color:
+        #1f2937;
 
     }
-
-
-    idGuruLogin =
-      String(
-        userLogin.idGuru || ""
-      ).trim();
-
-
-    if (!idGuruLogin) {
-
-      throw new Error(
-        "ID Guru tidak ditemukan pada akun yang sedang login."
-      );
-
-    }
-
-
-    console.log(
-      "================================="
-    );
-
-    console.log(
-      "USER LOGIN"
-    );
-
-    console.log(
-      userLogin
-    );
-
-    console.log(
-      "ID GURU:",
-      idGuruLogin
-    );
-
-    console.log(
-      "================================="
-    );
-
-
-    return true;
-
-
-  } catch (error) {
-
-    console.error(
-      "Gagal mengambil data guru:",
-      error
-    );
-
-
-    tampilkanError(
-      "Data guru tidak ditemukan.<br><br>" +
-      escapeHTML(error.message) +
-      "<br><br>" +
-      "Silakan login kembali."
-    );
-
-
-    return false;
-
-  }
-
-}
-
-
-/* =====================================================
-   PANGGIL API
-===================================================== */
-
-async function callAPI(payload) {
-
-  try {
-
-    const response =
-      await fetch(
-        API_URL,
-        {
-
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "text/plain;charset=utf-8"
-          },
-
-          body:
-            JSON.stringify(payload)
-
-        }
-      );
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        "HTTP Error " +
-        response.status
-      );
-
-    }
-
-
-    const text =
-      await response.text();
-
-
-    if (!text) {
-
-      throw new Error(
-        "Server tidak mengirim response."
-      );
-
-    }
-
-
-    let result;
-
-
-    try {
-
-      result =
-        JSON.parse(text);
-
-    } catch (error) {
-
-      console.error(
-        "Response server:",
-        text
-      );
-
-
-      throw new Error(
-        "Response server bukan JSON yang valid."
-      );
-
-    }
-
-
-    console.log(
-      "API RESPONSE:",
-      result
-    );
-
-
-    return result;
-
-
-  } catch (error) {
-
-    console.error(
-      "API ERROR:",
-      error
-    );
-
-
-    throw error;
-
-  }
-
-}
-
-
-/* =====================================================
-   VOICE
-===================================================== */
-
-function speak(text) {
-
-  if (
-    !(
-      "speechSynthesis"
-      in window
-    )
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    window.speechSynthesis.cancel();
-
-
-    const voice =
-      new SpeechSynthesisUtterance(
-        text
-      );
-
-
-    voice.lang =
-      "id-ID";
-
-
-    voice.rate =
-      0.9;
-
-
-    voice.pitch =
-      1;
-
-
-    voice.volume =
-      1;
-
-
-    window.speechSynthesis.speak(
-      voice
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Voice error:",
-      error
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   LOAD DATA SISWA
-===================================================== */
-
-async function loadSiswa() {
-
-  tampilkanStatus(
-    "⏳ Memuat data siswa...",
-    ""
-  );
-
-
-  try {
-
-    const result =
-      await callAPI({
-        action: "getSiswa"
-      });
-
-
-    if (!result) {
-
-      throw new Error(
-        "Server tidak memberikan response."
-      );
-
-    }
-
-
-    if (
-      result.success !== true
-    ) {
-
-      throw new Error(
-        result.message ||
-        "Gagal mengambil data siswa."
-      );
-
-    }
-
-
-    semuaSiswa =
-      Array.isArray(
-        result.data
-      )
-        ? result.data
-        : [];
 
 
     /* ==========================================
-       HANYA SISWA AKTIF
+       HEADER
     ========================================== */
 
-    semuaSiswa =
-      semuaSiswa.filter(
-        function (siswa) {
+    .header {
 
-          const status =
-            String(
-              siswa.STATUS ||
-              "AKTIF"
-            )
-            .trim()
-            .toUpperCase();
+      background:
+        #1d4ed8;
 
+      color:
+        white;
 
-          return (
-            status === "AKTIF"
-          );
+      padding:
+        18px 20px;
 
-        }
-      );
+      text-align:
+        center;
 
-
-    console.log(
-      "Jumlah siswa aktif:",
-      semuaSiswa.length
-    );
-
-
-    if (
-      semuaSiswa.length === 0
-    ) {
-
-      throw new Error(
-        "Data siswa aktif belum tersedia."
-      );
+      box-shadow:
+        0 2px 8px
+        rgba(0,0,0,0.15);
 
     }
 
 
-    tampilkanStatus(
-      "✓ Data siswa berhasil dimuat.",
-      semuaSiswa.length +
-      " siswa aktif"
-    );
+    .header h1 {
+
+      margin:
+        0;
+
+      font-size:
+        23px;
+
+    }
 
 
-    await tunggu(500);
+    .header p {
+
+      margin:
+        6px 0 0;
+
+      font-size:
+        14px;
+
+      opacity:
+        0.9;
+
+    }
 
 
-    await mulaiScanner();
+    /* ==========================================
+       CONTAINER
+    ========================================== */
+
+    .container {
+
+      width:
+        100%;
+
+      max-width:
+        700px;
+
+      margin:
+        0 auto;
+
+      padding:
+        20px;
+
+    }
 
 
-  } catch (error) {
+    /* ==========================================
+       INFO GURU
+    ========================================== */
 
-    console.error(
-      "Gagal memuat siswa:",
-      error
-    );
+    .guru-card {
 
+      background:
+        white;
 
-    tampilkanError(
-      "Gagal memuat data siswa:<br><br>" +
-      escapeHTML(error.message)
-    );
+      border-radius:
+        14px;
 
+      padding:
+        15px 18px;
 
-    speak(
-      "Gagal memuat data siswa"
-    );
+      margin-bottom:
+        18px;
 
-  }
+      box-shadow:
+        0 3px 12px
+        rgba(0,0,0,0.08);
 
-}
-
-
-/* =====================================================
-   MULAI KAMERA
-===================================================== */
-
-async function mulaiScanner() {
-
-  if (kameraAktif) {
-
-    return;
-
-  }
+    }
 
 
-  if (
-    typeof Html5Qrcode ===
-    "undefined"
-  ) {
+    .guru-label {
 
-    tampilkanError(
-      "Library QR Scanner tidak ditemukan.<br><br>" +
-      "Pastikan html5-qrcode sudah dimuat pada scan.html."
-    );
+      font-size:
+        12px;
 
-    return;
+      color:
+        #6b7280;
 
-  }
+      margin-bottom:
+        5px;
 
-
-  if (!scanner) {
-
-    scanner =
-      new Html5Qrcode(
-        "reader"
-      );
-
-  }
+    }
 
 
-  try {
+    .guru-name {
 
-    await scanner.start(
+      font-size:
+        18px;
 
-      {
-        facingMode:
-          "environment"
-      },
+      font-weight:
+        bold;
 
-      {
-        fps: 10,
+      color:
+        #111827;
 
-        qrbox: {
-          width: 250,
-          height: 250
+    }
+
+
+    /* ==========================================
+       SCANNER CARD
+    ========================================== */
+
+    .scanner-card {
+
+      background:
+        white;
+
+      border-radius:
+        16px;
+
+      padding:
+        18px;
+
+      box-shadow:
+        0 3px 12px
+        rgba(0,0,0,0.08);
+
+    }
+
+
+    .scanner-title {
+
+      text-align:
+        center;
+
+      font-size:
+        18px;
+
+      font-weight:
+        bold;
+
+      margin-bottom:
+        15px;
+
+    }
+
+
+    /* ==========================================
+       QR READER
+    ========================================== */
+
+    #reader {
+
+      width:
+        100%;
+
+      max-width:
+        500px;
+
+      margin:
+        0 auto;
+
+      overflow:
+        hidden;
+
+      border-radius:
+        12px;
+
+    }
+
+
+    /* ==========================================
+       RESULT
+    ========================================== */
+
+    .result-box {
+
+      margin-top:
+        18px;
+
+      padding:
+        18px;
+
+      border-radius:
+        12px;
+
+      background:
+        #eff6ff;
+
+      color:
+        #1e3a8a;
+
+      text-align:
+        center;
+
+      line-height:
+        1.6;
+
+      min-height:
+        70px;
+
+      display:
+        flex;
+
+      flex-direction:
+        column;
+
+      justify-content:
+        center;
+
+    }
+
+
+    .result-box.success {
+
+      background:
+        #dcfce7;
+
+      color:
+        #166534;
+
+    }
+
+
+    .result-box.error {
+
+      background:
+        #fee2e2;
+
+      color:
+        #991b1b;
+
+    }
+
+
+    .student-name {
+
+      margin-top:
+        8px;
+
+    }
+
+
+    /* ==========================================
+       BUTTON
+    ========================================== */
+
+    .button-group {
+
+      display:
+        flex;
+
+      gap:
+        10px;
+
+      margin-top:
+        18px;
+
+    }
+
+
+    .btn {
+
+      flex:
+        1;
+
+      border:
+        none;
+
+      border-radius:
+        10px;
+
+      padding:
+        13px 15px;
+
+      font-size:
+        15px;
+
+      font-weight:
+        bold;
+
+      cursor:
+        pointer;
+
+    }
+
+
+    .btn-back {
+
+      background:
+        #e5e7eb;
+
+      color:
+        #374151;
+
+    }
+
+
+    .btn-back:hover {
+
+      background:
+        #d1d5db;
+
+    }
+
+
+    .btn-logout {
+
+      background:
+        #dc2626;
+
+      color:
+        white;
+
+    }
+
+
+    .btn-logout:hover {
+
+      background:
+        #b91c1c;
+
+    }
+
+
+    /* ==========================================
+       PETUNJUK
+    ========================================== */
+
+    .instruction {
+
+      margin-top:
+        18px;
+
+      padding:
+        15px;
+
+      background:
+        #f8fafc;
+
+      border-radius:
+        12px;
+
+      font-size:
+        14px;
+
+      line-height:
+        1.6;
+
+      color:
+        #4b5563;
+
+    }
+
+
+    .instruction strong {
+
+      color:
+        #111827;
+
+    }
+
+
+    /* ==========================================
+       FOOTER
+    ========================================== */
+
+    .footer {
+
+      text-align:
+        center;
+
+      padding:
+        20px;
+
+      font-size:
+        12px;
+
+      color:
+        #9ca3af;
+
+    }
+
+
+    /* ==========================================
+       MOBILE
+    ========================================== */
+
+    @media (
+      max-width: 480px
+    ) {
+
+      .container {
+
+        padding:
+          12px;
+
+      }
+
+
+      .header h1 {
+
+        font-size:
+          20px;
+
+      }
+
+
+      .scanner-card {
+
+        padding:
+          12px;
+
+      }
+
+
+      .button-group {
+
+        flex-direction:
+          column;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <!-- ==========================================
+       HEADER
+  =========================================== -->
+
+  <header class="header">
+
+    <h1>
+      📷 Scan QR Presensi
+    </h1>
+
+    <p>
+      SD Negeri Jatiwaringin XIII
+    </p>
+
+  </header>
+
+
+
+  <!-- ==========================================
+       CONTAINER
+  =========================================== -->
+
+  <main class="container">
+
+
+    <!-- ========================================
+         INFORMASI GURU
+    ========================================= -->
+
+    <div class="guru-card">
+
+      <div class="guru-label">
+        Guru yang sedang login
+      </div>
+
+      <div
+        class="guru-name"
+        id="guruInfo"
+      >
+        Memuat informasi guru...
+      </div>
+
+    </div>
+
+
+
+    <!-- ========================================
+         SCANNER
+    ========================================= -->
+
+    <div class="scanner-card">
+
+      <div class="scanner-title">
+
+        Arahkan kamera ke QR Code siswa
+
+      </div>
+
+
+      <!-- AREA KAMERA -->
+
+      <div id="reader"></div>
+
+
+      <!-- HASIL SCAN -->
+
+      <div
+        id="result"
+        class="result-box"
+      >
+
+        Memulai kamera...
+
+      </div>
+
+
+      <!-- TOMBOL -->
+
+      <div class="button-group">
+
+        <button
+          type="button"
+          class="btn btn-back"
+          onclick="kembali()"
+        >
+          ← Kembali
+        </button>
+
+
+        <button
+          type="button"
+          class="btn btn-logout"
+          onclick="logoutScan()"
+        >
+          Logout
+        </button>
+
+      </div>
+
+
+      <!-- PETUNJUK -->
+
+      <div class="instruction">
+
+        <strong>
+          Petunjuk:
+        </strong>
+
+        <br>
+
+        1. Izinkan akses kamera ketika diminta browser.
+
+        <br>
+
+        2. Arahkan kamera ke QR Code pada kartu siswa.
+
+        <br>
+
+        3. Tunggu sampai nama siswa muncul.
+
+        <br>
+
+        4. Jika berhasil, status otomatis tercatat sebagai
+        <strong>HADIR</strong>.
+
+        <br>
+
+        5. QR yang sama tidak dapat melakukan presensi
+        dua kali pada tanggal yang sama.
+
+      </div>
+
+    </div>
+
+
+  </main>
+
+
+
+  <!-- ==========================================
+       FOOTER
+  =========================================== -->
+
+  <footer class="footer">
+
+    Sistem Presensi Siswa
+
+    <br>
+
+    SD Negeri Jatiwaringin XIII
+
+  </footer>
+
+
+
+  <!-- ==========================================
+       LIBRARY QR SCANNER
+  =========================================== -->
+
+  <script
+    src="https://unpkg.com/html5-qrcode"
+  ></script>
+
+
+  <!-- ==========================================
+       SCAN JS
+  =========================================== -->
+
+  <script
+    src="scan.js"
+  ></script>
+
+
+
+  <!-- ==========================================
+       SCRIPT HALAMAN
+  =========================================== -->
+
+  <script>
+
+    /*
+     * Tampilkan nama guru
+     * yang sedang login.
+     */
+
+    document.addEventListener(
+      "DOMContentLoaded",
+      function () {
+
+        try {
+
+          const data =
+            localStorage.getItem(
+              "presensiUser"
+            );
+
+
+          if (!data) {
+
+            window.location.href =
+              "index.html";
+
+            return;
+
+          }
+
+
+          const user =
+            JSON.parse(data);
+
+
+          if (
+            !user ||
+            String(
+              user.role || ""
+            )
+            .toUpperCase() !==
+            "GURU"
+          ) {
+
+            window.location.href =
+              "index.html";
+
+            return;
+
+          }
+
+
+          const nama =
+            user.nama ||
+            user.namaGuru ||
+            user.username ||
+            "Guru";
+
+
+          const guruInfo =
+            document.getElementById(
+              "guruInfo"
+            );
+
+
+          if (guruInfo) {
+
+            guruInfo.textContent =
+              nama;
+
+          }
+
+        } catch (error) {
+
+          console.error(
+            error
+          );
+
+          window.location.href =
+            "index.html";
+
         }
-      },
-
-      onScanSuccess,
-
-      onScanError
-
-    );
-
-
-    kameraAktif =
-      true;
-
-
-    tampilkanStatus(
-      "📷 Kamera aktif.",
-      "Silakan arahkan kamera ke QR siswa."
-    );
-
-
-    console.log(
-      "Kamera scanner aktif."
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Kamera gagal:",
-      error
-    );
-
-
-    kameraAktif =
-      false;
-
-
-    tampilkanError(
-      "Kamera tidak dapat digunakan.<br><br>" +
-      "Pastikan:<br>" +
-      "• Izin kamera diberikan<br>" +
-      "• Website menggunakan HTTPS<br>" +
-      "• Kamera tidak sedang digunakan aplikasi lain"
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   STOP KAMERA
-===================================================== */
-
-async function stopScanner() {
-
-  if (
-    !scanner ||
-    !kameraAktif
-  ) {
-
-    return;
-
-  }
-
-
-  try {
-
-    await scanner.stop();
-
-  } catch (error) {
-
-    console.warn(
-      "Stop scanner:",
-      error
-    );
-
-  }
-
-
-  kameraAktif =
-    false;
-
-}
-
-
-/* =====================================================
-   QR BERHASIL DIBACA
-===================================================== */
-
-async function onScanSuccess(
-  decodedText,
-  decodedResult
-) {
-
-  /* ==========================================
-     CEGAH DOUBLE SCAN
-  ========================================== */
-
-  if (
-    sedangMemproses
-  ) {
-
-    return;
-
-  }
-
-
-  sedangMemproses =
-    true;
-
-
-  const idSiswa =
-    String(
-      decodedText || ""
-    ).trim();
-
-
-  console.log(
-    "================================="
-  );
-
-  console.log(
-    "QR TERBACA:"
-  );
-
-  console.log(
-    idSiswa
-  );
-
-  console.log(
-    "================================="
-  );
-
-
-  /* ==========================================
-     QR KOSONG
-  ========================================== */
-
-  if (!idSiswa) {
-
-    await prosesGagal(
-      "QR tidak berisi ID siswa."
-    );
-
-
-    sedangMemproses =
-      false;
-
-
-    return;
-
-  }
-
-
-  /* ==========================================
-     CARI SISWA
-  ========================================== */
-
-  const siswa =
-    semuaSiswa.find(
-      function (item) {
-
-        return (
-          String(
-            item.ID || ""
-          ).trim() ===
-          idSiswa
-        );
 
       }
     );
 
 
-  /* ==========================================
-     SISWA TIDAK DITEMUKAN
-  ========================================== */
+    /*
+     * Logout
+     */
 
-  if (!siswa) {
+    function logoutScan() {
 
-    await prosesGagal(
-      "QR siswa tidak terdaftar."
-    );
+      if (
+        typeof stopScanner ===
+        "function"
+      ) {
 
+        stopScanner();
 
-    sedangMemproses =
-      false;
-
-
-    return;
-
-  }
+      }
 
 
-  /* ==========================================
-     CEK ID SISWA
-  ========================================== */
-
-  if (!siswa.ID) {
-
-    await prosesGagal(
-      "Data siswa tidak memiliki ID."
-    );
-
-
-    sedangMemproses =
-      false;
-
-
-    return;
-
-  }
-
-
-  /* ==========================================
-     TAMPILKAN PROSES
-  ========================================== */
-
-  tampilkanStatus(
-    "⏳ Menyimpan presensi...",
-    siswa.NAMA
-  );
-
-
-  try {
-
-    /* ========================================
-       DATA YANG DIKIRIM KE SERVER
-    ======================================== */
-
-    const payload = {
-
-      action:
-        "simpanPresensi",
-
-      id:
-        String(
-          siswa.ID
-        ).trim(),
-
-      nisn:
-        siswa.NISN || "",
-
-      nama:
-        siswa.NAMA || "",
-
-      kelas:
-        siswa.KELAS || "",
-
-      status:
-        "HADIR",
-
-      idGuru:
-        idGuruLogin,
-
-      sumber:
-        "QR"
-
-    };
-
-
-    console.log(
-      "PAYLOAD PRESENSI QR:"
-    );
-
-    console.log(
-      payload
-    );
-
-
-    /* ========================================
-       KIRIM KE SERVER
-    ======================================== */
-
-    const result =
-      await callAPI(
-        payload
+      localStorage.removeItem(
+        "presensiUser"
       );
 
 
-    console.log(
-      "HASIL SIMPAN:",
-      result
-    );
-
-
-    /* ========================================
-       BERHASIL
-    ======================================== */
-
-    if (
-      result &&
-      result.success === true
-    ) {
-
-      tampilkanBerhasil(
-        siswa,
-        result
-      );
-
-
-      speak(
-        "Terima kasih, " +
-        siswa.NAMA
-      );
-
-
-      await tunggu(
-        1800
-      );
-
-
-      tampilkanStatus(
-        "📷 Kamera aktif.",
-        "Silakan scan siswa berikutnya."
-      );
-
-
-      sedangMemproses =
-        false;
-
-
-      return;
+      window.location.href =
+        "index.html";
 
     }
 
+  </script>
 
-    /* ========================================
-       DUPLIKAT
-    ======================================== */
 
-    if (
-      result &&
-      result.duplicate === true
-    ) {
+</body>
 
-      await prosesGagal(
-        "Siswa ini sudah melakukan presensi hari ini."
-      );
-
-
-      sedangMemproses =
-        false;
-
-
-      return;
-
-    }
-
-
-    /* ========================================
-       ERROR SERVER
-    ======================================== */
-
-    await prosesGagal(
-      (
-        result &&
-        result.message
-      ) ||
-      "Presensi gagal disimpan."
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "Error simpan presensi:",
-      error
-    );
-
-
-    await prosesGagal(
-      "Gagal terhubung ke server.<br><br>" +
-      escapeHTML(
-        error.message
-      )
-    );
-
-  }
-
-
-  sedangMemproses =
-    false;
-
-}
-
-
-/* =====================================================
-   TAMPILKAN BERHASIL
-===================================================== */
-
-function tampilkanBerhasil(
-  siswa,
-  result
-) {
-
-  const resultBox =
-    document.getElementById(
-      "result"
-    );
-
-
-  if (!resultBox) {
-
-    return;
-
-  }
-
-
-  resultBox.className =
-    "result-box success";
-
-
-  let jam = "";
-
-
-  if (
-    result &&
-    result.data &&
-    result.data.jam
-  ) {
-
-    jam =
-      result.data.jam;
-
-  }
-
-
-  resultBox.innerHTML = `
-
-    <div
-      style="
-        font-size:50px;
-        margin-bottom:8px;
-      "
-    >
-      ✓
-    </div>
-
-    <div
-      style="
-        font-size:21px;
-        font-weight:bold;
-      "
-    >
-      PRESENSI BERHASIL
-    </div>
-
-    <div
-      class="student-name"
-      style="
-        font-size:20px;
-        font-weight:bold;
-        margin-top:10px;
-      "
-    >
-      ${escapeHTML(
-        siswa.NAMA
-      )}
-    </div>
-
-    <div
-      style="
-        margin-top:6px;
-      "
-    >
-      NISN:
-      ${escapeHTML(
-        siswa.NISN
-      )}
-    </div>
-
-    <div>
-      Kelas:
-      <strong>
-        ${escapeHTML(
-          siswa.KELAS
-        )}
-      </strong>
-    </div>
-
-    <div>
-      Status:
-      <strong>
-        HADIR
-      </strong>
-    </div>
-
-    ${
-      jam
-        ? `
-          <div>
-            Jam:
-            <strong>
-              ${escapeHTML(
-                jam
-              )}
-            </strong>
-          </div>
-        `
-        : ""
-    }
-
-  `;
-
-}
-
-
-/* =====================================================
-   PROSES GAGAL
-===================================================== */
-
-async function prosesGagal(
-  message
-) {
-
-  tampilkanError(
-    message +
-    "<br><br>" +
-    "Silakan coba lagi."
-  );
-
-
-  speak(
-    "Gagal, coba lagi"
-  );
-
-
-  await tunggu(
-    1500
-  );
-
-
-  tampilkanStatus(
-    "📷 Kamera aktif.",
-    "Silakan scan siswa berikutnya."
-  );
-
-}
-
-
-/* =====================================================
-   STATUS NORMAL
-===================================================== */
-
-function tampilkanStatus(
-  message,
-  extra
-) {
-
-  const result =
-    document.getElementById(
-      "result"
-    );
-
-
-  if (!result) {
-
-    return;
-
-  }
-
-
-  result.className =
-    "result-box";
-
-
-  result.innerHTML = `
-
-    <div>
-      ${message}
-    </div>
-
-    ${
-      extra
-        ? `
-          <div
-            style="
-              margin-top:6px;
-            "
-          >
-            ${escapeHTML(
-              extra
-            )}
-          </div>
-        `
-        : ""
-    }
-
-  `;
-
-}
-
-
-/* =====================================================
-   STATUS ERROR
-===================================================== */
-
-function tampilkanError(
-  message
-) {
-
-  const result =
-    document.getElementById(
-      "result"
-    );
-
-
-  if (!result) {
-
-    return;
-
-  }
-
-
-  result.className =
-    "result-box error";
-
-
-  result.innerHTML =
-    `❌ ${message}`;
-
-}
-
-
-/* =====================================================
-   DELAY
-===================================================== */
-
-function tunggu(ms) {
-
-  return new Promise(
-    function (resolve) {
-
-      setTimeout(
-        resolve,
-        ms
-      );
-
-    }
-  );
-
-}
-
-
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
-
-function escapeHTML(
-  value
-) {
-
-  return String(
-    value ?? ""
-  )
-
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =====================================================
-   ERROR SCANNER
-===================================================== */
-
-function onScanError(
-  errorMessage
-) {
-
-  /*
-   * Error ketika QR belum ditemukan
-   * adalah kondisi normal.
-   *
-   * Karena itu tidak ditampilkan
-   * kepada pengguna.
-   */
-
-}
-
-
-/* =====================================================
-   KEMBALI KE PRESENSI
-===================================================== */
-
-async function kembali() {
-
-  await stopScanner();
-
-
-  window.location.href =
-    "presensi.html";
-
-}
-
-
-/* =====================================================
-   INIT
-===================================================== */
-
-async function init() {
-
-  /* ==========================================
-     CEK LOGIN GURU
-  ========================================== */
-
-  const loginOK =
-    ambilDataGuru();
-
-
-  if (!loginOK) {
-
-    await tunggu(
-      2000
-    );
-
-
-    window.location.href =
-      "index.html";
-
-
-    return;
-
-  }
-
-
-  /* ==========================================
-     LOAD DATA SISWA
-  ========================================== */
-
-  await loadSiswa();
-
-}
-
-
-/* =====================================================
-   SAAT HALAMAN DITUTUP
-===================================================== */
-
-window.addEventListener(
-  "beforeunload",
-  function () {
-
-    if (
-      scanner &&
-      kameraAktif
-    ) {
-
-      scanner
-        .stop()
-        .catch(
-          function () {}
-        );
-
-    }
-
-  }
-);
+</html>
