@@ -5,6 +5,7 @@ const API_URL =
 let currentUser = null;
 let siswaList = [];
 let kelasList = [];
+let sedangMenyimpan = false;
 
 
 /* =====================================================
@@ -23,20 +24,15 @@ async function callAPI(payload) {
     body: JSON.stringify(payload)
   });
 
-
   const text = await response.text();
 
   console.log("API RESPONSE:", text);
 
-
   if (!text) {
-
     throw new Error(
       "Server tidak mengirim response."
     );
-
   }
-
 
   let result;
 
@@ -56,7 +52,6 @@ async function callAPI(payload) {
     );
 
   }
-
 
   return result;
 
@@ -106,9 +101,9 @@ async function initPresensi() {
     );
 
 
-  /* -----------------------------------------------------
+  /* ---------------------------------------------------
      CEK LOGIN
-  ----------------------------------------------------- */
+  --------------------------------------------------- */
 
   if (!savedUser) {
 
@@ -120,9 +115,9 @@ async function initPresensi() {
   }
 
 
-  /* -----------------------------------------------------
+  /* ---------------------------------------------------
      BACA USER
-  ----------------------------------------------------- */
+  --------------------------------------------------- */
 
   try {
 
@@ -154,9 +149,9 @@ async function initPresensi() {
   );
 
 
-  /* -----------------------------------------------------
+  /* ---------------------------------------------------
      VALIDASI ROLE
-  ----------------------------------------------------- */
+  --------------------------------------------------- */
 
   const role =
     String(
@@ -180,9 +175,9 @@ async function initPresensi() {
   }
 
 
-  /* -----------------------------------------------------
+  /* ---------------------------------------------------
      VALIDASI ID GURU
-  ----------------------------------------------------- */
+  --------------------------------------------------- */
 
   if (!currentUser.idGuru) {
 
@@ -201,30 +196,30 @@ async function initPresensi() {
   }
 
 
-  /* -----------------------------------------------------
+  /* ---------------------------------------------------
      TAMPILKAN INFORMASI GURU
-  ----------------------------------------------------- */
+  --------------------------------------------------- */
 
   tampilkanInfoGuru();
 
 
-  /* -----------------------------------------------------
+  /* ---------------------------------------------------
      SET TANGGAL
-  ----------------------------------------------------- */
+  --------------------------------------------------- */
 
   setTanggalHariIni();
 
 
-  /* -----------------------------------------------------
-     PASANG EVENT
-  ----------------------------------------------------- */
+  /* ---------------------------------------------------
+     EVENT
+  --------------------------------------------------- */
 
   pasangEvent();
 
 
-  /* -----------------------------------------------------
-     LOAD KELAS GURU
-  ----------------------------------------------------- */
+  /* ---------------------------------------------------
+     LOAD KELAS
+  --------------------------------------------------- */
 
   await loadKelasGuru();
 
@@ -289,6 +284,11 @@ function setTanggalHariIni() {
     return;
   }
 
+
+  /*
+     Menggunakan waktu lokal browser.
+     Format YYYY-MM-DD cocok untuk input date.
+  */
 
   const now =
     new Date();
@@ -438,10 +438,13 @@ async function loadKelasGuru() {
     );
 
 
-    if (!result.success) {
+    if (
+      !result ||
+      !result.success
+    ) {
 
       throw new Error(
-        result.message ||
+        result?.message ||
         "Gagal mengambil kelas guru."
       );
 
@@ -461,9 +464,9 @@ async function loadKelasGuru() {
     `;
 
 
-    /* ---------------------------------------------------
+    /* -------------------------------------------------
        TIDAK ADA KELAS
-    --------------------------------------------------- */
+    ------------------------------------------------- */
 
     if (
       kelasList.length === 0
@@ -487,9 +490,9 @@ async function loadKelasGuru() {
     }
 
 
-    /* ---------------------------------------------------
-       MASUKKAN KELAS KE SELECT
-    --------------------------------------------------- */
+    /* -------------------------------------------------
+       MASUKKAN KELAS
+    ------------------------------------------------- */
 
     kelasList.forEach(
       function (kelas) {
@@ -527,22 +530,31 @@ async function loadKelasGuru() {
     );
 
 
-    /* ---------------------------------------------------
+    /* -------------------------------------------------
        JIKA HANYA SATU KELAS
-    --------------------------------------------------- */
+    ------------------------------------------------- */
 
     if (
       kelasList.length === 1
     ) {
 
+      const namaKelas =
+        kelasList[0].NAMA_KELAS ||
+        kelasList[0].namaKelas ||
+        "";
+
+
       select.value =
-        kelasList[0].NAMA_KELAS;
+        namaKelas;
 
 
-      await loadSiswa();
+      if (namaKelas) {
+
+        await loadSiswa();
+
+      }
 
     }
-
 
   } catch (error) {
 
@@ -623,10 +635,13 @@ async function loadSiswa() {
     );
 
 
-    if (!result.success) {
+    if (
+      !result ||
+      !result.success
+    ) {
 
       throw new Error(
-        result.message ||
+        result?.message ||
         "Gagal mengambil data siswa."
       );
 
@@ -639,21 +654,24 @@ async function loadSiswa() {
         : [];
 
 
-    /* ---------------------------------------------------
+    /* -------------------------------------------------
        HANYA SISWA AKTIF
-    --------------------------------------------------- */
+    ------------------------------------------------- */
 
     siswaList =
       siswaList.filter(
         function (siswa) {
 
-          return String(
-            siswa.STATUS ||
-            "AKTIF"
-          )
-            .trim()
-            .toUpperCase()
-            === "AKTIF";
+          const status =
+            String(
+              siswa.STATUS ||
+              "AKTIF"
+            )
+              .trim()
+              .toUpperCase();
+
+
+          return status === "AKTIF";
 
         }
       );
@@ -678,6 +696,9 @@ async function loadSiswa() {
       "GAGAL LOAD SISWA:",
       error
     );
+
+
+    siswaList = [];
 
 
     tampilkanErrorTable(
@@ -772,9 +793,9 @@ function tampilkanSiswa() {
   body.innerHTML = "";
 
 
-  /* ---------------------------------------------------
+  /* -------------------------------------------------
      TIDAK ADA SISWA
-  --------------------------------------------------- */
+  ------------------------------------------------- */
 
   if (
     siswaList.length === 0
@@ -807,9 +828,9 @@ function tampilkanSiswa() {
   }
 
 
-  /* ---------------------------------------------------
+  /* -------------------------------------------------
      TAMPILKAN SISWA
-  --------------------------------------------------- */
+  ------------------------------------------------- */
 
   siswaList.forEach(
     function (siswa, index) {
@@ -908,9 +929,9 @@ function tampilkanSiswa() {
   }
 
 
-  /* ---------------------------------------------------
-     EVENT PERUBAHAN STATUS
-  --------------------------------------------------- */
+  /* -------------------------------------------------
+     EVENT STATUS
+  ------------------------------------------------- */
 
   const selects =
     document.querySelectorAll(
@@ -1008,6 +1029,11 @@ function resetPresensi() {
   }
 
 
+  /*
+     Karena pilihan awal adalah HADIR,
+     reset dikembalikan ke HADIR.
+  */
+
   selects.forEach(
     function (select) {
 
@@ -1052,7 +1078,7 @@ function updateSummary() {
 
       const status =
         String(
-          select.value
+          select.value || ""
         )
           .trim()
           .toUpperCase();
@@ -1120,9 +1146,25 @@ function updateSummary() {
 
 async function simpanSemuaPresensi() {
 
-  /* ---------------------------------------------------
+  /* -------------------------------------------------
+     CEGAH DOUBLE CLICK
+  ------------------------------------------------- */
+
+  if (sedangMenyimpan) {
+
+    showMessage(
+      "Presensi sedang diproses. Mohon tunggu.",
+      "info"
+    );
+
+    return;
+
+  }
+
+
+  /* -------------------------------------------------
      CEK SISWA
-  --------------------------------------------------- */
+  ------------------------------------------------- */
 
   if (
     siswaList.length === 0
@@ -1138,9 +1180,9 @@ async function simpanSemuaPresensi() {
   }
 
 
-  /* ---------------------------------------------------
-     AMBIL TANGGAL DAN KELAS
-  --------------------------------------------------- */
+  /* -------------------------------------------------
+     AMBIL TANGGAL
+  ------------------------------------------------- */
 
   const tanggalInput =
     document.getElementById(
@@ -1190,9 +1232,9 @@ async function simpanSemuaPresensi() {
   }
 
 
-  /* ---------------------------------------------------
-     CEK ID GURU
-  --------------------------------------------------- */
+  /* -------------------------------------------------
+     CEK GURU
+  ------------------------------------------------- */
 
   if (
     !currentUser ||
@@ -1209,9 +1251,45 @@ async function simpanSemuaPresensi() {
   }
 
 
-  /* ---------------------------------------------------
+  /* -------------------------------------------------
+     CEK APAKAH KELAS MILIK GURU
+  ------------------------------------------------- */
+
+  const kelasGuru =
+    kelasList.find(
+      function (item) {
+
+        const namaKelas =
+          item.NAMA_KELAS ||
+          item.namaKelas ||
+          "";
+
+
+        return String(
+          namaKelas
+        ) === String(
+          kelas
+        );
+
+      }
+    );
+
+
+  if (!kelasGuru) {
+
+    showMessage(
+      "Kelas tersebut tidak terdaftar sebagai kelas Anda.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  /* -------------------------------------------------
      KONFIRMASI
-  --------------------------------------------------- */
+  ------------------------------------------------- */
 
   const yakin =
     confirm(
@@ -1228,9 +1306,12 @@ async function simpanSemuaPresensi() {
   }
 
 
-  /* ---------------------------------------------------
+  sedangMenyimpan = true;
+
+
+  /* -------------------------------------------------
      BUTTON
-  --------------------------------------------------- */
+  ------------------------------------------------- */
 
   const button =
     document.getElementById(
@@ -1238,14 +1319,18 @@ async function simpanSemuaPresensi() {
     );
 
 
+  let teksButton =
+    "💾 Simpan Presensi";
+
+
   if (button) {
+
+    teksButton =
+      button.textContent;
+
 
     button.disabled =
       true;
-
-
-    button.dataset.text =
-      button.textContent;
 
 
     button.textContent =
@@ -1264,6 +1349,7 @@ async function simpanSemuaPresensi() {
 
     let berhasil = 0;
     let gagal = 0;
+    let sudahAda = 0;
 
 
     /* -------------------------------------------------
@@ -1290,7 +1376,9 @@ async function simpanSemuaPresensi() {
 
             return String(
               item.ID
-            ) === String(id);
+            ) === String(
+              id
+            );
 
           }
         );
@@ -1326,7 +1414,11 @@ async function simpanSemuaPresensi() {
               siswa.KELAS,
 
             status:
-              select.value,
+              String(
+                select.value || "HADIR"
+              )
+                .trim()
+                .toUpperCase(),
 
             idGuru:
               currentUser.idGuru,
@@ -1356,7 +1448,37 @@ async function simpanSemuaPresensi() {
 
         } else {
 
-          gagal++;
+          const pesan =
+            String(
+              result?.message ||
+              ""
+            )
+              .toLowerCase();
+
+
+          if (
+            pesan.includes(
+              "sudah"
+            ) ||
+            pesan.includes(
+              "duplikat"
+            ) ||
+            pesan.includes(
+              "duplicate"
+            ) ||
+            pesan.includes(
+              "tercatat"
+            )
+          ) {
+
+            sudahAda++;
+
+          } else {
+
+            gagal++;
+
+          }
+
 
           console.error(
             "GAGAL:",
@@ -1370,6 +1492,7 @@ async function simpanSemuaPresensi() {
       } catch (error) {
 
         gagal++;
+
 
         console.error(
           "ERROR SISWA:",
@@ -1387,7 +1510,8 @@ async function simpanSemuaPresensi() {
     ------------------------------------------------- */
 
     if (
-      gagal === 0
+      gagal === 0 &&
+      sudahAda === 0
     ) {
 
       showMessage(
@@ -1397,11 +1521,27 @@ async function simpanSemuaPresensi() {
         "success"
       );
 
+    } else if (
+      gagal === 0 &&
+      sudahAda > 0
+    ) {
+
+      showMessage(
+        "Presensi selesai. " +
+        berhasil +
+        " berhasil, " +
+        sudahAda +
+        " sudah tercatat.",
+        "info"
+      );
+
     } else {
 
       showMessage(
         "Presensi selesai. Berhasil: " +
         berhasil +
+        ", sudah tercatat: " +
+        sudahAda +
         ", gagal: " +
         gagal +
         ".",
@@ -1428,6 +1568,9 @@ async function simpanSemuaPresensi() {
 
   } finally {
 
+    sedangMenyimpan = false;
+
+
     if (button) {
 
       button.disabled =
@@ -1435,7 +1578,7 @@ async function simpanSemuaPresensi() {
 
 
       button.textContent =
-        button.dataset.text ||
+        teksButton ||
         "💾 Simpan Presensi";
 
     }
@@ -1604,5 +1747,21 @@ function escapeHTML(value) {
       /'/g,
       "&#039;"
     );
+
+}
+
+
+/* =====================================================
+   LOGOUT
+===================================================== */
+
+function logout() {
+
+  localStorage.removeItem(
+    "presensiUser"
+  );
+
+  window.location.href =
+    "index.html";
 
 }
