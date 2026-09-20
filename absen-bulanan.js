@@ -32,6 +32,11 @@ document.addEventListener(
   "DOMContentLoaded",
   function () {
 
+    console.log(
+      "absen-bulanan.js berhasil dimuat."
+    );
+
+
     const saved =
       localStorage.getItem(
         "presensiUser"
@@ -55,6 +60,8 @@ document.addEventListener(
 
     } catch (error) {
 
+      console.error(error);
+
       localStorage.removeItem(
         "presensiUser"
       );
@@ -65,6 +72,12 @@ document.addEventListener(
       return;
 
     }
+
+
+    console.log(
+      "USER:",
+      currentUser
+    );
 
 
     if (
@@ -102,17 +115,29 @@ document.addEventListener(
       new Date();
 
 
+    /*
+     * SET BULAN
+     */
+
     document.getElementById(
       "bulan"
     ).value =
       sekarang.getMonth() + 1;
 
 
+    /*
+     * SET TAHUN
+     */
+
     document.getElementById(
       "tahun"
     ).value =
       sekarang.getFullYear();
 
+
+    /*
+     * BUAT LAPORAN
+     */
 
     buatLaporan();
 
@@ -124,7 +149,15 @@ document.addEventListener(
    API
 ===================================================== */
 
-async function callAPI(payload) {
+async function callAPI(
+  payload
+) {
+
+  console.log(
+    "REQUEST API:",
+    payload
+  );
+
 
   const response =
     await fetch(
@@ -147,6 +180,12 @@ async function callAPI(payload) {
     await response.text();
 
 
+  console.log(
+    "RESPONSE API:",
+    text
+  );
+
+
   if (!text) {
 
     throw new Error(
@@ -166,7 +205,10 @@ async function callAPI(payload) {
 
   } catch (error) {
 
-    console.error(text);
+    console.error(
+      "Response bukan JSON:",
+      text
+    );
 
     throw new Error(
       "Response server bukan JSON."
@@ -186,29 +228,52 @@ async function callAPI(payload) {
 
 async function buatLaporan() {
 
+  const bulanElement =
+    document.getElementById(
+      "bulan"
+    );
+
+
+  const tahunElement =
+    document.getElementById(
+      "tahun"
+    );
+
+
+  if (
+    !bulanElement ||
+    !tahunElement
+  ) {
+
+    alert(
+      "Elemen bulan/tahun tidak ditemukan."
+    );
+
+    return;
+
+  }
+
+
   const bulan =
     Number(
-      document.getElementById(
-        "bulan"
-      ).value
+      bulanElement.value
     );
 
 
   const tahun =
     Number(
-      document.getElementById(
-        "tahun"
-      ).value
+      tahunElement.value
     );
 
 
   if (
     !bulan ||
-    !tahun
+    bulan < 1 ||
+    bulan > 12
   ) {
 
     showMessage(
-      "Bulan dan tahun wajib dipilih.",
+      "Bulan tidak valid.",
       "error"
     );
 
@@ -217,10 +282,33 @@ async function buatLaporan() {
   }
 
 
-  document.getElementById(
-    "loading"
-  ).style.display =
-    "block";
+  if (
+    !tahun ||
+    tahun < 2020
+  ) {
+
+    showMessage(
+      "Tahun tidak valid.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  const loading =
+    document.getElementById(
+      "loading"
+    );
+
+
+  if (loading) {
+
+    loading.style.display =
+      "block";
+
+  }
 
 
   try {
@@ -250,49 +338,57 @@ async function buatLaporan() {
 
 
     if (
-      !result.success
+      !result ||
+      result.success !== true
     ) {
 
       throw new Error(
-        result.message ||
-        "Gagal membuat laporan."
+        result &&
+        result.message
+          ? result.message
+          : "Gagal membuat laporan."
       );
 
     }
 
 
-    laporanData =
-  result.data;
+    if (!result.data) {
 
-renderLaporan(
-  result.data
-);
+      throw new Error(
+        "Server tidak mengirim data laporan."
+      );
+
+    }
 
 
     /*
-     * SIMPAN DATA LAPORAN
-     * supaya bisa digunakan
-     * untuk Download Excel
+     * SIMPAN DATA
      */
 
     laporanData =
       result.data;
 
 
+    /*
+     * TAMPILKAN
+     */
+
     renderLaporan(
-      result.data
+      laporanData
     );
 
 
     showMessage(
-      "Laporan berhasil dibuat.",
+      "Laporan berhasil dimuat.",
       "success"
     );
 
-
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "ERROR LAPORAN:",
+      error
+    );
 
 
     showMessage(
@@ -302,10 +398,12 @@ renderLaporan(
 
   } finally {
 
-    document.getElementById(
-      "loading"
-    ).style.display =
-      "none";
+    if (loading) {
+
+      loading.style.display =
+        "none";
+
+    }
 
   }
 
@@ -316,30 +414,49 @@ renderLaporan(
    RENDER LAPORAN
 ===================================================== */
 
-function renderLaporan(data) {
+function renderLaporan(
+  data
+) {
+
+  console.log(
+    "RENDER DATA:",
+    data
+  );
+
 
   document.getElementById(
     "namaSekolah"
   ).textContent =
-    data.sekolah.nama;
+    data.sekolah &&
+    data.sekolah.nama
+      ? data.sekolah.nama
+      : "SD NEGERI JATIWARINGIN XIII";
 
 
   document.getElementById(
     "kelas"
   ).textContent =
-    data.kelas.nama;
+    data.kelas &&
+    data.kelas.nama
+      ? data.kelas.nama
+      : "-";
 
 
   document.getElementById(
     "waliKelas"
   ).textContent =
-    data.guru.nama;
+    data.guru &&
+    data.guru.nama
+      ? data.guru.nama
+      : "-";
 
 
   document.getElementById(
     "periode"
   ).textContent =
-    namaBulan[data.bulan] +
+    namaBulan[
+      Number(data.bulan)
+    ] +
     " " +
     data.tahun;
 
@@ -347,46 +464,54 @@ function renderLaporan(data) {
   document.getElementById(
     "namaKepala"
   ).textContent =
-    data.kepalaSekolah.nama ||
-    "-";
+    data.kepalaSekolah &&
+    data.kepalaSekolah.nama
+      ? data.kepalaSekolah.nama
+      : "-";
 
 
   document.getElementById(
     "nipKepala"
   ).textContent =
-    data.kepalaSekolah.nip ||
-    "-";
+    data.kepalaSekolah &&
+    data.kepalaSekolah.nip
+      ? data.kepalaSekolah.nip
+      : "-";
 
 
   document.getElementById(
     "namaWali"
   ).textContent =
-    data.guru.nama ||
-    "-";
+    data.guru &&
+    data.guru.nama
+      ? data.guru.nama
+      : "-";
 
 
   document.getElementById(
     "nipWali"
   ).textContent =
-    data.guru.nip ||
-    "-";
+    data.guru &&
+    data.guru.nip
+      ? data.guru.nip
+      : "-";
 
 
   buatHeader(
-    data.jumlahHari
+    Number(data.jumlahHari)
   );
 
 
   buatBody(
-    data.siswa,
-    data.jumlahHari
+    data.siswa || [],
+    Number(data.jumlahHari)
   );
 
 }
 
 
 /* =====================================================
-   HEADER
+   HEADER TABEL
 ===================================================== */
 
 function buatHeader(
@@ -399,19 +524,24 @@ function buatHeader(
     );
 
 
+  if (!head) {
+
+    return;
+
+  }
+
+
   let html = `
     <tr>
 
       <th
         class="no"
-        rowspan="2"
       >
         No
       </th>
 
       <th
         class="nama"
-        rowspan="2"
       >
         Nama Siswa
       </th>
@@ -443,7 +573,7 @@ function buatHeader(
 
 
 /* =====================================================
-   BODY
+   BODY TABEL
 ===================================================== */
 
 function buatBody(
@@ -455,6 +585,13 @@ function buatBody(
     document.getElementById(
       "tableBody"
     );
+
+
+  if (!body) {
+
+    return;
+
+  }
 
 
   body.innerHTML = "";
@@ -471,8 +608,7 @@ function buatBody(
         <td
           colspan="${jumlahHari + 2}"
         >
-          Tidak ada siswa.
-
+          Tidak ada siswa pada kelas ini.
         </td>
 
       </tr>
@@ -484,7 +620,10 @@ function buatBody(
 
 
   siswa.forEach(
-    function (item, index) {
+    function (
+      item,
+      index
+    ) {
 
       let html = `
         <tr>
@@ -495,7 +634,7 @@ function buatBody(
 
           <td class="nama">
             ${escapeHTML(
-              item.nama
+              item.nama || ""
             )}
           </td>
       `;
@@ -508,12 +647,17 @@ function buatBody(
       ) {
 
         const kode =
-          item.hari[d] || "";
+          item.hari &&
+          item.hari[d]
+            ? item.hari[d]
+            : "";
 
 
         html += `
           <td>
-            ${kode}
+            ${escapeHTML(
+              kode
+            )}
           </td>
         `;
 
@@ -538,10 +682,15 @@ function buatBody(
 
 /* =====================================================
    DOWNLOAD EXCEL
-   TANPA LIBRARY XLSX
+   TANPA LIBRARY
 ===================================================== */
 
 function downloadExcel() {
+
+  console.log(
+    "DOWNLOAD EXCEL DIPANGGIL"
+  );
+
 
   if (!laporanData) {
 
@@ -565,44 +714,54 @@ function downloadExcel() {
 
 
   const namaSekolah =
-    data.sekolah.nama ||
-    "SD NEGERI JATIWARINGIN XIII";
+    data.sekolah &&
+    data.sekolah.nama
+      ? data.sekolah.nama
+      : "SD NEGERI JATIWARINGIN XIII";
 
 
   const namaKelas =
-    data.kelas.nama ||
-    "-";
+    data.kelas &&
+    data.kelas.nama
+      ? data.kelas.nama
+      : "-";
 
 
   const namaWali =
-    data.guru.nama ||
-    "-";
+    data.guru &&
+    data.guru.nama
+      ? data.guru.nama
+      : "-";
 
 
   const nipWali =
-    data.guru.nip ||
-    "-";
+    data.guru &&
+    data.guru.nip
+      ? data.guru.nip
+      : "-";
 
 
   const namaKepala =
-    data.kepalaSekolah.nama ||
-    "-";
+    data.kepalaSekolah &&
+    data.kepalaSekolah.nama
+      ? data.kepalaSekolah.nama
+      : "-";
 
 
   const nipKepala =
-    data.kepalaSekolah.nip ||
-    "-";
+    data.kepalaSekolah &&
+    data.kepalaSekolah.nip
+      ? data.kepalaSekolah.nip
+      : "-";
 
 
   const periode =
-    namaBulan[data.bulan] +
+    namaBulan[
+      Number(data.bulan)
+    ] +
     " " +
     data.tahun;
 
-
-  /* =================================================
-     BUAT HTML UNTUK EXCEL
-  ================================================= */
 
   let html = `
 <!DOCTYPE html>
@@ -616,7 +775,7 @@ function downloadExcel() {
 <style>
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: Arial;
 }
 
 .title {
@@ -626,13 +785,9 @@ body {
 }
 
 .school {
-  font-size: 15pt;
+  font-size: 14pt;
   font-weight: bold;
   text-align: center;
-}
-
-.info {
-  font-size: 11pt;
 }
 
 table {
@@ -645,7 +800,6 @@ th {
   background: #d9eaf7;
   font-weight: bold;
   text-align: center;
-  vertical-align: middle;
   padding: 5px;
 }
 
@@ -663,14 +817,9 @@ td {
   text-align: center;
 }
 
-.ttd {
-  border: none !important;
-}
-
 .ttd td {
-  border: none !important;
+  border: none;
   text-align: center;
-  height: 80px;
 }
 
 </style>
@@ -687,7 +836,7 @@ td {
   colspan="${jumlahHari + 2}"
   class="title"
 >
-  DAFTAR ABSENSI SISWA
+DAFTAR ABSENSI SISWA
 </td>
 
 </tr>
@@ -699,9 +848,9 @@ td {
   colspan="${jumlahHari + 2}"
   class="school"
 >
-  ${escapeExcelHTML(
-    namaSekolah
-  )}
+${escapeExcelHTML(
+  namaSekolah
+)}
 </td>
 
 </tr>
@@ -709,8 +858,10 @@ td {
 
 <tr>
 
-<td colspan="${jumlahHari + 2}">
-  &nbsp;
+<td
+  colspan="${jumlahHari + 2}"
+>
+&nbsp;
 </td>
 
 </tr>
@@ -718,17 +869,16 @@ td {
 
 <tr>
 
-<td class="info">
-  <b>Kelas</b>
+<td>
+<b>Kelas</b>
 </td>
 
 <td
   colspan="${jumlahHari + 1}"
-  class="info"
 >
-  ${escapeExcelHTML(
-    namaKelas
-  )}
+${escapeExcelHTML(
+  namaKelas
+)}
 </td>
 
 </tr>
@@ -736,17 +886,16 @@ td {
 
 <tr>
 
-<td class="info">
-  <b>Wali Kelas</b>
+<td>
+<b>Wali Kelas</b>
 </td>
 
 <td
   colspan="${jumlahHari + 1}"
-  class="info"
 >
-  ${escapeExcelHTML(
-    namaWali
-  )}
+${escapeExcelHTML(
+  namaWali
+)}
 </td>
 
 </tr>
@@ -754,17 +903,16 @@ td {
 
 <tr>
 
-<td class="info">
-  <b>NIP Wali Kelas</b>
+<td>
+<b>NIP Wali Kelas</b>
 </td>
 
 <td
   colspan="${jumlahHari + 1}"
-  class="info"
 >
-  ${escapeExcelHTML(
-    nipWali
-  )}
+${escapeExcelHTML(
+  nipWali
+)}
 </td>
 
 </tr>
@@ -772,17 +920,16 @@ td {
 
 <tr>
 
-<td class="info">
-  <b>Bulan</b>
+<td>
+<b>Bulan</b>
 </td>
 
 <td
   colspan="${jumlahHari + 1}"
-  class="info"
 >
-  ${escapeExcelHTML(
-    periode
-  )}
+${escapeExcelHTML(
+  periode
+)}
 </td>
 
 </tr>
@@ -790,30 +937,26 @@ td {
 
 <tr>
 
-<td colspan="${jumlahHari + 2}">
-  &nbsp;
+<td
+  colspan="${jumlahHari + 2}"
+>
+&nbsp;
 </td>
 
 </tr>
 
 
-<!-- HEADER ABSENSI -->
-
 <tr>
 
-<th class="no">
-  No
+<th>
+No
 </th>
 
 <th>
-  Nama Siswa
+Nama Siswa
 </th>
 `;
 
-
-  /* =================================================
-     HEADER TANGGAL
-  ================================================= */
 
   for (
     let d = 1;
@@ -822,10 +965,8 @@ td {
   ) {
 
     html += `
-<th>
-  ${d}
-</th>
-`;
+      <th>${d}</th>
+    `;
 
   }
 
@@ -835,84 +976,62 @@ td {
 `;
 
 
-  /* =================================================
-     DATA SISWA
-  ================================================= */
+  const siswa =
+    data.siswa || [];
 
-  if (
-    data.siswa &&
-    data.siswa.length > 0
-  ) {
 
-    data.siswa.forEach(
-      function (
-        siswa,
-        index
+  siswa.forEach(
+    function (
+      item,
+      index
+    ) {
+
+      html += `
+        <tr>
+
+          <td>
+            ${index + 1}
+          </td>
+
+          <td class="nama">
+            ${escapeExcelHTML(
+              item.nama || ""
+            )}
+          </td>
+      `;
+
+
+      for (
+        let d = 1;
+        d <= jumlahHari;
+        d++
       ) {
 
-        html += `
-<tr>
-
-<td class="no">
-  ${index + 1}
-</td>
-
-<td class="nama">
-  ${escapeExcelHTML(
-    siswa.nama || ""
-  )}
-</td>
-`;
-
-
-        for (
-          let d = 1;
-          d <= jumlahHari;
-          d++
-        ) {
-
-          const kode =
-            siswa.hari[d] || "";
-
-
-          html += `
-<td>
-  ${escapeExcelHTML(
-    kode
-  )}
-</td>
-`;
-
-        }
+        const kode =
+          item.hari &&
+          item.hari[d]
+            ? item.hari[d]
+            : "";
 
 
         html += `
-</tr>
-`;
+          <td>
+            ${escapeExcelHTML(
+              kode
+            )}
+          </td>
+        `;
 
       }
-    );
-
-  } else {
-
-    html += `
-<tr>
-
-<td
-  colspan="${jumlahHari + 2}"
->
-  Tidak ada siswa
-</td>
-
-</tr>
-`;
-
-  }
 
 
-  /* =================================================
-     KETERANGAN
-  ================================================= */
+      html += `
+        </tr>
+      `;
+
+    }
+  );
+
 
   html += `
 
@@ -921,7 +1040,7 @@ td {
 <td
   colspan="${jumlahHari + 2}"
 >
-  &nbsp;
+&nbsp;
 </td>
 
 </tr>
@@ -930,18 +1049,16 @@ td {
 <tr>
 
 <td>
-
 <b>Keterangan</b>
-
 </td>
 
 <td
   colspan="${jumlahHari + 1}"
 >
-  H = Hadir,
-  I = Izin,
-  S = Sakit,
-  A = Alpa
+H = Hadir,
+I = Izin,
+S = Sakit,
+A = Alpa
 </td>
 
 </tr>
@@ -952,13 +1069,11 @@ td {
 <td
   colspan="${jumlahHari + 2}"
 >
-  &nbsp;
+&nbsp;
 </td>
 
 </tr>
 
-
-<!-- TANDA TANGAN -->
 
 <tr class="ttd">
 
@@ -967,20 +1082,15 @@ td {
     (jumlahHari + 2) / 2
   )}"
 >
-
 <b>Kepala Sekolah</b>
-
 </td>
-
 
 <td
   colspan="${Math.floor(
     (jumlahHari + 2) / 2
   )}"
 >
-
 <b>Wali Kelas</b>
-
 </td>
 
 </tr>
@@ -993,42 +1103,17 @@ td {
     (jumlahHari + 2) / 2
   )}"
 >
-  <br><br><br>
-</td>
-
-
-<td
-  colspan="${Math.floor(
-    (jumlahHari + 2) / 2
-  )}"
->
-  <br><br><br>
-</td>
-
-</tr>
-
-
-<tr class="ttd">
-
-<td
-  colspan="${Math.ceil(
-    (jumlahHari + 2) / 2
-  )}"
->
-
+<br><br><br>
 <b>
 ${escapeExcelHTML(
   namaKepala
 )}
 </b>
-
 <br>
-
 NIP.
 ${escapeExcelHTML(
   nipKepala
 )}
-
 </td>
 
 
@@ -1037,20 +1122,17 @@ ${escapeExcelHTML(
     (jumlahHari + 2) / 2
   )}"
 >
-
+<br><br><br>
 <b>
 ${escapeExcelHTML(
   namaWali
 )}
 </b>
-
 <br>
-
 NIP.
 ${escapeExcelHTML(
   nipWali
 )}
-
 </td>
 
 </tr>
@@ -1062,10 +1144,6 @@ ${escapeExcelHTML(
 </html>
 `;
 
-
-  /* =================================================
-     BUAT FILE EXCEL
-  ================================================= */
 
   const blob =
     new Blob(
@@ -1099,7 +1177,7 @@ ${escapeExcelHTML(
     ) +
     "_" +
     namaBulan[
-      data.bulan
+      Number(data.bulan)
     ] +
     "_" +
     data.tahun +
@@ -1142,7 +1220,65 @@ ${escapeExcelHTML(
 
 
 /* =====================================================
-   ESCAPE HTML UNTUK EXCEL
+   SANITASI NAMA FILE
+===================================================== */
+
+function sanitasiNamaFile(
+  nama
+) {
+
+  return String(
+    nama || "Kelas"
+  )
+    .replace(
+      /[\\/:*?"<>|]/g,
+      "_"
+    )
+    .replace(
+      /\s+/g,
+      "_"
+    );
+
+}
+
+
+/* =====================================================
+   ESCAPE HTML
+===================================================== */
+
+function escapeHTML(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* =====================================================
+   ESCAPE EXCEL HTML
 ===================================================== */
 
 function escapeExcelHTML(
@@ -1177,507 +1313,6 @@ function escapeExcelHTML(
 
 
 /* =====================================================
-   SANITASI NAMA FILE
-===================================================== */
-
-function sanitasiNamaFile(
-  nama
-) {
-
-  return String(
-    nama || "Kelas"
-  )
-    .replace(
-      /[\\/:*?"<>|]/g,
-      "_"
-    )
-    .replace(
-      /\s+/g,
-      "_"
-    );
-
-}
-
-
-  /*
-   * ================================================
-   * DATA EXCEL
-   * ================================================
-   */
-
-  const rows = [];
-
-
-  rows.push([
-    "DAFTAR ABSENSI SISWA"
-  ]);
-
-
-  rows.push([
-    namaSekolah
-  ]);
-
-
-  rows.push([]);
-
-
-  rows.push([
-    "Kelas",
-    namaKelas
-  ]);
-
-
-  rows.push([
-    "Wali Kelas",
-    namaWali
-  ]);
-
-
-  rows.push([
-    "NIP Wali Kelas",
-    nipWali
-  ]);
-
-
-  rows.push([
-    "Bulan",
-    periode
-  ]);
-
-
-  rows.push([]);
-
-
-  /*
-   * HEADER TABEL
-   */
-
-  const header = [
-    "No",
-    "Nama Siswa"
-  ];
-
-
-  for (
-    let d = 1;
-    d <= jumlahHari;
-    d++
-  ) {
-
-    header.push(
-      String(d)
-    );
-
-  }
-
-
-  rows.push(header);
-
-
-  /*
-   * DATA SISWA
-   */
-
-  if (
-    data.siswa &&
-    data.siswa.length > 0
-  ) {
-
-    data.siswa.forEach(
-      function (
-        siswa,
-        index
-      ) {
-
-        const row = [
-          index + 1,
-          siswa.nama || ""
-        ];
-
-
-        for (
-          let d = 1;
-          d <= jumlahHari;
-          d++
-        ) {
-
-          row.push(
-            siswa.hari[d] || ""
-          );
-
-        }
-
-
-        rows.push(row);
-
-      }
-    );
-
-  } else {
-
-    const row = [
-      "",
-      "Tidak ada siswa"
-    ];
-
-
-    for (
-      let d = 1;
-      d <= jumlahHari;
-      d++
-    ) {
-
-      row.push("");
-
-    }
-
-
-    rows.push(row);
-
-  }
-
-
-  /*
-   * KETERANGAN
-   */
-
-  rows.push([]);
-
-  rows.push([
-    "Keterangan",
-    "H = Hadir, I = Izin, S = Sakit, A = Alpa"
-  ]);
-
-
-  rows.push([]);
-
-
-  /*
-   * TANDA TANGAN
-   */
-
-  rows.push([
-    "Kepala Sekolah",
-    "",
-    "",
-    "Wali Kelas"
-  ]);
-
-
-  rows.push([]);
-
-
-  rows.push([
-    namaKepala,
-    "",
-    "",
-    namaWali
-  ]);
-
-
-  rows.push([
-    "NIP. " + nipKepala,
-    "",
-    "",
-    "NIP. " + nipWali
-  ]);
-
-
-  /*
-   * ================================================
-   * BUAT WORKSHEET
-   * ================================================
-   */
-
-  const worksheet =
-    XLSX.utils.aoa_to_sheet(
-      rows
-    );
-
-
-  /*
-   * ================================================
-   * LEBAR KOLOM
-   * ================================================
-   */
-
-  const widths = [];
-
-
-  widths.push({
-    wch: 6
-  });
-
-
-  widths.push({
-    wch: 30
-  });
-
-
-  for (
-    let d = 1;
-    d <= jumlahHari;
-    d++
-  ) {
-
-    widths.push({
-      wch: 5
-    });
-
-  }
-
-
-  worksheet["!cols"] =
-    widths;
-
-
-  /*
-   * ================================================
-   * MERGE JUDUL
-   * ================================================
-   */
-
-  worksheet["!merges"] = [
-
-    {
-      s: {
-        r: 0,
-        c: 0
-      },
-
-      e: {
-        r: 0,
-        c: jumlahHari + 1
-      }
-    },
-
-    {
-      s: {
-        r: 1,
-        c: 0
-      },
-
-      e: {
-        r: 1,
-        c: jumlahHari + 1
-      }
-    }
-
-  ];
-
-
-  /*
-   * ================================================
-   * FORMAT HEADER
-   * ================================================
-   */
-
-  const headerRow =
-    8;
-
-
-  for (
-    let c = 0;
-    c <= jumlahHari + 1;
-    c++
-  ) {
-
-    const cell =
-      XLSX.utils.encode_cell({
-        r: headerRow,
-        c: c
-      });
-
-
-    if (
-      worksheet[cell]
-    ) {
-
-      worksheet[cell].s = {
-
-        font: {
-          bold: true
-        },
-
-        alignment: {
-          horizontal:
-            "center",
-          vertical:
-            "center"
-        },
-
-        border: {
-
-          top: {
-            style: "thin"
-          },
-
-          bottom: {
-            style: "thin"
-          },
-
-          left: {
-            style: "thin"
-          },
-
-          right: {
-            style: "thin"
-          }
-
-        }
-
-      };
-
-    }
-
-  }
-
-
-  /*
-   * ================================================
-   * BORDER DATA
-   * ================================================
-   */
-
-  for (
-    let r = headerRow + 1;
-    r < rows.length;
-    r++
-  ) {
-
-    for (
-      let c = 0;
-      c <= jumlahHari + 1;
-      c++
-    ) {
-
-      const cell =
-        XLSX.utils.encode_cell({
-          r: r,
-          c: c
-        });
-
-
-      if (
-        worksheet[cell]
-      ) {
-
-        worksheet[cell].s = {
-
-          border: {
-
-            top: {
-              style: "thin"
-            },
-
-            bottom: {
-              style: "thin"
-            },
-
-            left: {
-              style: "thin"
-            },
-
-            right: {
-              style: "thin"
-            }
-
-          },
-
-          alignment: {
-
-            horizontal:
-              c === 1
-                ? "left"
-                : "center",
-
-            vertical:
-              "center"
-
-          }
-
-        };
-
-      }
-
-    }
-
-  }
-
-
-  /*
-   * ================================================
-   * BUAT WORKBOOK
-   * ================================================
-   */
-
-  const workbook =
-    XLSX.utils.book_new();
-
-
-  XLSX.utils.book_append_sheet(
-    workbook,
-    worksheet,
-    "Absensi Bulanan"
-  );
-
-
-  /*
-   * ================================================
-   * NAMA FILE
-   * ================================================
-   */
-
-  const namaFile =
-    "Absensi_" +
-    sanitasiNamaFile(
-      namaKelas
-    ) +
-    "_" +
-    namaBulan[data.bulan] +
-    "_" +
-    data.tahun +
-    ".xlsx";
-
-
-  /*
-   * ================================================
-   * DOWNLOAD
-   * ================================================
-   */
-
-  XLSX.writeFile(
-    workbook,
-    namaFile
-  );
-
-}
-
-
-/* =====================================================
-   SANITASI NAMA FILE
-===================================================== */
-
-function sanitasiNamaFile(
-  nama
-) {
-
-  return String(
-    nama || "Kelas"
-  )
-    .replace(
-      /[\\/:*?"<>|]/g,
-      "_"
-    )
-    .replace(
-      /\s+/g,
-      "_"
-    );
-
-}
-
-
-/* =====================================================
    MESSAGE
 ===================================================== */
 
@@ -1692,6 +1327,15 @@ function showMessage(
     );
 
 
+  if (!element) {
+
+    alert(message);
+
+    return;
+
+  }
+
+
   element.className =
     "message " +
     type;
@@ -1699,38 +1343,5 @@ function showMessage(
 
   element.textContent =
     message;
-
-}
-
-
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
-
-function escapeHTML(value) {
-
-  return String(
-    value ?? ""
-  )
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
 
 }
