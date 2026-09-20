@@ -261,6 +261,14 @@ async function buatLaporan() {
     }
 
 
+    laporanData =
+  result.data;
+
+renderLaporan(
+  result.data
+);
+
+
     /*
      * SIMPAN DATA LAPORAN
      * supaya bisa digunakan
@@ -530,6 +538,7 @@ function buatBody(
 
 /* =====================================================
    DOWNLOAD EXCEL
+   TANPA LIBRARY XLSX
 ===================================================== */
 
 function downloadExcel() {
@@ -547,24 +556,6 @@ function downloadExcel() {
 
   const data =
     laporanData;
-
-
-  /*
-   * Pastikan library XLSX tersedia
-   */
-
-  if (
-    typeof XLSX ===
-    "undefined"
-  ) {
-
-    alert(
-      "Library Excel belum dimuat. Silakan periksa koneksi internet atau script XLSX pada HTML."
-    );
-
-    return;
-
-  }
 
 
   const jumlahHari =
@@ -607,6 +598,605 @@ function downloadExcel() {
     namaBulan[data.bulan] +
     " " +
     data.tahun;
+
+
+  /* =================================================
+     BUAT HTML UNTUK EXCEL
+  ================================================= */
+
+  let html = `
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<style>
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+.title {
+  font-size: 18pt;
+  font-weight: bold;
+  text-align: center;
+}
+
+.school {
+  font-size: 15pt;
+  font-weight: bold;
+  text-align: center;
+}
+
+.info {
+  font-size: 11pt;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th {
+  border: 1px solid #000;
+  background: #d9eaf7;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  padding: 5px;
+}
+
+td {
+  border: 1px solid #000;
+  padding: 4px;
+  text-align: center;
+}
+
+.nama {
+  text-align: left;
+}
+
+.no {
+  text-align: center;
+}
+
+.ttd {
+  border: none !important;
+}
+
+.ttd td {
+  border: none !important;
+  text-align: center;
+  height: 80px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<table>
+
+<tr>
+
+<td
+  colspan="${jumlahHari + 2}"
+  class="title"
+>
+  DAFTAR ABSENSI SISWA
+</td>
+
+</tr>
+
+
+<tr>
+
+<td
+  colspan="${jumlahHari + 2}"
+  class="school"
+>
+  ${escapeExcelHTML(
+    namaSekolah
+  )}
+</td>
+
+</tr>
+
+
+<tr>
+
+<td colspan="${jumlahHari + 2}">
+  &nbsp;
+</td>
+
+</tr>
+
+
+<tr>
+
+<td class="info">
+  <b>Kelas</b>
+</td>
+
+<td
+  colspan="${jumlahHari + 1}"
+  class="info"
+>
+  ${escapeExcelHTML(
+    namaKelas
+  )}
+</td>
+
+</tr>
+
+
+<tr>
+
+<td class="info">
+  <b>Wali Kelas</b>
+</td>
+
+<td
+  colspan="${jumlahHari + 1}"
+  class="info"
+>
+  ${escapeExcelHTML(
+    namaWali
+  )}
+</td>
+
+</tr>
+
+
+<tr>
+
+<td class="info">
+  <b>NIP Wali Kelas</b>
+</td>
+
+<td
+  colspan="${jumlahHari + 1}"
+  class="info"
+>
+  ${escapeExcelHTML(
+    nipWali
+  )}
+</td>
+
+</tr>
+
+
+<tr>
+
+<td class="info">
+  <b>Bulan</b>
+</td>
+
+<td
+  colspan="${jumlahHari + 1}"
+  class="info"
+>
+  ${escapeExcelHTML(
+    periode
+  )}
+</td>
+
+</tr>
+
+
+<tr>
+
+<td colspan="${jumlahHari + 2}">
+  &nbsp;
+</td>
+
+</tr>
+
+
+<!-- HEADER ABSENSI -->
+
+<tr>
+
+<th class="no">
+  No
+</th>
+
+<th>
+  Nama Siswa
+</th>
+`;
+
+
+  /* =================================================
+     HEADER TANGGAL
+  ================================================= */
+
+  for (
+    let d = 1;
+    d <= jumlahHari;
+    d++
+  ) {
+
+    html += `
+<th>
+  ${d}
+</th>
+`;
+
+  }
+
+
+  html += `
+</tr>
+`;
+
+
+  /* =================================================
+     DATA SISWA
+  ================================================= */
+
+  if (
+    data.siswa &&
+    data.siswa.length > 0
+  ) {
+
+    data.siswa.forEach(
+      function (
+        siswa,
+        index
+      ) {
+
+        html += `
+<tr>
+
+<td class="no">
+  ${index + 1}
+</td>
+
+<td class="nama">
+  ${escapeExcelHTML(
+    siswa.nama || ""
+  )}
+</td>
+`;
+
+
+        for (
+          let d = 1;
+          d <= jumlahHari;
+          d++
+        ) {
+
+          const kode =
+            siswa.hari[d] || "";
+
+
+          html += `
+<td>
+  ${escapeExcelHTML(
+    kode
+  )}
+</td>
+`;
+
+        }
+
+
+        html += `
+</tr>
+`;
+
+      }
+    );
+
+  } else {
+
+    html += `
+<tr>
+
+<td
+  colspan="${jumlahHari + 2}"
+>
+  Tidak ada siswa
+</td>
+
+</tr>
+`;
+
+  }
+
+
+  /* =================================================
+     KETERANGAN
+  ================================================= */
+
+  html += `
+
+<tr>
+
+<td
+  colspan="${jumlahHari + 2}"
+>
+  &nbsp;
+</td>
+
+</tr>
+
+
+<tr>
+
+<td>
+
+<b>Keterangan</b>
+
+</td>
+
+<td
+  colspan="${jumlahHari + 1}"
+>
+  H = Hadir,
+  I = Izin,
+  S = Sakit,
+  A = Alpa
+</td>
+
+</tr>
+
+
+<tr>
+
+<td
+  colspan="${jumlahHari + 2}"
+>
+  &nbsp;
+</td>
+
+</tr>
+
+
+<!-- TANDA TANGAN -->
+
+<tr class="ttd">
+
+<td
+  colspan="${Math.ceil(
+    (jumlahHari + 2) / 2
+  )}"
+>
+
+<b>Kepala Sekolah</b>
+
+</td>
+
+
+<td
+  colspan="${Math.floor(
+    (jumlahHari + 2) / 2
+  )}"
+>
+
+<b>Wali Kelas</b>
+
+</td>
+
+</tr>
+
+
+<tr class="ttd">
+
+<td
+  colspan="${Math.ceil(
+    (jumlahHari + 2) / 2
+  )}"
+>
+  <br><br><br>
+</td>
+
+
+<td
+  colspan="${Math.floor(
+    (jumlahHari + 2) / 2
+  )}"
+>
+  <br><br><br>
+</td>
+
+</tr>
+
+
+<tr class="ttd">
+
+<td
+  colspan="${Math.ceil(
+    (jumlahHari + 2) / 2
+  )}"
+>
+
+<b>
+${escapeExcelHTML(
+  namaKepala
+)}
+</b>
+
+<br>
+
+NIP.
+${escapeExcelHTML(
+  nipKepala
+)}
+
+</td>
+
+
+<td
+  colspan="${Math.floor(
+    (jumlahHari + 2) / 2
+  )}"
+>
+
+<b>
+${escapeExcelHTML(
+  namaWali
+)}
+</b>
+
+<br>
+
+NIP.
+${escapeExcelHTML(
+  nipWali
+)}
+
+</td>
+
+</tr>
+
+</table>
+
+</body>
+
+</html>
+`;
+
+
+  /* =================================================
+     BUAT FILE EXCEL
+  ================================================= */
+
+  const blob =
+    new Blob(
+      [
+        "\uFEFF",
+        html
+      ],
+      {
+        type:
+          "application/vnd.ms-excel"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+
+  const namaFile =
+    "Absensi_" +
+    sanitasiNamaFile(
+      namaKelas
+    ) +
+    "_" +
+    namaBulan[
+      data.bulan
+    ] +
+    "_" +
+    data.tahun +
+    ".xls";
+
+
+  link.href =
+    url;
+
+
+  link.download =
+    namaFile;
+
+
+  document.body.appendChild(
+    link
+  );
+
+
+  link.click();
+
+
+  document.body.removeChild(
+    link
+  );
+
+
+  setTimeout(
+    function () {
+
+      URL.revokeObjectURL(
+        url
+      );
+
+    },
+    1000
+  );
+
+}
+
+
+/* =====================================================
+   ESCAPE HTML UNTUK EXCEL
+===================================================== */
+
+function escapeExcelHTML(
+  value
+) {
+
+  return String(
+    value ?? ""
+  )
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+
+}
+
+
+/* =====================================================
+   SANITASI NAMA FILE
+===================================================== */
+
+function sanitasiNamaFile(
+  nama
+) {
+
+  return String(
+    nama || "Kelas"
+  )
+    .replace(
+      /[\\/:*?"<>|]/g,
+      "_"
+    )
+    .replace(
+      /\s+/g,
+      "_"
+    );
+
+}
 
 
   /*
