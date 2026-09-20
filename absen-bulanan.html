@@ -3,610 +3,396 @@
 
 <head>
 
-<meta charset="UTF-8">
-
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
->
-
-<title>
-  Daftar Absensi Siswa
-</title>
-
-<style>
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 20px;
-  font-family: Arial, sans-serif;
-  background: #f3f4f6;
-  color: #111;
-}
-
-.container {
-  max-width: 1600px;
-  margin: auto;
-}
-
-.toolbar {
-  background: white;
-  padding: 18px;
-  border-radius: 12px;
-  margin-bottom: 15px;
-}
-
-.toolbar-row {
-  display: flex;
-  gap: 12px;
-  align-items: end;
-  flex-wrap: wrap;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-select,
-button {
-  padding: 10px 14px;
-  border-radius: 7px;
-  border: 1px solid #ccc;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  font-weight: bold;
-}
-
-.blue {
-  background: #2563eb;
-  color: white;
-}
-
-.green {
-  background: #16a34a;
-  color: white;
-}
-
-.gray {
-  background: #64748b;
-  color: white;
-}
-
-
-/* HEADER */
-
-.report {
-  background: white;
-  padding: 25px;
-}
-
-.report-title {
-  text-align: center;
-}
-
-.report-title h1 {
-  margin: 0;
-  font-family: "Times New Roman", serif;
-  font-size: 31px;
-}
-
-.report-title h2 {
-  margin: 5px 0 15px;
-  font-family: "Times New Roman", serif;
-  font-size: 24px;
-}
-
-.line {
-  border-top: 3px solid black;
-  margin-bottom: 18px;
-}
-
-.identity {
-  font-size: 15px;
-  margin-bottom: 20px;
-}
-
-.identity-row {
-  display: grid;
-  grid-template-columns:
-    120px
-    15px
-    auto;
-
-  margin-bottom: 5px;
-}
-
-.identity-label {
-  font-weight: bold;
-}
-
-
-/* TABLE */
-
-.table-wrapper {
-  overflow-x: auto;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-  min-width: 1150px;
-  table-layout: fixed;
-}
-
-th,
-td {
-  border: 1px solid #222;
-  padding: 5px 2px;
-  text-align: center;
-  font-size: 11px;
-}
-
-th {
-  background: #e5e7eb;
-}
-
-.no {
-  width: 40px;
-}
-
-.nama {
-  width: 190px;
-  text-align: left;
-  padding-left: 8px;
-}
-
-.hari {
-  width: 27px;
-}
-
-.total {
-  width: 32px;
-}
-
-.hadir {
-  color: #059669;
-  font-weight: bold;
-}
-
-.izin {
-  color: #f59e0b;
-  font-weight: bold;
-}
-
-.sakit {
-  color: #7c3aed;
-  font-weight: bold;
-}
-
-.alpa {
-  color: #dc2626;
-  font-weight: bold;
-}
-
-
-/* KETERANGAN */
-
-.legend {
-  margin-top: 20px;
-  border: 1px solid #94a3b8;
-  border-radius: 7px;
-  padding: 12px 18px;
-  display: inline-block;
-}
-
-.legend strong {
-  margin-right: 15px;
-}
-
-.legend span {
-  margin-right: 22px;
-}
-
-
-/* SIGNATURE */
-
-.signature-area {
-  margin-top: 45px;
-  display: flex;
-  justify-content: space-between;
-  gap: 100px;
-  padding: 0 50px;
-}
-
-.signature {
-  width: 310px;
-  font-size: 14px;
-}
-
-.signature.left {
-  text-align: left;
-}
-
-.signature.right {
-  text-align: left;
-}
-
-.sign-space {
-  height: 75px;
-}
-
-.name-signature {
-  font-weight: bold;
-  text-decoration: underline;
-}
-
-.loading {
-  padding: 30px;
-  text-align: center;
-}
-
-.error {
-  display: none;
-  padding: 12px;
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-
-/* PRINT */
-
-@media print {
-
-  @page {
-    size: A4 landscape;
-    margin: 8mm;
-  }
-
-  body {
-    margin: 0;
-    padding: 0;
-    background: white;
-  }
-
-  .no-print {
-    display: none !important;
-  }
-
-  .report {
-    padding: 0;
-  }
-
-  .report-title h1 {
-    font-size: 25px;
-  }
-
-  .report-title h2 {
-    font-size: 20px;
-  }
-
-  table {
-    min-width: 0;
-    width: 100%;
-  }
-
-  th,
-  td {
-    font-size: 8px;
-    padding: 2px 1px;
-  }
-
-  .nama {
-    width: 130px;
-  }
-
-  .hari {
-    width: auto;
-  }
-
-  .signature-area {
-    margin-top: 25px;
-  }
-
-  .sign-space {
-    height: 55px;
-  }
-
-}
-
-</style>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Absensi Bulanan</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .panel {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    select,
+    input,
+    button {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      border: none;
+    }
+
+    .btn-print {
+      background: #059669;
+    }
+
+    .btn-back {
+      background: #6b7280;
+    }
+
+    #loading {
+      display: none;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #report {
+      background: white;
+      padding: 25px;
+      overflow-x: auto;
+    }
+
+    .kop {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .kop h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+
+    .kop h2 {
+      font-size: 18px;
+      margin: 5px 0 20px;
+    }
+
+    .info {
+      margin-bottom: 20px;
+      line-height: 1.8;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 11px;
+    }
+
+    th,
+    td {
+      border: 1px solid #000;
+      padding: 4px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    th.nama,
+    td.nama {
+      min-width: 180px;
+      text-align: left;
+    }
+
+    th.no,
+    td.no {
+      width: 35px;
+    }
+
+    .keterangan {
+      margin-top: 15px;
+      font-size: 12px;
+    }
+
+    .ttd {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 60px;
+      text-align: center;
+    }
+
+    .ttd-box {
+      width: 250px;
+    }
+
+    .ttd-space {
+      height: 70px;
+    }
+
+    .message {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .message.error {
+      display: block;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .message.success {
+      display: block;
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    @media print {
+
+      body {
+        background: white;
+      }
+
+      .no-print {
+        display: none !important;
+      }
+
+      .container {
+        max-width: none;
+        padding: 0;
+      }
+
+      .panel {
+        display: none;
+      }
+
+      #report {
+        padding: 0;
+      }
+
+      @page {
+        size: landscape;
+        margin: 8mm;
+      }
+
+    }
+
+  </style>
 
 </head>
 
-
 <body>
-
 
 <div class="container">
 
+  <div class="panel no-print">
 
-<!-- FILTER -->
+    <h2>📋 Absensi Bulanan</h2>
 
-<div class="toolbar no-print">
+    <div class="form-row">
 
-  <div class="toolbar-row">
+      <div class="form-group">
+
+        <label>Bulan</label>
+
+        <select id="bulan">
+
+          <option value="1">Januari</option>
+          <option value="2">Februari</option>
+          <option value="3">Maret</option>
+          <option value="4">April</option>
+          <option value="5">Mei</option>
+          <option value="6">Juni</option>
+          <option value="7">Juli</option>
+          <option value="8">Agustus</option>
+          <option value="9">September</option>
+          <option value="10">Oktober</option>
+          <option value="11">November</option>
+          <option value="12">Desember</option>
+
+        </select>
+
+      </div>
 
 
-    <div class="form-group">
+      <div class="form-group">
 
-      <label>
-        Bulan
-      </label>
+        <label>Tahun</label>
 
-      <select id="bulan">
+        <input
+          type="number"
+          id="tahun"
+          min="2020"
+          max="2100"
+        >
 
-        <option value="1">Januari</option>
-        <option value="2">Februari</option>
-        <option value="3">Maret</option>
-        <option value="4">April</option>
-        <option value="5">Mei</option>
-        <option value="6">Juni</option>
-        <option value="7">Juli</option>
-        <option value="8">Agustus</option>
-        <option value="9">September</option>
-        <option value="10">Oktober</option>
-        <option value="11">November</option>
-        <option value="12">Desember</option>
+      </div>
 
-      </select>
+
+      <button onclick="buatLaporan()">
+        🔍 Tampilkan
+      </button>
+
+
+      <button
+        class="btn-print"
+        onclick="window.print()"
+      >
+        🖨️ Cetak
+      </button>
+
+
+      <button
+        class="btn-back"
+        onclick="history.back()"
+      >
+        ← Kembali
+      </button>
 
     </div>
 
-
-    <div class="form-group">
-
-      <label>
-        Tahun
-      </label>
-
-      <select id="tahun"></select>
-
-    </div>
-
-
-    <button
-      class="blue"
-      onclick="tampilkanAbsen()"
-    >
-      🔍 Tampilkan
-    </button>
-
-
-    <button
-      class="green"
-      onclick="window.print()"
-    >
-      🖨️ Cetak
-    </button>
-
-
-    <button
-      class="gray"
-      onclick="location.href='presensi.html'"
-    >
-      ← Kembali
-    </button>
-
-
-  </div>
-
-</div>
-
-
-<!-- REPORT -->
-
-<div class="report">
-
-
-  <div class="report-title">
-
-    <h1>
-      DAFTAR ABSENSI SISWA
-    </h1>
-
-    <h2 id="namaSekolah">
-      SD NEGERI JATIWARINGIN XIII
-    </h2>
+    <div
+      id="message"
+      class="message"
+    ></div>
 
   </div>
 
 
-  <div class="line"></div>
+  <div id="loading">
+    ⏳ Membuat laporan...
+  </div>
 
 
-  <div class="identity">
+  <div id="report">
 
-    <div class="identity-row">
+    <div class="kop">
 
-      <div class="identity-label">
-        Kelas
+      <h1>
+        DAFTAR ABSENSI SISWA
+      </h1>
+
+      <h2 id="namaSekolah">
+        SD NEGERI JATIWARINGIN XIII
+      </h2>
+
+    </div>
+
+
+    <div class="info">
+
+      <div>
+        <strong>Kelas</strong>
+        &nbsp;&nbsp;&nbsp;:
+        <span id="kelas">-</span>
       </div>
 
-      <div>:</div>
+      <div>
+        <strong>Wali Kelas</strong>
+        :
+        <span id="waliKelas">-</span>
+      </div>
 
-      <div id="kelasGuru">
-        -
+      <div>
+        <strong>Bulan</strong>
+        &nbsp;&nbsp;&nbsp;:
+        <span id="periode">-</span>
       </div>
 
     </div>
 
 
-    <div class="identity-row">
+    <table>
 
-      <div class="identity-label">
+      <thead id="tableHead"></thead>
+
+      <tbody id="tableBody"></tbody>
+
+    </table>
+
+
+    <div class="keterangan">
+
+      <strong>Keterangan:</strong>
+
+      H = Hadir &nbsp;&nbsp;
+
+      I = Izin &nbsp;&nbsp;
+
+      S = Sakit &nbsp;&nbsp;
+
+      A = Alpa
+
+    </div>
+
+
+    <div class="ttd">
+
+      <div class="ttd-box">
+
+        Kepala Sekolah
+
+        <div class="ttd-space"></div>
+
+        <strong id="namaKepala">
+          -
+        </strong>
+
+        <br>
+
+        NIP.
+        <span id="nipKepala">
+          -
+        </span>
+
+      </div>
+
+
+      <div class="ttd-box">
+
         Wali Kelas
-      </div>
 
-      <div>:</div>
+        <div class="ttd-space"></div>
 
-      <div id="namaGuru">
-        -
-      </div>
+        <strong id="namaWali">
+          -
+        </strong>
 
-    </div>
+        <br>
 
+        NIP.
+        <span id="nipWali">
+          -
+        </span>
 
-    <div class="identity-row">
-
-      <div class="identity-label">
-        Bulan
-      </div>
-
-      <div>:</div>
-
-      <div id="periode">
-        -
       </div>
 
     </div>
 
   </div>
-
-
-  <div
-    id="loading"
-    class="loading"
-  >
-    Memuat data...
-  </div>
-
-
-  <div
-    id="error"
-    class="error"
-  ></div>
-
-
-  <div
-    id="hasil"
-    style="display:none;"
-  >
-
-
-    <div class="table-wrapper">
-
-      <table>
-
-        <thead id="tableHead"></thead>
-
-        <tbody id="tableBody"></tbody>
-
-      </table>
-
-    </div>
-
-
-    <div class="legend">
-
-      <strong>
-        Keterangan:
-      </strong>
-
-      <span>
-        <b class="hadir">H</b>
-        = Hadir
-      </span>
-
-      <span>
-        <b class="izin">I</b>
-        = Izin
-      </span>
-
-      <span>
-        <b class="sakit">S</b>
-        = Sakit
-      </span>
-
-      <span>
-        <b class="alpa">A</b>
-        = Alpa
-      </span>
-
-    </div>
-
-
-    <!-- TANDA TANGAN -->
-
-    <div class="signature-area">
-
-
-      <div class="signature left">
-
-        <div>
-          Mengetahui,
-        </div>
-
-        <div>
-          Kepala Sekolah
-        </div>
-
-        <div class="sign-space"></div>
-
-        <div
-          class="name-signature"
-          id="namaKepala"
-        >
-          __________________
-        </div>
-
-        <div>
-          NIP.
-          <span id="nipKepala">
-            __________________
-          </span>
-        </div>
-
-      </div>
-
-
-      <div class="signature right">
-
-        <div id="tanggalCetak">
-          Jakarta, -
-        </div>
-
-        <div>
-          Wali Kelas
-          <span id="kelasTtd">
-          </span>
-        </div>
-
-        <div class="sign-space"></div>
-
-        <div
-          class="name-signature"
-          id="namaGuruTtd"
-        >
-          __________________
-        </div>
-
-        <div>
-          NIP.
-          <span id="nipGuru">
-            __________________
-          </span>
-        </div>
-
-      </div>
-
-
-    </div>
-
-
-  </div>
-
-
-</div>
-
 
 </div>
 
