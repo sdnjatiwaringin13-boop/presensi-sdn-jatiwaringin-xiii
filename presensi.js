@@ -13,28 +13,20 @@ let kelasList = [];
 
 async function callAPI(payload) {
 
+  console.log("API REQUEST:", payload);
+
   const response = await fetch(API_URL, {
-
     method: "POST",
-
     headers: {
-      "Content-Type":
-        "text/plain;charset=utf-8"
+      "Content-Type": "text/plain;charset=utf-8"
     },
-
     body: JSON.stringify(payload)
-
   });
 
 
-  const text =
-    await response.text();
+  const text = await response.text();
 
-
-  console.log(
-    "API RESPONSE:",
-    text
-  );
+  console.log("API RESPONSE:", text);
 
 
   if (!text) {
@@ -48,16 +40,14 @@ async function callAPI(payload) {
 
   let result;
 
-
   try {
 
-    result =
-      JSON.parse(text);
+    result = JSON.parse(text);
 
   } catch (error) {
 
     console.error(
-      "Response bukan JSON:",
+      "RESPONSE BUKAN JSON:",
       text
     );
 
@@ -116,9 +106,9 @@ async function initPresensi() {
     );
 
 
-  /* ---------------------------------------------
-     BELUM LOGIN
-  --------------------------------------------- */
+  /* -----------------------------------------------------
+     CEK LOGIN
+  ----------------------------------------------------- */
 
   if (!savedUser) {
 
@@ -130,9 +120,9 @@ async function initPresensi() {
   }
 
 
-  /* ---------------------------------------------
-     PARSE USER
-  --------------------------------------------- */
+  /* -----------------------------------------------------
+     BACA USER
+  ----------------------------------------------------- */
 
   try {
 
@@ -142,7 +132,7 @@ async function initPresensi() {
   } catch (error) {
 
     console.error(
-      "USER DATA ERROR:",
+      "DATA USER RUSAK:",
       error
     );
 
@@ -158,9 +148,15 @@ async function initPresensi() {
   }
 
 
-  /* ---------------------------------------------
+  console.log(
+    "CURRENT USER:",
+    currentUser
+  );
+
+
+  /* -----------------------------------------------------
      VALIDASI ROLE
-  --------------------------------------------- */
+  ----------------------------------------------------- */
 
   const role =
     String(
@@ -184,9 +180,9 @@ async function initPresensi() {
   }
 
 
-  /* ---------------------------------------------
+  /* -----------------------------------------------------
      VALIDASI ID GURU
-  --------------------------------------------- */
+  ----------------------------------------------------- */
 
   if (!currentUser.idGuru) {
 
@@ -196,7 +192,7 @@ async function initPresensi() {
     );
 
     console.error(
-      "CURRENT USER:",
+      "USER TANPA ID GURU:",
       currentUser
     );
 
@@ -205,30 +201,30 @@ async function initPresensi() {
   }
 
 
-  /* ---------------------------------------------
-     TAMPILKAN GURU
-  --------------------------------------------- */
+  /* -----------------------------------------------------
+     TAMPILKAN INFORMASI GURU
+  ----------------------------------------------------- */
 
   tampilkanInfoGuru();
 
 
-  /* ---------------------------------------------
-     TANGGAL
-  --------------------------------------------- */
+  /* -----------------------------------------------------
+     SET TANGGAL
+  ----------------------------------------------------- */
 
   setTanggalHariIni();
 
 
-  /* ---------------------------------------------
-     EVENT
-  --------------------------------------------- */
+  /* -----------------------------------------------------
+     PASANG EVENT
+  ----------------------------------------------------- */
 
   pasangEvent();
 
 
-  /* ---------------------------------------------
-     LOAD KELAS
-  --------------------------------------------- */
+  /* -----------------------------------------------------
+     LOAD KELAS GURU
+  ----------------------------------------------------- */
 
   await loadKelasGuru();
 
@@ -247,12 +243,15 @@ function tampilkanInfoGuru() {
     );
 
 
-  if (!guruInfo) return;
+  if (!guruInfo) {
+    return;
+  }
 
 
   const nama =
     currentUser.nama ||
     currentUser.namaGuru ||
+    currentUser.namaGuruKelas ||
     currentUser.username ||
     "Guru";
 
@@ -263,23 +262,19 @@ function tampilkanInfoGuru() {
 
 
   guruInfo.innerHTML = `
-
     <strong>
       ${escapeHTML(nama)}
     </strong>
-
     <br>
-
     ID Guru:
     ${escapeHTML(idGuru)}
-
   `;
 
 }
 
 
 /* =====================================================
-   TANGGAL HARI INI
+   SET TANGGAL HARI INI
 ===================================================== */
 
 function setTanggalHariIni() {
@@ -290,7 +285,9 @@ function setTanggalHariIni() {
     );
 
 
-  if (!input) return;
+  if (!input) {
+    return;
+  }
 
 
   const now =
@@ -304,15 +301,19 @@ function setTanggalHariIni() {
   const month =
     String(
       now.getMonth() + 1
-    )
-      .padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   const day =
     String(
       now.getDate()
-    )
-      .padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   input.value =
@@ -405,7 +406,9 @@ async function loadKelasGuru() {
     );
 
 
-  if (!select) return;
+  if (!select) {
+    return;
+  }
 
 
   select.innerHTML = `
@@ -458,6 +461,10 @@ async function loadKelasGuru() {
     `;
 
 
+    /* ---------------------------------------------------
+       TIDAK ADA KELAS
+    --------------------------------------------------- */
+
     if (
       kelasList.length === 0
     ) {
@@ -480,8 +487,23 @@ async function loadKelasGuru() {
     }
 
 
+    /* ---------------------------------------------------
+       MASUKKAN KELAS KE SELECT
+    --------------------------------------------------- */
+
     kelasList.forEach(
       function (kelas) {
+
+        const namaKelas =
+          kelas.NAMA_KELAS ||
+          kelas.namaKelas ||
+          "";
+
+
+        if (!namaKelas) {
+          return;
+        }
+
 
         const option =
           document.createElement(
@@ -490,11 +512,11 @@ async function loadKelasGuru() {
 
 
         option.value =
-          kelas.NAMA_KELAS;
+          namaKelas;
 
 
         option.textContent =
-          kelas.NAMA_KELAS;
+          namaKelas;
 
 
         select.appendChild(
@@ -505,10 +527,9 @@ async function loadKelasGuru() {
     );
 
 
-    /*
-     * Jika guru hanya mempunyai
-     * satu kelas, otomatis pilih.
-     */
+    /* ---------------------------------------------------
+       JIKA HANYA SATU KELAS
+    --------------------------------------------------- */
 
     if (
       kelasList.length === 1
@@ -526,7 +547,7 @@ async function loadKelasGuru() {
   } catch (error) {
 
     console.error(
-      "LOAD KELAS ERROR:",
+      "GAGAL LOAD KELAS:",
       error
     );
 
@@ -618,9 +639,9 @@ async function loadSiswa() {
         : [];
 
 
-    /*
-     * Hanya siswa AKTIF
-     */
+    /* ---------------------------------------------------
+       HANYA SISWA AKTIF
+    --------------------------------------------------- */
 
     siswaList =
       siswaList.filter(
@@ -654,7 +675,7 @@ async function loadSiswa() {
   } catch (error) {
 
     console.error(
-      "LOAD SISWA ERROR:",
+      "GAGAL LOAD SISWA:",
       error
     );
 
@@ -676,7 +697,7 @@ async function loadSiswa() {
 
 
 /* =====================================================
-   LOADING
+   TAMPILKAN LOADING
 ===================================================== */
 
 function tampilkanLoading() {
@@ -743,11 +764,17 @@ function tampilkanSiswa() {
     );
 
 
-  if (!body) return;
+  if (!body) {
+    return;
+  }
 
 
   body.innerHTML = "";
 
+
+  /* ---------------------------------------------------
+     TIDAK ADA SISWA
+  --------------------------------------------------- */
 
   if (
     siswaList.length === 0
@@ -779,6 +806,10 @@ function tampilkanSiswa() {
 
   }
 
+
+  /* ---------------------------------------------------
+     TAMPILKAN SISWA
+  --------------------------------------------------- */
 
   siswaList.forEach(
     function (siswa, index) {
@@ -877,25 +908,26 @@ function tampilkanSiswa() {
   }
 
 
-  /*
-   * Update summary ketika
-   * status siswa berubah.
-   */
+  /* ---------------------------------------------------
+     EVENT PERUBAHAN STATUS
+  --------------------------------------------------- */
 
-  document
-    .querySelectorAll(
+  const selects =
+    document.querySelectorAll(
       ".status-select"
-    )
-    .forEach(
-      function (select) {
-
-        select.addEventListener(
-          "change",
-          updateSummary
-        );
-
-      }
     );
+
+
+  selects.forEach(
+    function (select) {
+
+      select.addEventListener(
+        "change",
+        updateSummary
+      );
+
+    }
+  );
 
 
   updateSummary();
@@ -962,6 +994,20 @@ function resetPresensi() {
     );
 
 
+  if (
+    selects.length === 0
+  ) {
+
+    showMessage(
+      "Belum ada data presensi.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
   selects.forEach(
     function (select) {
 
@@ -984,7 +1030,7 @@ function resetPresensi() {
 
 
 /* =====================================================
-   SUMMARY
+   UPDATE SUMMARY
 ===================================================== */
 
 function updateSummary() {
@@ -1004,11 +1050,15 @@ function updateSummary() {
   selects.forEach(
     function (select) {
 
-      switch (
+      const status =
         String(
           select.value
-        ).toUpperCase()
-      ) {
+        )
+          .trim()
+          .toUpperCase();
+
+
+      switch (status) {
 
         case "HADIR":
           hadir++;
@@ -1070,6 +1120,10 @@ function updateSummary() {
 
 async function simpanSemuaPresensi() {
 
+  /* ---------------------------------------------------
+     CEK SISWA
+  --------------------------------------------------- */
+
   if (
     siswaList.length === 0
   ) {
@@ -1083,6 +1137,10 @@ async function simpanSemuaPresensi() {
 
   }
 
+
+  /* ---------------------------------------------------
+     AMBIL TANGGAL DAN KELAS
+  --------------------------------------------------- */
 
   const tanggalInput =
     document.getElementById(
@@ -1132,7 +1190,14 @@ async function simpanSemuaPresensi() {
   }
 
 
-  if (!currentUser.idGuru) {
+  /* ---------------------------------------------------
+     CEK ID GURU
+  --------------------------------------------------- */
+
+  if (
+    !currentUser ||
+    !currentUser.idGuru
+  ) {
 
     showMessage(
       "ID Guru tidak ditemukan.",
@@ -1144,16 +1209,28 @@ async function simpanSemuaPresensi() {
   }
 
 
+  /* ---------------------------------------------------
+     KONFIRMASI
+  --------------------------------------------------- */
+
   const yakin =
     confirm(
       "Simpan presensi seluruh siswa kelas " +
       kelas +
+      " tanggal " +
+      tanggal +
       "?"
     );
 
 
-  if (!yakin) return;
+  if (!yakin) {
+    return;
+  }
 
+
+  /* ---------------------------------------------------
+     BUTTON
+  --------------------------------------------------- */
 
   const button =
     document.getElementById(
@@ -1165,6 +1242,11 @@ async function simpanSemuaPresensi() {
 
     button.disabled =
       true;
+
+
+    button.dataset.text =
+      button.textContent;
+
 
     button.textContent =
       "⏳ Menyimpan...";
@@ -1183,6 +1265,10 @@ async function simpanSemuaPresensi() {
     let berhasil = 0;
     let gagal = 0;
 
+
+    /* -------------------------------------------------
+       SIMPAN SATU PER SATU
+    ------------------------------------------------- */
 
     for (
       let i = 0;
@@ -1255,7 +1341,7 @@ async function simpanSemuaPresensi() {
 
 
         console.log(
-          "SIMPAN:",
+          "HASIL SIMPAN:",
           siswa.NAMA,
           result
         );
@@ -1273,19 +1359,20 @@ async function simpanSemuaPresensi() {
           gagal++;
 
           console.error(
-            "Gagal simpan:",
+            "GAGAL:",
             siswa.NAMA,
             result
           );
 
         }
 
+
       } catch (error) {
 
         gagal++;
 
         console.error(
-          "Error siswa:",
+          "ERROR SISWA:",
           siswa.NAMA,
           error
         );
@@ -1295,7 +1382,13 @@ async function simpanSemuaPresensi() {
     }
 
 
-    if (gagal === 0) {
+    /* -------------------------------------------------
+       HASIL
+    ------------------------------------------------- */
+
+    if (
+      gagal === 0
+    ) {
 
       showMessage(
         "Presensi berhasil disimpan untuk " +
@@ -1321,7 +1414,7 @@ async function simpanSemuaPresensi() {
   } catch (error) {
 
     console.error(
-      "SIMPAN PRESENSI ERROR:",
+      "SIMPAN ERROR:",
       error
     );
 
@@ -1340,7 +1433,9 @@ async function simpanSemuaPresensi() {
       button.disabled =
         false;
 
+
       button.textContent =
+        button.dataset.text ||
         "💾 Simpan Presensi";
 
     }
@@ -1413,7 +1508,9 @@ function showMessage(
   if (!element) {
 
     console.log(
-      "[" + type + "]",
+      "[" +
+      type +
+      "] " +
       message
     );
 
@@ -1423,11 +1520,12 @@ function showMessage(
 
 
   element.className =
-    "message " + type;
+    "message " +
+    type;
 
 
-  element.innerHTML =
-    escapeHTML(message);
+  element.textContent =
+    message;
 
 
   setTimeout(
@@ -1436,7 +1534,8 @@ function showMessage(
       element.className =
         "message";
 
-      element.innerHTML =
+
+      element.textContent =
         "";
 
     },
