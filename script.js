@@ -1,53 +1,89 @@
+/*******************************************************
+ * LOGIN - PRESENSI SISWA
+ * SD NEGERI JATIWARINGIN XIII
+ *******************************************************/
+
 const API_URL =
   "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
 
 /* =====================================================
-   API
+   PANGGIL API
 ===================================================== */
 
 async function callAPI(payload) {
 
   try {
 
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(payload)
-    });
+    const response =
+      await fetch(API_URL, {
 
-    const text = await response.text();
+        method: "POST",
 
-    console.log("API RESPONSE:", text);
+        headers: {
+          "Content-Type":
+            "text/plain;charset=utf-8"
+        },
+
+        body:
+          JSON.stringify(payload)
+
+      });
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        "HTTP Error " +
+        response.status
+      );
+
+    }
+
+
+    const text =
+      await response.text();
+
 
     if (!text) {
+
       throw new Error(
         "Server tidak mengirim response."
       );
+
     }
+
 
     let result;
 
+
     try {
 
-      result = JSON.parse(text);
+      result =
+        JSON.parse(text);
 
     } catch (error) {
 
       console.error(
-        "Response bukan JSON:",
+        "RESPONSE SERVER:",
         text
       );
 
       throw new Error(
-        "Server mengirim response yang bukan JSON."
+        "Response server bukan JSON yang valid."
       );
 
     }
 
+
+    console.log(
+      "API RESPONSE:",
+      result
+    );
+
+
     return result;
+
 
   } catch (error) {
 
@@ -55,6 +91,7 @@ async function callAPI(payload) {
       "API ERROR:",
       error
     );
+
 
     throw error;
 
@@ -64,7 +101,7 @@ async function callAPI(payload) {
 
 
 /* =====================================================
-   DOM READY
+   SAAT HALAMAN LOGIN DIBUKA
 ===================================================== */
 
 document.addEventListener(
@@ -83,24 +120,34 @@ document.addEventListener(
 
 function initLogin() {
 
-  const form =
-    document.getElementById("loginForm");
-
-  if (!form) {
-
-    console.warn(
-      "Form login #loginForm tidak ditemukan."
+  const loginForm =
+    document.getElementById(
+      "loginForm"
     );
 
-    return;
 
+  if (!loginForm) {
+    return;
   }
 
 
-  form.addEventListener(
+  loginForm.addEventListener(
     "submit",
     handleLogin
   );
+
+
+  const usernameInput =
+    document.getElementById(
+      "username"
+    );
+
+
+  if (usernameInput) {
+
+    usernameInput.focus();
+
+  }
 
 }
 
@@ -115,10 +162,27 @@ async function handleLogin(event) {
 
 
   const usernameInput =
-    document.getElementById("username");
+    document.getElementById(
+      "username"
+    );
+
 
   const passwordInput =
-    document.getElementById("password");
+    document.getElementById(
+      "password"
+    );
+
+
+  const loginButton =
+    document.getElementById(
+      "loginButton"
+    );
+
+
+  const message =
+    document.getElementById(
+      "loginMessage"
+    );
 
 
   const username =
@@ -133,6 +197,8 @@ async function handleLogin(event) {
       : "";
 
 
+  /* ================= VALIDASI ================= */
+
   if (!username) {
 
     showLoginMessage(
@@ -140,9 +206,7 @@ async function handleLogin(event) {
       "error"
     );
 
-    if (usernameInput) {
-      usernameInput.focus();
-    }
+    usernameInput.focus();
 
     return;
 
@@ -156,41 +220,35 @@ async function handleLogin(event) {
       "error"
     );
 
-    if (passwordInput) {
-      passwordInput.focus();
-    }
+    passwordInput.focus();
 
     return;
 
   }
 
 
-  const button =
-    document.querySelector(
-      '#loginForm button[type="submit"]'
-    );
+  /* ================= LOADING ================= */
 
+  if (loginButton) {
 
-  if (button) {
+    loginButton.disabled =
+      true;
 
-    button.disabled = true;
-
-    button.dataset.originalText =
-      button.textContent;
-
-    button.textContent =
-      "⏳ Memproses...";
+    loginButton.textContent =
+      "MEMPROSES...";
 
   }
 
 
   showLoginMessage(
-    "Memeriksa akun...",
-    "info"
+    "Menghubungkan ke server...",
+    "loading"
   );
 
 
   try {
+
+    /* ================= PANGGIL API ================= */
 
     const result =
       await callAPI({
@@ -210,20 +268,20 @@ async function handleLogin(event) {
     );
 
 
-    /* ============================================
-       CEK RESPONSE SERVER
-    ============================================ */
+    /* ================= RESPONSE TIDAK ADA ================= */
 
     if (!result) {
 
       throw new Error(
-        "Server tidak mengirim data."
+        "Server tidak memberikan response."
       );
 
     }
 
 
-    if (!result.success) {
+    /* ================= LOGIN GAGAL ================= */
+
+    if (result.success !== true) {
 
       throw new Error(
         result.message ||
@@ -233,14 +291,15 @@ async function handleLogin(event) {
     }
 
 
-    /* ============================================
-       AMBIL USER
+    /* =================================================
+       AMBIL DATA USER
        
-       Mendukung dua format:
+       Kita dukung dua format:
        
        result.user
+       atau
        result.data.user
-    ============================================ */
+    ================================================= */
 
     const user =
       result.user ||
@@ -250,12 +309,15 @@ async function handleLogin(event) {
       );
 
 
+    /* ================= USER TIDAK ADA ================= */
+
     if (!user) {
 
       console.error(
-        "LOGIN RESPONSE TANPA USER:",
+        "LOGIN RESPONSE:",
         result
       );
+
 
       throw new Error(
         "Server tidak mengirim data user."
@@ -264,163 +326,138 @@ async function handleLogin(event) {
     }
 
 
-    /* ============================================
-       VALIDASI USER
-    ============================================ */
-
-    if (!user.username) {
-
-      console.error(
-        "USERNAME USER TIDAK ADA:",
-        user
-      );
-
-      throw new Error(
-        "Data username dari server tidak lengkap."
-      );
-
-    }
-
-
-    if (!user.role) {
-
-      console.error(
-        "ROLE USER TIDAK ADA:",
-        user
-      );
-
-      throw new Error(
-        "Data role dari server tidak lengkap."
-      );
-
-    }
-
+    /* ================= NORMALISASI ================= */
 
     const role =
-      String(user.role)
-        .trim()
-        .toUpperCase();
+      String(
+        user.role || ""
+      )
+      .trim()
+      .toUpperCase();
 
 
-    /* ============================================
-       GURU HARUS MEMILIKI ID GURU
-    ============================================ */
+    const idUser =
+      String(
+        user.idUser || ""
+      ).trim();
 
-    if (role === "GURU") {
 
-      if (!user.idGuru) {
+    const idGuru =
+      String(
+        user.idGuru || ""
+      ).trim();
 
-        console.error(
-          "USER GURU TANPA ID GURU:",
-          user
-        );
 
-        throw new Error(
-          "Akun GURU belum memiliki ID Guru."
-        );
+    const nama =
+      String(
+        user.nama ||
+        user.namaGuru ||
+        user.username ||
+        ""
+      ).trim();
 
-      }
+
+    const usernameServer =
+      String(
+        user.username ||
+        username
+      ).trim();
+
+
+    /* ================= VALIDASI ROLE ================= */
+
+    if (
+      role !== "ADMIN" &&
+      role !== "GURU"
+    ) {
+
+      throw new Error(
+        "Role pengguna tidak valid: " +
+        role
+      );
 
     }
 
 
-    /* ============================================
-       NORMALISASI USER
-    ============================================ */
+    /* ================= GURU WAJIB ID GURU ================= */
 
-    const userData = {
+    if (
+      role === "GURU" &&
+      !idGuru
+    ) {
+
+      throw new Error(
+        "Akun GURU belum memiliki ID_GURU. Periksa sheet USERS."
+      );
+
+    }
+
+
+    /* ================= DATA USER ================= */
+
+    const currentUser = {
 
       idUser:
-        user.idUser ||
-        user.ID_USER ||
-        "",
+        idUser,
 
       username:
-        user.username ||
-        user.USERNAME ||
-        username,
+        usernameServer,
 
       role:
         role,
 
       idGuru:
-        user.idGuru ||
-        user.ID_GURU ||
-        "",
+        idGuru,
 
       nama:
-        user.nama ||
-        user.namaGuru ||
-        user.NAMA ||
-        user.NAMA_GURU ||
-        user.username ||
-        username
+        nama
 
     };
 
 
-    console.log(
-      "USER YANG DISIMPAN:",
-      userData
-    );
-
-
-    /* ============================================
-       SIMPAN LOGIN
-    ============================================ */
+    /* ================= SIMPAN LOGIN ================= */
 
     localStorage.setItem(
       "presensiUser",
-      JSON.stringify(userData)
+      JSON.stringify(
+        currentUser
+      )
     );
 
 
-    /* ============================================
-       CEK HASIL STORAGE
-    ============================================ */
-
-    const savedUser =
-      localStorage.getItem(
-        "presensiUser"
-      );
+    console.log(
+      "USER TERSIMPAN:",
+      currentUser
+    );
 
 
-    if (!savedUser) {
+    /* ================= BERHASIL ================= */
 
-      throw new Error(
-        "Data login gagal disimpan di browser."
-      );
-
-    }
-
-
-    /* ============================================
-       REDIRECT
-    ============================================ */
-
-    if (role === "ADMIN") {
-
-      window.location.href =
-        "admin.html";
-
-      return;
-
-    }
+    showLoginMessage(
+      "Login berhasil. Membuka halaman...",
+      "success"
+    );
 
 
-    if (role === "GURU") {
+    /* ================= REDIRECT ================= */
 
-      window.location.href =
-        "presensi.html";
+    setTimeout(
+      function () {
 
-      return;
+        if (role === "ADMIN") {
 
-    }
+          window.location.href =
+            "admin.html";
 
+        } else if (role === "GURU") {
 
-    throw new Error(
-      "Role user tidak dikenali: " +
-      role
+          window.location.href =
+            "presensi.html";
+
+        }
+
+      },
+      500
     );
 
 
@@ -434,20 +471,20 @@ async function handleLogin(event) {
 
     showLoginMessage(
       error.message ||
-      "Login gagal.",
+      "Gagal login.",
       "error"
     );
 
 
   } finally {
 
-    if (button) {
+    if (loginButton) {
 
-      button.disabled = false;
+      loginButton.disabled =
+        false;
 
-      button.textContent =
-        button.dataset.originalText ||
-        "Login";
+      loginButton.textContent =
+        "LOGIN";
 
     }
 
@@ -457,53 +494,36 @@ async function handleLogin(event) {
 
 
 /* =====================================================
-   MESSAGE LOGIN
+   PESAN LOGIN
 ===================================================== */
 
 function showLoginMessage(
   message,
-  type = "info"
+  type
 ) {
 
-  let element =
+  const element =
     document.getElementById(
       "loginMessage"
     );
 
 
-  /*
-   * Jika HTML menggunakan #message,
-   * gunakan juga sebagai fallback.
-   */
-
   if (!element) {
-
-    element =
-      document.getElementById(
-        "message"
-      );
-
-  }
-
-
-  if (!element) {
-
-    console.log(
-      "[" + type + "]",
-      message
-    );
-
     return;
-
   }
-
-
-  element.className =
-    "message " + type;
 
 
   element.textContent =
     message;
+
+
+  element.className =
+    "login-message " +
+    (type || "");
+
+
+  element.style.display =
+    "block";
 
 }
 
@@ -518,6 +538,7 @@ function logout() {
     "presensiUser"
   );
 
+
   window.location.href =
     "index.html";
 
@@ -525,40 +546,34 @@ function logout() {
 
 
 /* =====================================================
-   CEK LOGIN
+   AMBIL USER LOGIN
 ===================================================== */
 
 function getCurrentUser() {
 
-  const savedUser =
-    localStorage.getItem(
-      "presensiUser"
-    );
-
-
-  if (!savedUser) {
-
-    return null;
-
-  }
-
-
   try {
 
-    return JSON.parse(
-      savedUser
-    );
+    const data =
+      localStorage.getItem(
+        "presensiUser"
+      );
+
+
+    if (!data) {
+      return null;
+    }
+
+
+    return JSON.parse(data);
+
 
   } catch (error) {
 
     console.error(
-      "Data user rusak:",
+      "Gagal membaca user:",
       error
     );
 
-    localStorage.removeItem(
-      "presensiUser"
-    );
 
     return null;
 
@@ -576,30 +591,25 @@ function escapeHTML(value) {
   return String(
     value ?? ""
   )
-
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
+  .replace(
+    /&/g,
+    "&amp;"
+  )
+  .replace(
+    /</g,
+    "&lt;"
+  )
+  .replace(
+    />/g,
+    "&gt;"
+  )
+  .replace(
+    /"/g,
+    "&quot;"
+  )
+  .replace(
+    /'/g,
+    "&#039;"
+  );
 
 }
