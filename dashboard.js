@@ -2,60 +2,50 @@
 
 (function () {
 
-  const $ = (id) => document.getElementById(id);
+  let siswaData = [];
+  let presensiHariIni = [];
 
-  let user = null;
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
 
-  function init() {
+  async function init() {
 
-    user = getCurrentUser();
+    const user =
+      Auth.requireLogin();
 
-    if (!user) {
-      location.href = "index.html";
-      return;
-    }
+    if (!user) return;
 
-    renderUser();
+    tampilkanUser(user);
 
-    bindEvents();
-
-    loadDashboard();
+    await loadDashboard();
   }
 
-  function renderUser() {
+  function tampilkanUser(user) {
 
     const nama =
       user.nama ||
       user.username ||
       "Pengguna";
 
-    const role =
-      String(user.role || "")
-        .toUpperCase();
-
-    setText("namaUser", nama);
-    setText("userName", nama);
-    setText("roleUser", role);
-    setText("userRole", role);
+    setText(
+      "topUserName",
+      nama
+    );
 
     setText(
-      "welcomeUser",
-      `Selamat datang, ${nama}`
-    );
-  }
-
-  function bindEvents() {
-
-    $("refreshButton")?.addEventListener(
-      "click",
-      loadDashboard
+      "sidebarUserName",
+      nama
     );
 
+    setText(
+      "sidebarUserRole",
+      Auth.getRole(user)
+    );
   }
 
   async function loadDashboard() {
-
-    setLoading(true);
 
     try {
 
@@ -85,131 +75,208 @@
 
       ]);
 
-      const siswa =
+      siswaData =
         siswaResult.success &&
-        Array.isArray(siswaResult.data)
+        Array.isArray(
+          siswaResult.data
+        )
           ? siswaResult.data
           : [];
 
       const guru =
         guruResult.success &&
-        Array.isArray(guruResult.data)
+        Array.isArray(
+          guruResult.data
+        )
           ? guruResult.data
           : [];
 
       const kelas =
         kelasResult.success &&
-        Array.isArray(kelasResult.data)
+        Array.isArray(
+          kelasResult.data
+        )
           ? kelasResult.data
           : [];
 
-      const rekap =
+      const semuaPresensi =
         rekapResult.success &&
-        Array.isArray(rekapResult.data)
+        Array.isArray(
+          rekapResult.data
+        )
           ? rekapResult.data
           : [];
 
-      renderStatistics(
-        siswa,
-        guru,
-        kelas,
-        rekap
+      presensiHariIni =
+        semuaPresensi.filter(
+          function (item) {
+            return sameToday(
+              item.TANGGAL
+            );
+          }
+        );
+
+      setText(
+        "totalSiswa",
+        siswaData.length
       );
 
-      renderTodayAttendance(
-        rekap
+      setText(
+        "totalGuru",
+        guru.length
       );
+
+      setText(
+        "totalKelas",
+        kelas.length
+      );
+
+      renderStatistik();
+
+      renderSudahAbsen();
+
+      renderBelumAbsen();
 
     } catch (error) {
 
-      console.error(error);
+      console.error(
+        "Dashboard:",
+        error
+      );
 
-      showError(error.message);
+      setTableError(
+        "tableBelumBody",
+        4,
+        error.message
+      );
 
-    } finally {
-
-      setLoading(false);
-
+      setTableError(
+        "tableSudahBody",
+        5,
+        error.message
+      );
     }
   }
 
-  function renderStatistics(
-    siswa,
-    guru,
-    kelas,
-    rekap
-  ) {
-
-    setNumber(
-      "jumlahSiswa",
-      siswa.length
-    );
-
-    setNumber(
-      "jumlahGuru",
-      guru.length
-    );
-
-    setNumber(
-      "jumlahKelas",
-      kelas.length
-    );
-
-    const today =
-      todayString();
-
-    const todayRows =
-      rekap.filter(row =>
-        normalizeDate(row.TANGGAL) === today
-      );
+  function renderStatistik() {
 
     const hadir =
-      todayRows.filter(row =>
-        String(row.STATUS)
-          .toUpperCase() === "HADIR"
-      ).length;
+      countStatus("HADIR");
 
     const izin =
-      todayRows.filter(row =>
-        String(row.STATUS)
-          .toUpperCase() === "IZIN"
-      ).length;
+      countStatus("IZIN");
 
     const sakit =
-      todayRows.filter(row =>
-        String(row.STATUS)
-          .toUpperCase() === "SAKIT"
-      ).length;
+      countStatus("SAKIT");
 
     const alpa =
-      todayRows.filter(row =>
-        String(row.STATUS)
-          .toUpperCase() === "ALPA"
+      countStatus("ALPA");
+
+    const sudahIDs =
+      new Set(
+        presensiHariIni.map(
+          item =>
+            String(item.ID || "")
+        )
+      );
+
+    const belum =
+      siswaData.filter(
+        siswa =>
+          !sudahIDs.has(
+            String(siswa.ID || "")
+          )
       ).length;
 
-    setNumber("jumlahHadir", hadir);
-    setNumber("jumlahIzin", izin);
-    setNumber("jumlahSakit", sakit);
-    setNumber("jumlahAlpa", alpa);
-  }
-
-  function renderTodayAttendance(rows) {
-
-    const table = $("dashboardTable");
-
-    if (!table) return;
-
-    const today = todayString();
-
-    const data = rows.filter(row =>
-      normalizeDate(row.TANGGAL) === today
+    setText(
+      "totalHadir",
+      hadir
     );
 
-    if (!data.length) {
+    setText(
+      "totalIzin",
+      izin
+    );
 
-      table.innerHTML = `
+    setText(
+      "totalSakit",
+      sakit
+    );
+
+    setText(
+      "totalAlpa",
+      alpa
+    );
+
+    setText(
+      "totalBelumAbsen",
+      belum
+    );
+
+    const total =
+      hadir +
+      izin +
+      sakit +
+      alpa;
+
+    setText(
+      "rekapHadir",
+      hadir
+    );
+
+    setText(
+      "rekapIzin",
+      izin
+    );
+
+    setText(
+      "rekapSakit",
+      sakit
+    );
+
+    setText(
+      "rekapAlpa",
+      alpa
+    );
+
+    setText(
+      "persenHadir",
+      persen(hadir, total)
+    );
+
+    setText(
+      "persenIzin",
+      persen(izin, total)
+    );
+
+    setText(
+      "persenSakit",
+      persen(sakit, total)
+    );
+
+    setText(
+      "persenAlpa",
+      persen(alpa, total)
+    );
+  }
+
+  function renderSudahAbsen() {
+
+    const tbody =
+      document.getElementById(
+        "tableSudahBody"
+      );
+
+    if (!tbody) return;
+
+    if (!presensiHariIni.length) {
+
+      tbody.innerHTML = `
         <tr>
-          <td colspan="7" class="empty">
+          <td
+            colspan="5"
+            class="empty"
+          >
             Belum ada presensi hari ini.
           </td>
         </tr>
@@ -218,149 +285,300 @@
       return;
     }
 
-    table.innerHTML = data.map(
-      (row, index) => {
+    tbody.innerHTML =
+      presensiHariIni.map(
+        function (
+          item,
+          index
+        ) {
 
-        const status =
-          String(row.STATUS || "")
-            .toUpperCase();
+          const status =
+            String(
+              item.STATUS || ""
+            ).toUpperCase();
 
-        return `
-          <tr>
-            <td>${index + 1}</td>
+          return `
+            <tr>
+              <td>
+                ${index + 1}
+              </td>
 
-            <td>
-              ${escapeHTML(
-                row.NISN || "-"
-              )}
-            </td>
+              <td>
+                ${escapeHTML(
+                  item.NISN || "-"
+                )}
+              </td>
 
-            <td>
-              ${escapeHTML(
-                row.NAMA || "-"
-              )}
-            </td>
+              <td>
+                ${escapeHTML(
+                  item.NAMA || "-"
+                )}
+              </td>
 
-            <td>
-              ${escapeHTML(
-                row.KELAS || "-"
-              )}
-            </td>
+              <td>
+                <span
+                  class="badge badge-${status.toLowerCase()}"
+                >
+                  ${escapeHTML(status)}
+                </span>
+              </td>
 
-            <td>
-              ${escapeHTML(
-                row.JAM || "-"
-              )}
-            </td>
-
-            <td>
-              <span class="status-${status.toLowerCase()}">
-                ${escapeHTML(status)}
-              </span>
-            </td>
-
-            <td>
-              ${escapeHTML(
-                row.SUMBER || "-"
-              )}
-            </td>
-          </tr>
-        `;
-      }
-    ).join("");
+              <td>
+                ${escapeHTML(
+                  item.JAM || "-"
+                )}
+              </td>
+            </tr>
+          `;
+        }
+      ).join("");
   }
 
-  function normalizeDate(value) {
+  function renderBelumAbsen() {
 
-    if (!value) return "";
+    const tbody =
+      document.getElementById(
+        "tableBelumBody"
+      );
+
+    if (!tbody) return;
+
+    const sudahIDs =
+      new Set(
+        presensiHariIni.map(
+          item =>
+            String(item.ID || "")
+        )
+      );
+
+    const belum =
+      siswaData.filter(
+        siswa =>
+          !sudahIDs.has(
+            String(siswa.ID || "")
+          )
+      );
+
+    if (!belum.length) {
+
+      tbody.innerHTML = `
+        <tr>
+          <td
+            colspan="4"
+            class="empty"
+          >
+            Semua siswa sudah melakukan presensi.
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+    tbody.innerHTML =
+      belum.map(
+        function (
+          siswa,
+          index
+        ) {
+
+          return `
+            <tr>
+              <td>${index + 1}</td>
+
+              <td>
+                ${escapeHTML(
+                  siswa.NISN || "-"
+                )}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  siswa.NAMA || "-"
+                )}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  siswa.KELAS || "-"
+                )}
+              </td>
+            </tr>
+          `;
+        }
+      ).join("");
+  }
+
+  function countStatus(status) {
+
+    return presensiHariIni.filter(
+      item =>
+        String(
+          item.STATUS || ""
+        ).toUpperCase() === status
+    ).length;
+  }
+
+  function persen(
+    jumlah,
+    total
+  ) {
+
+    if (!total) {
+      return "0%";
+    }
+
+    return (
+      (
+        jumlah /
+        total *
+        100
+      ).toFixed(1) +
+      "%"
+    );
+  }
+
+  function sameToday(value) {
+
+    if (!value) return false;
+
+    const today =
+      formatLocalDate(
+        new Date()
+      );
 
     const text =
       String(value);
 
-    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
-      return text;
+    if (
+      /^\d{4}-\d{2}-\d{2}$/
+        .test(text)
+    ) {
+      return text === today;
     }
 
     const date =
       new Date(value);
 
-    if (isNaN(date.getTime())) {
-      return text.substring(0, 10);
+    if (
+      !isNaN(
+        date.getTime()
+      )
+    ) {
+      return (
+        formatLocalDate(
+          date
+        ) === today
+      );
     }
+
+    return (
+      text.substring(
+        0,
+        10
+      ) === today
+    );
+  }
+
+  function formatLocalDate(date) {
 
     return [
       date.getFullYear(),
+
       String(
         date.getMonth() + 1
-      ).padStart(2, "0"),
+      ).padStart(
+        2,
+        "0"
+      ),
+
       String(
         date.getDate()
-      ).padStart(2, "0")
+      ).padStart(
+        2,
+        "0"
+      )
     ].join("-");
   }
 
-  function todayString() {
+  function setText(
+    id,
+    value
+  ) {
 
-    const date = new Date();
+    const element =
+      document.getElementById(
+        id
+      );
 
-    return [
-      date.getFullYear(),
-      String(
-        date.getMonth() + 1
-      ).padStart(2, "0"),
-      String(
-        date.getDate()
-      ).padStart(2, "0")
-    ].join("-");
-  }
-
-  function setNumber(id, value) {
-
-    const el = $(id);
-
-    if (el) {
-      el.textContent =
-        Number(value || 0)
-          .toLocaleString("id-ID");
-    }
-  }
-
-  function setText(id, value) {
-
-    const el = $(id);
-
-    if (el) {
-      el.textContent =
+    if (element) {
+      element.textContent =
         value ?? "";
     }
   }
 
-  function setLoading(state) {
+  function setTableError(
+    id,
+    colspan,
+    message
+  ) {
 
-    document.body.classList.toggle(
-      "loading-dashboard",
-      state
-    );
+    const element =
+      document.getElementById(
+        id
+      );
+
+    if (!element) return;
+
+    element.innerHTML = `
+      <tr>
+        <td
+          colspan="${colspan}"
+          class="error"
+        >
+          ${escapeHTML(message)}
+        </td>
+      </tr>
+    `;
   }
 
-  function showError(message) {
+  window.filterTable =
+    function (
+      tableId,
+      keyword
+    ) {
 
-    const el = $("dashboardError");
+      const table =
+        document.getElementById(
+          tableId
+        );
 
-    if (el) {
-      el.textContent = message;
-      el.style.display = "block";
-    } else {
-      console.error(message);
-    }
-  }
+      if (!table) return;
 
-  window.loadDashboard =
-    loadDashboard;
+      keyword =
+        String(
+          keyword || ""
+        )
+          .toLowerCase()
+          .trim();
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    init
-  );
+      table
+        .querySelectorAll(
+          "tbody tr"
+        )
+        .forEach(
+          function (row) {
+
+            row.style.display =
+              row.textContent
+                .toLowerCase()
+                .includes(
+                  keyword
+                )
+                ? ""
+                : "none";
+          }
+        );
+    };
 
 })();
