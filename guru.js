@@ -1,9 +1,6 @@
 (function () {
   "use strict";
 
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
-
   Auth.requireRole("ADMIN");
 
   let guruList = [];
@@ -264,23 +261,6 @@
       "none";
   }
 
-  async function callAPI(payload) {
-    const response = await fetch(
-      API_URL,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "text/plain;charset=utf-8"
-        },
-
-        body: JSON.stringify(payload)
-      }
-    );
-
-    return await response.json();
-  }
 
   function tampilkanPesan(message, type) {
     const element =
