@@ -17,10 +17,22 @@ const CACHEABLE_ACTIONS = new Set([
 ]);
 
 const WRITE_ACTIONS = new Set([
-  "tambahSiswa","updateSiswa","hapusSiswa",
-  "tambahGuru","updateGuru","hapusGuru",
-  "tambahKelas","updateKelas","hapusKelas",
-  "simpanPresensi","simpanPengaturan"
+  "tambahSiswa",
+  "updateSiswa",
+  "hapusSiswa",
+
+  "tambahGuru",
+  "updateGuru",
+  "hapusGuru",
+
+  "tambahKelas",
+  "updateKelas",
+  "hapusKelas",
+
+  "simpanPresensi",
+  "simpanPresensiBatch",
+
+  "simpanPengaturan"
 ]);
 
 function cacheKey(payload) {
