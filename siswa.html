@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
 
   <meta charset="UTF-8">
@@ -10,7 +9,17 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>Data Siswa - Presensi</title>
+  <title>Data Siswa</title>
+
+  <meta
+    name="theme-color"
+    content="#1565c0"
+  >
+
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
 
   <link
     rel="stylesheet"
@@ -19,40 +28,45 @@
 
 </head>
 
-
-<body class="dashboard-body">
-
+<body>
 
 <header class="topbar">
 
-  <div>
+  <div class="topbar-left">
 
-    <h1>
-      Data Siswa
-    </h1>
+    <div class="topbar-logo">
+      SD
+    </div>
 
-    <span>
-      SD Negeri Jatiwaringin XIII
-    </span>
+    <div>
+
+      <div class="topbar-title">
+        Data Siswa
+      </div>
+
+      <div class="topbar-school">
+        SD Negeri Jatiwaringin XIII
+      </div>
+
+    </div>
 
   </div>
 
 
-  <div>
+  <div class="topbar-right">
 
     <button
-      class="back-button"
-      onclick="location.href='admin.html'"
+      class="btn btn-secondary btn-small"
+      onclick="location.href='dashboard.html'"
     >
       Dashboard
     </button>
 
-
     <button
-      id="logoutButton"
-      class="logout-button"
+      class="btn btn-danger btn-small"
+      onclick="Auth.logout()"
     >
-      Logout
+      Keluar
     </button>
 
   </div>
@@ -60,19 +74,28 @@
 </header>
 
 
+<main class="container">
 
-<main class="dashboard-container">
+  <div class="page-header">
+
+    <div>
+
+      <h1>Data Siswa</h1>
+
+      <p>
+        Kelola data siswa sekolah.
+      </p>
+
+    </div>
+
+  </div>
 
 
-  <!-- FORM SISWA -->
+  <!-- FORM -->
 
-  <section
-    id="formSiswa"
-    class="panel"
-    style="display:none;"
-  >
+  <section class="card">
 
-    <div class="panel-header">
+    <div class="card-header">
 
       <h2 id="formTitle">
         Tambah Siswa
@@ -83,81 +106,74 @@
 
     <form id="siswaForm">
 
+      <input
+        type="hidden"
+        id="siswaId"
+      >
+
 
       <div class="form-grid">
 
+        <div class="form-group">
 
-        <div>
-
-          <label for="inputID">
-            ID Siswa
-          </label>
-
-          <input
-            type="text"
-            id="inputID"
-            placeholder="Contoh: S005"
-            required
-          >
-
-        </div>
-
-
-        <div>
-
-          <label for="inputNISN">
+          <label for="siswaNisn">
             NISN
           </label>
 
           <input
             type="text"
-            id="inputNISN"
-            placeholder="Masukkan NISN"
+            id="siswaNisn"
             required
           >
 
         </div>
 
 
-        <div>
+        <div class="form-group">
 
-          <label for="inputNama">
+          <label for="siswaNama">
             Nama Siswa
           </label>
 
           <input
             type="text"
-            id="inputNama"
-            placeholder="Nama lengkap"
+            id="siswaNama"
             required
           >
 
         </div>
 
 
-        <div>
+        <div class="form-group">
 
-          <label for="inputKelas">
+          <label for="siswaKelas">
             Kelas
           </label>
 
-          <input
-            type="text"
-            id="inputKelas"
-            placeholder="Contoh: 1A"
+          <select
+            id="siswaKelas"
             required
           >
+
+            <option value="">
+              Pilih kelas
+            </option>
+
+          </select>
 
         </div>
 
 
-        <div>
+        <div class="form-group">
 
-          <label for="inputJK">
+          <label for="siswaJK">
             Jenis Kelamin
           </label>
 
-          <select id="inputJK" required>
+          <select
+            id="siswaJK"
+            required
+          >
 
             <option value="">
               Pilih
@@ -176,13 +192,13 @@
         </div>
 
 
-        <div>
+        <div class="form-group">
 
-          <label for="inputStatus">
+          <label for="siswaStatus">
             Status
           </label>
 
-          <select id="inputStatus" required>
+          <select id="siswaStatus">
 
             <option value="AKTIF">
               AKTIF
@@ -196,7 +212,6 @@
 
         </div>
 
-
       </div>
 
 
@@ -204,106 +219,81 @@
 
         <button
           type="submit"
-          class="primary-button"
+          class="btn btn-primary"
+          id="btnSimpanSiswa"
         >
           Simpan
         </button>
 
-
         <button
           type="button"
-          id="cancelButton"
-          class="secondary-button"
+          class="btn btn-secondary"
+          id="btnBatalSiswa"
+          style="display:none;"
         >
           Batal
         </button>
 
       </div>
 
-
     </form>
+
+
+    <div
+      id="siswaMessage"
+      class="message"
+      style="display:none;"
+    ></div>
 
   </section>
 
 
+  <!-- DATA -->
 
-  <!-- DATA SISWA -->
+  <section class="card">
 
-  <section class="panel">
+    <div class="card-header">
+
+      <h2>Daftar Siswa</h2>
+
+    </div>
 
 
-    <div class="page-header">
+    <div class="toolbar">
 
-      <div>
+      <div class="form-group">
 
-        <h2>
-          Daftar Siswa
-        </h2>
+        <label for="filterKelas">
+          Kelas
+        </label>
 
-        <p>
-          Data siswa dari Google Spreadsheet
-        </p>
+        <select id="filterKelas">
+
+          <option value="">
+            Semua Kelas
+          </option>
+
+        </select>
 
       </div>
 
 
-      <div>
+      <div class="form-group">
 
-        <span
-          id="jumlahSiswa"
-          class="jumlah-data"
+        <label for="searchSiswa">
+          Cari
+        </label>
+
+        <input
+          type="search"
+          id="searchSiswa"
+          placeholder="Cari nama / NISN"
         >
-          0 siswa
-        </span>
-
-
-        <button
-          id="tambahButton"
-          class="primary-button"
-        >
-          + Tambah Siswa
-        </button>
 
       </div>
 
     </div>
 
-
-
-    <!-- FILTER -->
-
-    <div class="filter-area">
-
-
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Cari nama atau NISN..."
-      >
-
-
-      <select id="kelasFilter">
-
-        <option value="">
-          Semua Kelas
-        </option>
-
-      </select>
-
-
-      <button
-        id="refreshButton"
-        class="secondary-button"
-      >
-        🔄 Refresh
-      </button>
-
-
-    </div>
-
-
-
-    <!-- TABLE -->
 
     <div class="table-wrapper">
 
@@ -314,35 +304,27 @@
           <tr>
 
             <th>No</th>
-
-            <th>ID</th>
-
             <th>NISN</th>
-
             <th>Nama</th>
-
             <th>Kelas</th>
-
             <th>JK</th>
-
             <th>Status</th>
-
             <th>Aksi</th>
 
           </tr>
 
         </thead>
 
-
-        <tbody id="siswaTable">
+        <tbody id="siswaTableBody">
 
           <tr>
 
             <td
-              colspan="8"
-              class="loading"
+              colspan="7"
+              class="text-center"
             >
-              Memuat data siswa...
+              Memuat data...
+
             </td>
 
           </tr>
@@ -353,16 +335,14 @@
 
     </div>
 
-
   </section>
-
 
 </main>
 
 
-<script src="./siswa.js"></script>
-
+<script src="auth.js"></script>
+<script src="siswa.js"></script>
+<script src="pwa.js"></script>
 
 </body>
-
 </html>
