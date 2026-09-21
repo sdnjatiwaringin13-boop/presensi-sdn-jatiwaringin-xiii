@@ -1,867 +1,754 @@
-<!DOCTYPE html>
-<html lang="id">
+"use strict";
 
-<head>
+(function () {
 
-    <meta charset="UTF-8">
+  let user = null;
+  let dataReport = null;
+  let daftarGuru = [];
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+  const $ = (id) =>
+    document.getElementById(id);
 
-    <title>
-        Laporan Kehadiran Siswa
-    </title>
+  function init() {
 
+    user =
+      getCurrentUser();
 
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
+    if (!user) {
+      location.href =
+        "index.html";
+      return;
+    }
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
+    const role =
+      String(user.role || "")
+        .toUpperCase();
 
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
+    if (
+      role !== "ADMIN" &&
+      role !== "GURU"
+    ) {
+      location.href =
+        "dashboard.html";
+      return;
+    }
 
+    setDefaultPeriod();
 
-    <!-- SHEETJS -->
+    bindEvents();
 
-    <script
-        src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
-    ></script>
+    if (role === "ADMIN") {
+      loadGuru();
+    } else {
+      hideGuruSelector();
+    }
+  }
 
+  function setDefaultPeriod() {
 
-    <!-- CSS KHUSUS LAPORAN -->
+    const now =
+      new Date();
 
-    <style>
+    const bulan =
+      $("bulan");
 
-        .report-toolbar {
+    const tahun =
+      $("tahun");
 
-            background: #fff;
+    if (bulan) {
+      bulan.value =
+        now.getMonth() + 1;
+    }
 
-            padding: 12px;
+    if (tahun) {
+      tahun.value =
+        now.getFullYear();
+    }
+  }
 
-            margin-bottom: 15px;
+  function bindEvents() {
 
-            border:
-                1px solid #dfe4e7;
+    $("tampilButton")?.addEventListener(
+      "click",
+      loadReport
+    );
 
-            display: flex;
+    $("loadButton")?.addEventListener(
+      "click",
+      loadReport
+    );
 
-            gap: 8px;
+    $("printButton")?.addEventListener(
+      "click",
+      () => window.print()
+    );
 
-            align-items: end;
+    $("exportExcelButton")?.addEventListener(
+      "click",
+      exportExcel
+    );
 
-            flex-wrap: wrap;
+    $("downloadButton")?.addEventListener(
+      "click",
+      exportExcel
+    );
+  }
 
+  async function loadGuru() {
+
+    try {
+
+      const result =
+        await callAPI({
+          action: "getGuru"
+        });
+
+      if (!result.success) {
+        throw new Error(
+          result.message ||
+          "Gagal mengambil data guru."
+        );
+      }
+
+      daftarGuru =
+        Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      const select =
+        $("guruSelect");
+
+      if (!select) return;
+
+      select.innerHTML = `
+        <option value="">
+          Pilih Guru / Wali Kelas
+        </option>
+
+        ${daftarGuru.map(
+          guru => `
+            <option
+              value="${escapeAttr(
+                guru.ID_GURU
+              )}">
+              ${escapeHTML(
+                guru.NAMA ||
+                guru.ID_GURU
+              )}
+            </option>
+          `
+        ).join("")}
+      `;
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(error.message);
+    }
+  }
+
+  function hideGuruSelector() {
+
+    const wrapper =
+      $("guruWrapper") ||
+      $("guruContainer");
+
+    if (wrapper) {
+      wrapper.style.display =
+        "none";
+    }
+  }
+
+  async function loadReport() {
+
+    const bulan =
+      Number(
+        $("bulan")?.value
+      );
+
+    const tahun =
+      Number(
+        $("tahun")?.value
+      );
+
+    const role =
+      String(user.role)
+        .toUpperCase();
+
+    let idGuru =
+      user.idGuru || "";
+
+    if (role === "ADMIN") {
+
+      idGuru =
+        String(
+          $("guruSelect")?.value ||
+          ""
+        );
+    }
+
+    if (!bulan || !tahun) {
+      alert(
+        "Bulan dan tahun wajib dipilih."
+      );
+      return;
+    }
+
+    if (!idGuru) {
+      alert(
+        "Guru/Wali Kelas wajib dipilih."
+      );
+      return;
+    }
+
+    showLoading();
+
+    try {
+
+      const result =
+        await callAPI({
+
+          action:
+            "getAbsenBulanan",
+
+          idGuru,
+
+          bulan,
+
+          tahun
+
+        });
+
+      if (!result.success) {
+        throw new Error(
+          result.message ||
+          "Gagal mengambil laporan."
+        );
+      }
+
+      dataReport =
+        result.data;
+
+      renderReport(
+        dataReport
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      showError(
+        error.message
+      );
+    }
+  }
+
+  function renderReport(data) {
+
+    const container =
+      $("reportContent") ||
+      $("laporan");
+
+    if (!container) return;
+
+    const sekolah =
+      data.sekolah || {};
+
+    const kelas =
+      data.kelas || {};
+
+    const guru =
+      data.guru || {};
+
+    const kepala =
+      data.kepalaSekolah || {};
+
+    const siswa =
+      Array.isArray(data.siswa)
+        ? data.siswa
+        : [];
+
+    const bulan =
+      Number(data.bulan);
+
+    const tahun =
+      Number(data.tahun);
+
+    const jumlahHari =
+      Number(data.jumlahHari || 0);
+
+    const namaBulan =
+      [
+        "",
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember"
+      ][bulan] || "";
+
+    const hariKeys =
+      getDayKeys(
+        siswa,
+        jumlahHari
+      );
+
+    const rows =
+      siswa.map(
+        (item, index) => {
+
+          const hari =
+            item.hari || {};
+
+          const rekap =
+            hitungRekap(hari);
+
+          const persen =
+            rekap.total
+              ? (
+                rekap.hadir /
+                rekap.total
+              ) * 100
+              : 0;
+
+          return `
+            <tr>
+
+              <td>
+                ${index + 1}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  item.nisn || "-"
+                )}
+              </td>
+
+              <td class="nama-siswa">
+                ${escapeHTML(
+                  item.nama || "-"
+                )}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  item.jk || "-"
+                )}
+              </td>
+
+              ${hariKeys.map(
+                day => `
+                  <td>
+                    ${escapeHTML(
+                      hari[day] || "-"
+                    )}
+                  </td>
+                `
+              ).join("")}
+
+              <td>${rekap.hadir}</td>
+              <td>${rekap.sakit}</td>
+              <td>${rekap.izin}</td>
+              <td>${rekap.alpa}</td>
+              <td>${rekap.total}</td>
+              <td>${persen.toFixed(1)}%</td>
+
+            </tr>
+          `;
         }
-
-
-        .report-filter {
-
-            min-width: 130px;
-
-        }
-
-
-        .report-filter label {
-
-            display: block;
-
-            margin-bottom: 4px;
-
-            font-size: 11px;
-
-            font-weight: 700;
-
-        }
-
-
-        .report-paper {
-
-            width: 100%;
-
-            background: #fff;
-
-            padding: 18px;
-
-            overflow-x: auto;
-
-        }
-
-
-        .report-title {
-
-            text-align: center;
-
-            font-family:
-                "Times New Roman",
-                serif;
-
-            font-size: 17px;
-
-            font-weight: 700;
-
-            text-decoration:
-                underline;
-
-            margin-bottom: 5px;
-
-        }
-
-
-        .report-info {
-
-            text-align: center;
-
-            font-family:
-                "Times New Roman",
-                serif;
-
-            font-size: 10px;
-
-            margin-bottom: 9px;
-
-        }
-
-
-        .report-table {
-
-            width: 100%;
-
-            border-collapse: collapse;
-
-            table-layout: fixed;
-
-            font-family:
-                "Arial",
-                sans-serif;
-
-            font-size: 8px;
-
-            color: #000;
-
-        }
-
-
-        .report-table th,
-        .report-table td {
-
-            border:
-                1px solid #000;
-
-            padding:
-                2px 3px;
-
-            text-align:
-                center;
-
-            height:
-                15px;
-
-        }
-
-
-        .report-table th {
-
-            background:
-                #edf1f4;
-
-            font-weight:
-                700;
-
-        }
-
-
-        .report-table .col-no {
-
-            width: 25px;
-
-        }
-
-
-        .report-table .col-nisn {
-
-            width: 55px;
-
-        }
-
-
-        .report-table .col-nama {
-
-            width: 145px;
-
-            text-align: left;
-
-        }
-
-
-        .report-table .col-jk {
-
-            width: 28px;
-
-        }
-
-
-        .report-table .col-day {
-
-            width: 19px;
-
-        }
-
-
-        .report-table .col-total {
-
-            width: 24px;
-
-        }
-
-
-        .report-table .col-percent {
-
-            width: 35px;
-
-        }
-
-
-        .report-table td.nama {
-
-            text-align:
-                left;
-
-            white-space:
-                nowrap;
-
-            overflow:
-                hidden;
-
-            text-overflow:
-                ellipsis;
-
-        }
-
-
-        .status-H {
-
-            color:
-                #000;
-
-            font-weight:
-                700;
-
-        }
-
-
-        .status-S {
-
-            color:
-                #0066cc;
-
-            font-weight:
-                700;
-
-        }
-
-
-        .status-I {
-
-            color:
-                #cc7700;
-
-            font-weight:
-                700;
-
-        }
-
-
-        .status-A {
-
-            color:
-                #cc0000;
-
-            font-weight:
-                700;
-
-        }
-
-
-        .status-empty {
-
-            color:
-                #777;
-
-        }
-
-
-        .report-note {
-
-            display:
-                flex;
-
-            justify-content:
-                space-between;
-
-            gap:
-                20px;
-
-            margin-top:
-                8px;
-
-            font-family:
-                "Times New Roman",
-                serif;
-
-            font-size:
-                8px;
-
-        }
-
-
-        .report-signature {
-
-            display:
-                grid;
-
-            grid-template-columns:
-                1fr 1fr;
-
-            gap:
-                100px;
-
-            margin-top:
-                45px;
-
-            font-family:
-                "Times New Roman",
-                serif;
-
-            font-size:
-                10px;
-
-        }
-
-
-        .signature-box {
-
-            min-height:
-                115px;
-
-        }
-
-
-        .signature-name {
-
-            margin-top:
-                55px;
-
-            font-weight:
-                700;
-
-            text-decoration:
-                underline;
-
-        }
-
-
-        .signature-nip {
-
-            margin-top:
-                3px;
-
-            font-size:
-                9px;
-
-        }
-
-
-        .report-loading {
-
-            text-align:
-                center;
-
-            padding:
-                50px;
-
-        }
-
-
-        @page {
-
-            size:
-                F4 landscape;
-
-            margin:
-                8mm;
-
-        }
-
-
-        @media print {
-
-            body {
-
-                background:
-                    #fff !important;
-
-            }
-
-
-            .app-sidebar,
-            .app-topbar,
-            .page-breadcrumb,
-            .report-toolbar,
-            .no-print {
-
-                display:
-                    none !important;
-
-            }
-
-
-            .app-main {
-
-                margin:
-                    0 !important;
-
-            }
-
-
-            .app-page-content {
-
-                padding:
-                    0 !important;
-
-            }
-
-
-            .legacy-page-content {
-
-                width:
-                    100% !important;
-
-            }
-
-
-            .report-paper {
-
-                padding:
-                    0 !important;
-
-                margin:
-                    0 !important;
-
-                width:
-                    100% !important;
-
-                overflow:
-                    visible !important;
-
-            }
-
-
-            .report-table {
-
-                font-size:
-                    7px;
-
-            }
-
-
-            .report-table th,
-            .report-table td {
-
-                height:
-                    14px;
-
-                padding:
-                    1px 2px;
-
-            }
-
-        }
-
-    </style>
-
-</head>
-
-
-<body>
-
-
-    <!-- =============================================
-         FILTER
-    ============================================== -->
-
-    <div class="report-toolbar no-print">
-
-
-        <div class="report-filter">
-
-            <label for="bulan">
-                Bulan
-            </label>
-
-            <select id="bulan">
-
-                <option value="1">
-                    Januari
-                </option>
-
-                <option value="2">
-                    Februari
-                </option>
-
-                <option value="3">
-                    Maret
-                </option>
-
-                <option value="4">
-                    April
-                </option>
-
-                <option value="5">
-                    Mei
-                </option>
-
-                <option value="6">
-                    Juni
-                </option>
-
-                <option value="7">
-                    Juli
-                </option>
-
-                <option value="8">
-                    Agustus
-                </option>
-
-                <option value="9">
-                    September
-                </option>
-
-                <option value="10">
-                    Oktober
-                </option>
-
-                <option value="11">
-                    November
-                </option>
-
-                <option value="12">
-                    Desember
-                </option>
-
-            </select>
+      ).join("");
+
+    container.innerHTML = `
+
+      <div class="laporan-bulanan">
+
+        <div class="report-header">
+
+          <h2>
+            LAPORAN KEHADIRAN SISWA
+            SDN JATIWARINGIN XIII
+          </h2>
+
+          <div>
+            Bulan:
+            <strong>
+              ${namaBulan}
+              ${tahun}
+            </strong>
+          </div>
+
+          <div>
+            Kelas:
+            <strong>
+              ${escapeHTML(
+                kelas.nama ||
+                kelas.NAMA_KELAS ||
+                "-"
+              )}
+            </strong>
+          </div>
 
         </div>
 
+        <table
+          class="table-report">
 
-        <div class="report-filter">
+          <thead>
 
-            <label for="tahun">
-                Tahun
-            </label>
+            <tr>
 
-            <input
-                type="number"
-                id="tahun"
-                min="2020"
-                max="2100"
-            >
+              <th rowspan="2">
+                NO
+              </th>
+
+              <th rowspan="2">
+                NISN
+              </th>
+
+              <th rowspan="2">
+                NAMA SISWA
+              </th>
+
+              <th rowspan="2">
+                L/P
+              </th>
+
+              <th
+                colspan="${hariKeys.length}">
+                TANGGAL
+              </th>
+
+              <th colspan="6">
+                REKAPITULASI
+              </th>
+
+            </tr>
+
+            <tr>
+
+              ${hariKeys.map(
+                day => `
+                  <th>
+                    ${day}
+                  </th>
+                `
+              ).join("")}
+
+              <th>H</th>
+              <th>S</th>
+              <th>I</th>
+              <th>A</th>
+              <th>JML</th>
+              <th>%</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+            ${rows}
+          </tbody>
+
+        </table>
+
+        <div class="report-footer">
+
+          <div>
+            <p>
+              Mengetahui,
+            </p>
+
+            <p>
+              Kepala Sekolah
+            </p>
+
+            <br><br><br>
+
+            <strong>
+              ${escapeHTML(
+                kepala.nama ||
+                "-"
+              )}
+            </strong>
+
+            <br>
+
+            NIP.
+            ${escapeHTML(
+              kepala.nip ||
+              "-"
+            )}
+          </div>
+
+          <div>
+            <p>
+              Guru / Wali Kelas
+            </p>
+
+            <br><br><br>
+
+            <strong>
+              ${escapeHTML(
+                guru.nama ||
+                "-"
+              )}
+            </strong>
+
+            <br>
+
+            NIP.
+            ${escapeHTML(
+              guru.nip ||
+              "-"
+            )}
+          </div>
 
         </div>
 
+      </div>
+    `;
+  }
 
-        <div
-            id="guruWrapper"
-            class="report-filter"
-        >
+  function getDayKeys(
+    siswa,
+    jumlahHari
+  ) {
 
-            <label for="pilihGuru">
-                Guru / Wali Kelas
-            </label>
+    const keys =
+      new Set();
 
-            <select id="pilihGuru">
+    siswa.forEach(
+      item => {
 
-                <option value="">
-                    Pilih Guru
-                </option>
+        const hari =
+          item.hari || {};
 
-            </select>
+        Object.keys(hari)
+          .forEach(
+            key =>
+              keys.add(
+                Number(key)
+              )
+          );
+      }
+    );
 
+    if (!keys.size) {
+
+      for (
+        let i = 1;
+        i <= jumlahHari;
+        i++
+      ) {
+        keys.add(i);
+      }
+    }
+
+    return [
+      ...keys
+    ].sort(
+      (a, b) => a - b
+    );
+  }
+
+  function hitungRekap(hari) {
+
+    let hadir = 0;
+    let sakit = 0;
+    let izin = 0;
+    let alpa = 0;
+
+    Object.values(hari)
+      .forEach(status => {
+
+        switch (
+          String(status)
+            .toUpperCase()
+        ) {
+
+          case "H":
+            hadir++;
+            break;
+
+          case "S":
+            sakit++;
+            break;
+
+          case "I":
+            izin++;
+            break;
+
+          case "A":
+            alpa++;
+            break;
+        }
+      });
+
+    const total =
+      hadir +
+      sakit +
+      izin +
+      alpa;
+
+    return {
+      hadir,
+      sakit,
+      izin,
+      alpa,
+      total
+    };
+  }
+
+  function showLoading() {
+
+    const container =
+      $("reportContent") ||
+      $("laporan");
+
+    if (container) {
+
+      container.innerHTML = `
+        <div class="loading">
+          Memuat laporan...
         </div>
+      `;
+    }
+  }
 
+  function showError(message) {
 
-        <button
-            type="button"
-            id="btnTampilkan"
-            class="btn btn-primary"
-        >
+    const container =
+      $("reportContent") ||
+      $("laporan");
 
-            <i class="fa-solid fa-magnifying-glass"></i>
+    if (container) {
 
-            Tampilkan
-
-        </button>
-
-
-        <button
-            type="button"
-            id="btnCetak"
-            class="btn btn-secondary"
-        >
-
-            <i class="fa-solid fa-print"></i>
-
-            Cetak
-
-        </button>
-
-
-        <button
-            type="button"
-            id="btnExcel"
-            class="btn btn-success"
-        >
-
-            <i class="fa-solid fa-file-excel"></i>
-
-            Excel
-
-        </button>
-
-    </div>
-
-
-    <div
-        id="rekapMessage"
-        class="no-print"
-    ></div>
-
-
-    <!-- =============================================
-         KERTAS LAPORAN
-    ============================================== -->
-
-    <div
-        id="reportPaper"
-        class="report-paper"
-    >
-
-        <div
-            id="reportLoading"
-            class="report-loading"
-        >
-
-            Silakan pilih bulan dan guru,
-            kemudian klik Tampilkan.
-
+      container.innerHTML = `
+        <div class="alert alert-danger">
+          ${escapeHTML(message)}
         </div>
+      `;
+    }
+  }
+
+  function exportExcel() {
+
+    if (!dataReport) {
+      alert(
+        "Tampilkan laporan terlebih dahulu."
+      );
+      return;
+    }
+
+    if (
+      typeof XLSX ===
+      "undefined"
+    ) {
+      exportCSV();
+      return;
+    }
+
+    const table =
+      document.querySelector(
+        ".table-report"
+      );
+
+    if (!table) {
+      alert(
+        "Tabel laporan tidak ditemukan."
+      );
+      return;
+    }
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    const worksheet =
+      XLSX.utils.table_to_sheet(
+        table
+      );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Laporan"
+    );
+
+    XLSX.writeFile(
+      workbook,
+      "Laporan-Kehadiran-Siswa.xlsx"
+    );
+  }
+
+  function exportCSV() {
+
+    const table =
+      document.querySelector(
+        ".table-report"
+      );
+
+    if (!table) return;
+
+    const rows =
+      [...table.rows].map(
+        row =>
+          [...row.cells]
+            .map(
+              cell =>
+                `"${String(
+                  cell.innerText
+                ).replace(
+                  /"/g,
+                  '""'
+                )}"`
+            )
+            .join(",")
+      );
+
+    const blob =
+      new Blob(
+        [rows.join("\n")],
+        {
+          type:
+            "text/csv;charset=utf-8;"
+        }
+      );
+
+    const url =
+      URL.createObjectURL(
+        blob
+      );
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+      "Laporan-Kehadiran-Siswa.csv";
+
+    link.click();
 
+    URL.revokeObjectURL(url);
+  }
 
-        <div
-            id="reportContent"
-            style="display:none;"
-        >
+  window.loadAbsenBulanan =
+    loadReport;
 
+  window.exportAbsenBulanan =
+    exportExcel;
 
-            <div class="report-title">
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
 
-                LAPORAN KEHADIRAN SISWA
-                SDN JATIWARINGIN XIII
-
-            </div>
-
-
-            <div class="report-info">
-
-                Bulan:
-                <strong id="reportBulan">
-                    -
-                </strong>
-
-                &nbsp;&nbsp;
-
-                Tahun:
-                <strong id="reportTahun">
-                    -
-                </strong>
-
-                &nbsp;&nbsp;
-
-                Kelas:
-                <strong id="reportKelas">
-                    -
-                </strong>
-
-                &nbsp;&nbsp;
-
-                Wali Kelas:
-                <strong id="reportGuru">
-                    -
-                </strong>
-
-                &nbsp;&nbsp;
-
-                Tahun Ajaran:
-                <strong id="reportTahunAjaran">
-                    -
-                </strong>
-
-                &nbsp;&nbsp;
-
-                Hari Efektif:
-                <strong id="reportHariEfektif">
-                    -
-                </strong>
-                Hari
-
-            </div>
-
-
-            <div class="table-wrapper">
-
-                <table
-                    id="rekapTable"
-                    class="report-table"
-                >
-
-                    <thead
-                        id="rekapTableHead"
-                    ></thead>
-
-
-                    <tbody
-                        id="rekapTableBody"
-                    ></tbody>
-
-
-                    <tfoot
-                        id="rekapTableFoot"
-                    ></tfoot>
-
-                </table>
-
-            </div>
-
-
-            <div class="report-note">
-
-                <div>
-
-                    Keterangan:
-                    H = Hadir,
-                    S = Sakit,
-                    I = Izin,
-                    A = Alpa,
-                    - = Belum Absen / Hari Libur
-
-                </div>
-
-
-                <div>
-
-                    Rumus Kehadiran =
-                    (Hadir / Hari Efektif) × 100%
-
-                </div>
-
-            </div>
-
-
-            <div class="report-signature">
-
-
-                <div class="signature-box">
-
-                    <div>
-                        Mengetahui,
-                    </div>
-
-                    <div>
-                        Kepala Sekolah
-                    </div>
-
-
-                    <div
-                        class="signature-name"
-                        id="kepalaSekolah"
-                    >
-                        -
-                    </div>
-
-
-                    <div
-                        class="signature-nip"
-                    >
-
-                        NIP:
-                        <span
-                            id="nipKepala"
-                        >
-                            -
-                        </span>
-
-                    </div>
-
-                </div>
-
-
-                <div class="signature-box">
-
-                    <div id="tanggalCetak">
-                        Bekasi, -
-                    </div>
-
-                    <div>
-                        Guru / Wali Kelas
-                    </div>
-
-
-                    <div
-                        class="signature-name"
-                        id="waliKelas"
-                    >
-                        -
-                    </div>
-
-
-                    <div
-                        class="signature-nip"
-                    >
-
-                        NIP:
-                        <span
-                            id="nipWali"
-                        >
-                            -
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-
-        </div>
-
-    </div>
-
-
-    <script src="auth.js"></script>
-    <script src="layout.js"></script>
-    <script src="absen-bulanan.js"></script>
-    <script src="pwa.js"></script>
-
-
-</body>
-
-</html>
+})();
