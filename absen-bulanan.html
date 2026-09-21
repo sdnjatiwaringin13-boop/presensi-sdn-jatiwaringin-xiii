@@ -1,32 +1,38 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Laporan Absensi Bulanan</title>
 
+  <!-- CSS UTAMA APLIKASI -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- CSS KHUSUS LAPORAN -->
   <style>
+
     * {
       box-sizing: border-box;
     }
 
-    html,
     body {
       margin: 0;
       padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
       background: #f5f7fa;
+      font-family: Arial, Helvetica, sans-serif;
       color: #222;
     }
 
-    body {
-      min-height: 100vh;
-    }
-
-    /* =========================
-       CONTAINER
-    ========================= */
+    /* =========================================
+       AREA HALAMAN
+    ========================================= */
 
     .page-container {
       width: 100%;
@@ -34,12 +40,12 @@
     }
 
     .page-header {
-      background: #ffffff;
+      background: #fff;
+      border: 1px solid #e1e5ea;
       border-radius: 10px;
       padding: 18px 20px;
       margin-bottom: 15px;
-      border: 1px solid #e1e5ea;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
     }
 
     .page-header h1 {
@@ -54,22 +60,27 @@
       color: #6b7280;
     }
 
-    /* =========================
+    /* =========================================
        FILTER
-    ========================= */
+    ========================================= */
 
     .filter-card {
-      background: #ffffff;
+      background: #fff;
       border: 1px solid #e1e5ea;
       border-radius: 10px;
       padding: 18px;
       margin-bottom: 15px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
     }
 
     .filter-grid {
       display: grid;
-      grid-template-columns: minmax(220px, 1fr) 180px 120px auto;
+      grid-template-columns:
+        minmax(220px, 1fr)
+        180px
+        120px
+        auto;
+
       gap: 12px;
       align-items: end;
     }
@@ -93,7 +104,7 @@
       padding: 0 11px;
       border: 1px solid #cfd5dc;
       border-radius: 7px;
-      background: #ffffff;
+      background: #fff;
       font-size: 14px;
       outline: none;
     }
@@ -101,12 +112,13 @@
     .form-group select:focus,
     .form-group input:focus {
       border-color: #2563eb;
-      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+      box-shadow:
+        0 0 0 2px rgba(37,99,235,.12);
     }
 
-    /* =========================
+    /* =========================================
        BUTTON
-    ========================= */
+    ========================================= */
 
     .button-group {
       display: flex;
@@ -115,44 +127,43 @@
     }
 
     .btn {
-      border: none;
-      border-radius: 7px;
       height: 40px;
       padding: 0 15px;
+      border: none;
+      border-radius: 7px;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
-      transition: 0.2s;
       white-space: nowrap;
-    }
-
-    .btn:hover {
-      opacity: 0.9;
     }
 
     .btn-primary {
       background: #2563eb;
-      color: #ffffff;
+      color: #fff;
     }
 
     .btn-success {
       background: #16a34a;
-      color: #ffffff;
+      color: #fff;
     }
 
     .btn-secondary {
       background: #6b7280;
-      color: #ffffff;
+      color: #fff;
+    }
+
+    .btn:hover {
+      opacity: .9;
     }
 
     .btn:disabled {
-      opacity: 0.55;
+      opacity: .55;
       cursor: not-allowed;
     }
 
-    /* =========================
+    /* =========================================
        STATUS
-    ========================= */
+    ========================================= */
 
     #statusMessage {
       display: none;
@@ -183,20 +194,20 @@
       color: #1e40af;
     }
 
-    /* =========================
+    /* =========================================
        REPORT
-    ========================= */
+    ========================================= */
 
     #reportContainer {
       display: none;
     }
 
     .report-card {
-      background: #ffffff;
+      background: #fff;
       border: 1px solid #e1e5ea;
       border-radius: 10px;
       padding: 18px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
     }
 
     .report-title {
@@ -221,9 +232,9 @@
       color: #555;
     }
 
-    /* =========================
-       INFO LAPORAN
-    ========================= */
+    /* =========================================
+       INFO
+    ========================================= */
 
     .report-info {
       display: grid;
@@ -239,45 +250,47 @@
     }
 
     .report-info-item .label {
-      font-weight: 700;
       min-width: 100px;
+      font-weight: 700;
     }
 
-    /* =========================
-       TABLE WRAPPER
-    ========================= */
+    /* =========================================
+       TABLE
+    ========================================= */
 
     .table-wrapper {
       width: 100%;
       overflow-x: auto;
       overflow-y: hidden;
       border: 1px solid #444;
-      background: #ffffff;
+      background: #fff;
       -webkit-overflow-scrolling: touch;
     }
-
-    /* =========================
-       TABLE
-    ========================= */
 
     #rekapTable {
       border-collapse: collapse;
       border-spacing: 0;
+
       width: max-content;
       min-width: 100%;
+
       table-layout: fixed;
+
       font-size: 10px;
-      background: #ffffff;
+      background: #fff;
     }
 
     #rekapTable th,
     #rekapTable td {
       border: 1px solid #555;
       padding: 4px 3px;
+
       text-align: center;
       vertical-align: middle;
-      box-sizing: border-box;
+
       line-height: 1.2;
+
+      box-sizing: border-box;
     }
 
     /* NO */
@@ -307,34 +320,18 @@
       max-width: 190px;
     }
 
-    /* HEADER UTAMA */
+    /* HEADER */
 
     #rekapTable thead tr:first-child th {
       background: #e5e7eb;
       font-weight: 800;
-      font-size: 10px;
       height: 32px;
       white-space: nowrap;
     }
 
-    /* HEADER TANGGAL */
+    /* TANGGAL */
 
-    #rekapTable .date-header {
-      width: 30px;
-      min-width: 30px;
-      max-width: 30px;
-
-      padding: 4px 1px;
-
-      background: #f3f4f6;
-      font-weight: 800;
-
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    /* CELL ABSENSI */
-
+    #rekapTable .date-header,
     #rekapTable .attendance-cell {
       width: 30px;
       min-width: 30px;
@@ -342,12 +339,20 @@
 
       padding: 4px 1px;
 
-      font-weight: 700;
       text-align: center;
       white-space: nowrap;
     }
 
-    /* SUMMARY */
+    #rekapTable .date-header {
+      background: #f3f4f6;
+      font-weight: 800;
+    }
+
+    #rekapTable .attendance-cell {
+      font-weight: 700;
+    }
+
+    /* AKUMULASI */
 
     #rekapTable .summary-header,
     #rekapTable .summary-cell {
@@ -360,7 +365,6 @@
     }
 
     #rekapTable .summary-header {
-      font-size: 10px;
       font-weight: 800;
       height: 30px;
     }
@@ -372,7 +376,6 @@
 
     .summary-title {
       background: #dbeafe !important;
-      font-weight: 800 !important;
     }
 
     .summary-hadir {
@@ -391,103 +394,88 @@
       background: #fee2e2 !important;
     }
 
-    /* NAMA SISWA */
-
     #rekapTable td:nth-child(3) {
       text-align: left;
       padding-left: 7px;
       font-weight: 600;
+
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
-    /* BARIS GANJIL */
-
     #rekapTable tbody tr:nth-child(odd) {
       background: #fafafa;
     }
 
-    /* HARI MINGGU */
-
-    #rekapTable .hari-minggu {
-      background: #fff1f2;
+    .hari-minggu {
+      background: #fff1f2 !important;
       color: #b91c1c;
     }
 
-    /* HARI LIBUR */
-
-    #rekapTable .hari-libur {
-      background: #fef2f2;
-      color: #b91c1c;
-    }
-
-    /* STATUS */
-
-    #rekapTable .status-hadir {
+    .status-hadir {
       color: #15803d;
     }
 
-    #rekapTable .status-sakit {
+    .status-sakit {
       color: #a16207;
     }
 
-    #rekapTable .status-izin {
+    .status-izin {
       color: #1d4ed8;
     }
 
-    #rekapTable .status-alpa {
+    .status-alpa {
       color: #b91c1c;
     }
 
-    /* =========================
-       LEGEND
-    ========================= */
+    /* =========================================
+       KETERANGAN
+    ========================================= */
 
     .report-keterangan {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       gap: 12px;
+
       margin-top: 12px;
       padding: 10px 12px;
+
       background: #f9fafb;
       border: 1px solid #e5e7eb;
       border-radius: 7px;
+
       font-size: 12px;
     }
 
-    .report-keterangan strong {
-      margin-right: 3px;
-    }
-
     .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
       font-weight: 600;
     }
 
-    /* =========================
-       TOMBOL LAPORAN
-    ========================= */
+    /* =========================================
+       ACTION
+    ========================================= */
 
     .report-actions {
       display: flex;
       justify-content: flex-end;
       gap: 8px;
+
       margin-top: 15px;
       flex-wrap: wrap;
     }
 
-    /* =========================
+    /* =========================================
        TANDA TANGAN
-    ========================= */
+    ========================================= */
 
     .signature-area {
       display: grid;
       grid-template-columns: 1fr 1fr;
+
       gap: 80px;
+
       margin-top: 45px;
       padding-bottom: 20px;
     }
@@ -510,61 +498,9 @@
       margin-top: 3px;
     }
 
-    /* =========================
-       PRINT
-    ========================= */
-
-    @media print {
-
-      @page {
-        size: landscape;
-        margin: 10mm;
-      }
-
-      body {
-        background: #ffffff;
-      }
-
-      .page-header,
-      .filter-card,
-      .report-actions,
-      #statusMessage {
-        display: none !important;
-      }
-
-      .page-container {
-        padding: 0;
-      }
-
-      .report-card {
-        border: none;
-        box-shadow: none;
-        padding: 0;
-      }
-
-      .table-wrapper {
-        overflow: visible;
-        border: none;
-      }
-
-      #rekapTable {
-        width: max-content;
-        min-width: 100%;
-      }
-
-      .report-keterangan {
-        border: 1px solid #555;
-      }
-
-      #rekapTable th,
-      #rekapTable td {
-        border: 1px solid #000;
-      }
-    }
-
-    /* =========================
+    /* =========================================
        RESPONSIVE
-    ========================= */
+    ========================================= */
 
     @media (max-width: 900px) {
 
@@ -580,9 +516,6 @@
         grid-template-columns: 1fr;
       }
 
-      .signature-area {
-        gap: 30px;
-      }
     }
 
     @media (max-width: 600px) {
@@ -607,47 +540,130 @@
         grid-template-columns: 1fr;
         gap: 20px;
       }
+
     }
+
+    /* =========================================
+       PRINT
+    ========================================= */
+
+    @media print {
+
+      @page {
+        size: landscape;
+        margin: 10mm;
+      }
+
+      body {
+        background: #fff;
+      }
+
+      /*
+       * Sembunyikan layout aplikasi
+       * saat mencetak laporan.
+       */
+
+      .sidebar,
+      .navbar,
+      .topbar,
+      .app-sidebar,
+      .app-header,
+      .page-header,
+      .filter-card,
+      .report-actions,
+      #statusMessage {
+        display: none !important;
+      }
+
+      .page-container {
+        padding: 0;
+      }
+
+      .report-card {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+      }
+
+      .table-wrapper {
+        overflow: visible;
+        border: none;
+      }
+
+      #rekapTable th,
+      #rekapTable td {
+        border: 1px solid #000;
+      }
+
+    }
+
   </style>
+
 </head>
+
 
 <body>
 
+  <!--
+    layout.js akan membuat menu/sidebar aplikasi
+    di sini.
+  -->
+
+
   <div class="page-container">
 
-    <!-- =========================
+    <!-- =====================================
          HEADER
-    ========================== -->
+    ====================================== -->
 
     <div class="page-header">
-      <h1>Laporan Absensi Bulanan</h1>
-      <p>Rekapitulasi kehadiran siswa berdasarkan guru dan bulan</p>
+
+      <h1>
+        Laporan Absensi Bulanan
+      </h1>
+
+      <p>
+        Rekapitulasi kehadiran siswa berdasarkan guru dan bulan
+      </p>
+
     </div>
 
 
-    <!-- =========================
+    <!-- =====================================
          FILTER
-    ========================== -->
+    ====================================== -->
 
     <div class="filter-card">
 
       <div class="filter-grid">
 
+
         <!-- GURU -->
 
         <div class="form-group">
-          <label for="pilihGuru">Guru / Wali Kelas</label>
+
+          <label for="pilihGuru">
+            Guru / Wali Kelas
+          </label>
 
           <select id="pilihGuru">
-            <option value="">Memuat data guru...</option>
+
+            <option value="">
+              Memuat data guru...
+            </option>
+
           </select>
+
         </div>
 
 
         <!-- BULAN -->
 
         <div class="form-group">
-          <label for="pilihBulan">Bulan</label>
+
+          <label for="pilihBulan">
+            Bulan
+          </label>
 
           <select id="pilihBulan">
 
@@ -665,13 +681,17 @@
             <option value="12">Desember</option>
 
           </select>
+
         </div>
 
 
         <!-- TAHUN -->
 
         <div class="form-group">
-          <label for="pilihTahun">Tahun</label>
+
+          <label for="pilihTahun">
+            Tahun
+          </label>
 
           <input
             type="number"
@@ -679,6 +699,7 @@
             min="2020"
             max="2100"
           >
+
         </div>
 
 
@@ -699,22 +720,19 @@
       </div>
 
 
-      <!-- STATUS -->
-
       <div id="statusMessage"></div>
 
     </div>
 
 
-    <!-- =========================
+    <!-- =====================================
          REPORT
-    ========================== -->
+    ====================================== -->
 
     <div id="reportContainer">
 
       <div class="report-card">
 
-        <!-- JUDUL -->
 
         <div class="report-title">
 
@@ -738,43 +756,78 @@
         <div class="report-info">
 
           <div class="report-info-item">
-            <span class="label">Kelas</span>
+
+            <span class="label">
+              Kelas
+            </span>
+
             <span>:</span>
-            <span id="infoKelas">-</span>
+
+            <span id="infoKelas">
+              -
+            </span>
+
           </div>
 
-          <div class="report-info-item">
-            <span class="label">Wali Kelas</span>
-            <span>:</span>
-            <span id="infoGuru">-</span>
-          </div>
 
           <div class="report-info-item">
-            <span class="label">NIP</span>
+
+            <span class="label">
+              Wali Kelas
+            </span>
+
             <span>:</span>
-            <span id="infoNipGuru">-</span>
+
+            <span id="infoGuru">
+              -
+            </span>
+
           </div>
 
+
           <div class="report-info-item">
-            <span class="label">Jumlah Hari</span>
+
+            <span class="label">
+              NIP
+            </span>
+
             <span>:</span>
-            <span id="infoJumlahHari">-</span>
+
+            <span id="infoNipGuru">
+              -
+            </span>
+
+          </div>
+
+
+          <div class="report-info-item">
+
+            <span class="label">
+              Jumlah Hari
+            </span>
+
+            <span>:</span>
+
+            <span id="infoJumlahHari">
+              -
+            </span>
+
           </div>
 
         </div>
 
 
-        <!-- =========================
+        <!-- =================================
              TABLE
-        ========================== -->
+        ================================== -->
 
         <div class="table-wrapper">
 
           <table id="rekapTable">
 
-            <!-- COLGROUP DIISI OTOMATIS OLEH JS -->
-
-            <colgroup id="rekapColGroup"></colgroup>
+            <colgroup
+              id="rekapColGroup"
+            ></colgroup>
 
 
             <thead id="rekapTableHead">
@@ -843,7 +896,10 @@
 
                 <td
                   colspan="7"
-                  style="padding:20px;text-align:center;"
+                  style="
+                    padding:20px;
+                    text-align:center;
+                  "
                 >
                   Belum ada data laporan.
                 </td>
@@ -857,13 +913,15 @@
         </div>
 
 
-        <!-- =========================
+        <!-- =================================
              KETERANGAN
-        ========================== -->
+        ================================== -->
 
         <div class="report-keterangan">
 
-          <strong>Keterangan:</strong>
+          <strong>
+            Keterangan:
+          </strong>
 
           <span class="legend-item">
             H = Hadir
@@ -888,9 +946,9 @@
         </div>
 
 
-        <!-- =========================
+        <!-- =================================
              ACTION
-        ========================== -->
+        ================================== -->
 
         <div class="report-actions">
 
@@ -913,11 +971,12 @@
         </div>
 
 
-        <!-- =========================
+        <!-- =================================
              TANDA TANGAN
-        ========================== -->
+        ================================== -->
 
         <div class="signature-area">
+
 
           <div class="signature-box">
 
@@ -985,9 +1044,9 @@
   </div>
 
 
-  <!-- =========================
+  <!-- =========================================
        JAVASCRIPT
-  ========================== -->
+  ========================================== -->
 
   <script src="api.js"></script>
 
@@ -995,11 +1054,14 @@
 
   <script src="layout.js"></script>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+  ></script>
 
   <script src="absen-bulanan.js"></script>
 
   <script src="pwa.js"></script>
 
 </body>
+
 </html>
