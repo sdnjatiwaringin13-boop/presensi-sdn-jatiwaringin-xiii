@@ -3,18 +3,23 @@
 /*
 ==========================================================
 LAYOUT UTAMA
+PRESENSI SISWA
 SD NEGERI JATIWARINGIN XIII
 ==========================================================
 */
 
 (function () {
 
-    const page =
-        location.pathname
-            .split("/")
-            .pop()
-            .toLowerCase() || "dashboard.html";
+    const currentPage =
+        (location.pathname.split("/").pop() || "dashboard.html")
+            .toLowerCase();
 
+
+    /*
+    ======================================================
+    KONFIGURASI JUDUL SETIAP HALAMAN
+    ======================================================
+    */
 
     const PAGE_CONFIG = {
 
@@ -26,25 +31,25 @@ SD NEGERI JATIWARINGIN XIII
 
         "admin.html": {
             title: "Administrator",
-            subtitle: "Manajemen Pengguna",
+            subtitle: "Manajemen Administrator",
             icon: "fa-user-shield"
         },
 
         "siswa.html": {
             title: "Data Siswa",
-            subtitle: "Master Data",
+            subtitle: "Master Data Siswa",
             icon: "fa-user-graduate"
         },
 
         "guru.html": {
             title: "Data Guru",
-            subtitle: "Master Data",
+            subtitle: "Master Data Guru",
             icon: "fa-chalkboard-user"
         },
 
         "kelas.html": {
             title: "Data Kelas",
-            subtitle: "Master Data",
+            subtitle: "Master Data Kelas",
             icon: "fa-school"
         },
 
@@ -56,25 +61,25 @@ SD NEGERI JATIWARINGIN XIII
 
         "scan.html": {
             title: "Scan QR",
-            subtitle: "Presensi QR",
+            subtitle: "Presensi QR Code",
             icon: "fa-qrcode"
         },
 
         "kartu.html": {
             title: "Kartu Siswa",
-            subtitle: "Kartu Identitas",
+            subtitle: "Cetak Kartu Siswa",
             icon: "fa-id-card"
         },
 
         "absen-bulanan.html": {
-            title: "Rekap Bulanan",
-            subtitle: "Laporan Presensi",
+            title: "Laporan Kehadiran",
+            subtitle: "Daftar Presensi Siswa Per Bulan",
             icon: "fa-calendar-days"
         },
 
         "pengaturan.html": {
             title: "Pengaturan",
-            subtitle: "Konfigurasi Sistem",
+            subtitle: "Pengaturan Sistem",
             icon: "fa-gear"
         }
 
@@ -82,9 +87,15 @@ SD NEGERI JATIWARINGIN XIII
 
 
     const config =
-        PAGE_CONFIG[page] ||
+        PAGE_CONFIG[currentPage] ||
         PAGE_CONFIG["dashboard.html"];
 
+
+    /*
+    ======================================================
+    BACA USER
+    ======================================================
+    */
 
     function getUser() {
 
@@ -99,26 +110,36 @@ SD NEGERI JATIWARINGIN XIII
 
             }
 
-            const raw =
-                localStorage.getItem(
-                    "presensiUser"
-                );
 
-            return raw
-                ? JSON.parse(raw)
-                : null;
+            const raw =
+                localStorage.getItem("presensiUser");
+
+
+            if (!raw) {
+                return null;
+            }
+
+
+            return JSON.parse(raw);
 
         } catch (error) {
 
             console.error(
-                "Gagal membaca user:",
+                "Gagal membaca data pengguna:",
                 error
             );
 
             return null;
         }
+
     }
 
+
+    /*
+    ======================================================
+    ESCAPE HTML
+    ======================================================
+    */
 
     function escapeHTML(value) {
 
@@ -128,412 +149,533 @@ SD NEGERI JATIWARINGIN XIII
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+
     }
 
 
-    function createLayout() {
+    /*
+    ======================================================
+    BUAT LAYOUT
+    ======================================================
+    */
+
+    function buildLayout() {
 
         /*
-        Simpan seluruh isi body lama.
-        Dengan cara ini halaman lama tidak
-        perlu dibangun ulang dari nol.
+        Jangan menjalankan layout pada login.
         */
 
-        const oldContent =
-            document.body.innerHTML;
+        if (
+            currentPage === "index.html" ||
+            currentPage === ""
+        ) {
+
+            return;
+
+        }
 
 
-        document.body.innerHTML = `
+        /*
+        Simpan isi halaman lama.
+        Kita hanya memindahkan isi halaman,
+        bukan mengubah JavaScript backend/frontend.
+        */
 
-            <div
-                id="appOverlay"
-                class="app-overlay"
-            ></div>
+        const oldNodes = [];
+
+        Array.from(document.body.children)
+            .forEach(function (node) {
+
+                /*
+                Script tidak perlu ditampilkan
+                di dalam area halaman.
+                */
+
+                if (
+                    node.tagName === "SCRIPT" ||
+                    node.tagName === "STYLE" ||
+                    node.tagName === "LINK"
+                ) {
+
+                    return;
+
+                }
 
 
-            <!-- =========================================
-                 SIDEBAR
-            ========================================== -->
+                oldNodes.push(node);
 
-            <aside
-                id="appSidebar"
-                class="app-sidebar"
-            >
+            });
 
-                <div class="sidebar-brand">
 
-                    <div class="brand-icon">
-                        <i class="fa-solid fa-school"></i>
+        /*
+        Buat wrapper lama.
+        */
+
+        const pageContent =
+            document.createElement("div");
+
+        pageContent.id =
+            "legacyPageContent";
+
+        pageContent.className =
+            "legacy-page-content";
+
+
+        oldNodes.forEach(function (node) {
+
+            pageContent.appendChild(node);
+
+        });
+
+
+        /*
+        Bersihkan body.
+        */
+
+        document.body.innerHTML = "";
+
+
+        /*
+        ==================================================
+        SIDEBAR
+        ==================================================
+        */
+
+        const sidebar =
+            document.createElement("aside");
+
+        sidebar.id =
+            "appSidebar";
+
+        sidebar.className =
+            "app-sidebar";
+
+
+        sidebar.innerHTML = `
+
+            <div class="sidebar-brand">
+
+                <div class="brand-icon">
+                    <i class="fa-solid fa-school"></i>
+                </div>
+
+                <div class="brand-text">
+
+                    <div class="brand-title">
+                        Administrator
                     </div>
 
-                    <div class="brand-text">
-
-                        <div class="brand-title">
-                            Administrator
-                        </div>
-
-                        <div class="brand-subtitle">
-                            Presensi Sekolah
-                        </div>
-
+                    <div class="brand-subtitle">
+                        Presensi Sekolah
                     </div>
 
                 </div>
-
-
-                <div class="sidebar-user">
-
-                    <div class="sidebar-user-avatar">
-                        <i class="fa-solid fa-user"></i>
-                    </div>
-
-                    <div class="sidebar-user-info">
-
-                        <div
-                            id="layoutUserName"
-                            class="sidebar-user-name"
-                        >
-                            Administrator
-                        </div>
-
-                        <div
-                            id="layoutUserRole"
-                            class="sidebar-user-role"
-                        >
-                            <span class="online-dot"></span>
-                            Online
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <nav class="app-menu">
-
-                    <div class="menu-section-title">
-                        MENU UTAMA
-                    </div>
-
-
-                    <!-- DASHBOARD -->
-
-                    <a
-                        href="dashboard.html"
-                        class="app-menu-link"
-                        data-page="dashboard.html"
-                    >
-
-                        <i class="fa-solid fa-gauge-high"></i>
-
-                        <span>
-                            Dashboard
-                        </span>
-
-                    </a>
-
-
-                    <!-- DATA MASTER -->
-
-                    <button
-                        type="button"
-                        class="app-menu-link menu-parent"
-                        id="masterMenuButton"
-                    >
-
-                        <i class="fa-solid fa-database"></i>
-
-                        <span>
-                            Data Master
-                        </span>
-
-                        <i
-                            class="fa-solid fa-chevron-down menu-arrow"
-                        ></i>
-
-                    </button>
-
-
-                    <div
-                        class="app-submenu"
-                        id="masterSubmenu"
-                    >
-
-                        <a
-                            href="siswa.html"
-                            class="app-submenu-link admin-only"
-                            data-page="siswa.html"
-                        >
-                            <i class="fa-solid fa-user-graduate"></i>
-                            <span>Data Siswa</span>
-                        </a>
-
-
-                        <a
-                            href="guru.html"
-                            class="app-submenu-link admin-only"
-                            data-page="guru.html"
-                        >
-                            <i class="fa-solid fa-chalkboard-user"></i>
-                            <span>Data Guru</span>
-                        </a>
-
-
-                        <a
-                            href="kelas.html"
-                            class="app-submenu-link admin-only"
-                            data-page="kelas.html"
-                        >
-                            <i class="fa-solid fa-school"></i>
-                            <span>Data Kelas</span>
-                        </a>
-
-                    </div>
-
-
-                    <!-- PRESENSI -->
-
-                    <a
-                        href="presensi.html"
-                        class="app-menu-link guru-only"
-                        data-page="presensi.html"
-                    >
-
-                        <i class="fa-solid fa-calendar-check"></i>
-
-                        <span>
-                            Presensi
-                        </span>
-
-                    </a>
-
-
-                    <!-- SCAN -->
-
-                    <a
-                        href="scan.html"
-                        class="app-menu-link"
-                        data-page="scan.html"
-                    >
-
-                        <i class="fa-solid fa-qrcode"></i>
-
-                        <span>
-                            Scan QR
-                        </span>
-
-                    </a>
-
-
-                    <!-- REKAP -->
-
-                    <a
-                        href="absen-bulanan.html"
-                        class="app-menu-link"
-                        data-page="absen-bulanan.html"
-                    >
-
-                        <i class="fa-solid fa-calendar-days"></i>
-
-                        <span>
-                            Rekap Bulanan
-                        </span>
-
-                    </a>
-
-
-                    <!-- KARTU -->
-
-                    <a
-                        href="kartu.html"
-                        class="app-menu-link admin-only"
-                        data-page="kartu.html"
-                    >
-
-                        <i class="fa-solid fa-id-card"></i>
-
-                        <span>
-                            Kartu Siswa
-                        </span>
-
-                    </a>
-
-
-                    <!-- PENGATURAN -->
-
-                    <a
-                        href="pengaturan.html"
-                        class="app-menu-link admin-only"
-                        data-page="pengaturan.html"
-                    >
-
-                        <i class="fa-solid fa-gear"></i>
-
-                        <span>
-                            Pengaturan
-                        </span>
-
-                    </a>
-
-
-                    <div class="menu-section-title account-title">
-                        AKUN
-                    </div>
-
-
-                    <button
-                        type="button"
-                        class="app-menu-link"
-                        id="profileButton"
-                    >
-
-                        <i class="fa-solid fa-user"></i>
-
-                        <span>
-                            Profil
-                        </span>
-
-                    </button>
-
-
-                    <button
-                        type="button"
-                        class="app-menu-link logout-link"
-                        id="logoutButton"
-                    >
-
-                        <i class="fa-solid fa-right-from-bracket"></i>
-
-                        <span>
-                            Keluar
-                        </span>
-
-                    </button>
-
-                </nav>
-
-            </aside>
-
-
-            <!-- =========================================
-                 MAIN
-            ========================================== -->
-
-            <div
-                id="appMain"
-                class="app-main"
-            >
-
-                <!-- TOPBAR -->
-
-                <header class="app-topbar">
-
-                    <div class="topbar-left">
-
-                        <button
-                            type="button"
-                            id="sidebarToggle"
-                            class="sidebar-toggle"
-                            title="Menu"
-                        >
-
-                            <i class="fa-solid fa-bars"></i>
-
-                        </button>
-
-
-                        <div class="topbar-heading">
-
-                            <div
-                                id="layoutPageTitle"
-                                class="topbar-title"
-                            >
-                                ${escapeHTML(config.title)}
-                            </div>
-
-                            <div
-                                id="layoutPageSubtitle"
-                                class="topbar-subtitle"
-                            >
-                                ${escapeHTML(config.subtitle)}
-                            </div>
-
-                        </div>
-
-                    </div>
-
-
-                    <div class="topbar-right">
-
-                        <div class="topbar-school">
-                            SD Negeri Jatiwaringin XIII
-                        </div>
-
-                        <div class="topbar-user">
-
-                            <div
-                                class="topbar-avatar"
-                            >
-                                <i class="fa-solid fa-user"></i>
-                            </div>
-
-                            <div
-                                id="layoutTopUserName"
-                                class="topbar-user-name"
-                            >
-                                Administrator
-                            </div>
-
-                            <i
-                                class="fa-solid fa-chevron-down topbar-chevron"
-                            ></i>
-
-                        </div>
-
-                    </div>
-
-                </header>
-
-
-                <!-- PAGE -->
-
-                <main
-                    id="appPageContent"
-                    class="app-page-content"
-                >
-
-                    <div class="page-breadcrumb">
-
-                        <i class="fa-solid fa-house"></i>
-
-                        <span>
-                            ${escapeHTML(config.title)}
-                        </span>
-
-                        <i class="fa-solid fa-angle-right"></i>
-
-                        <strong>
-                            ${escapeHTML(config.subtitle)}
-                        </strong>
-
-                    </div>
-
-
-                    <div
-                        id="legacyPageContent"
-                        class="legacy-page-content"
-                    >
-                        ${oldContent}
-                    </div>
-
-                </main>
 
             </div>
 
+
+            <div class="sidebar-user">
+
+                <div class="sidebar-user-avatar">
+
+                    <i class="fa-solid fa-user"></i>
+
+                </div>
+
+                <div class="sidebar-user-info">
+
+                    <div
+                        id="layoutUserName"
+                        class="sidebar-user-name"
+                    >
+                        Administrator
+                    </div>
+
+                    <div
+                        id="layoutUserRole"
+                        class="sidebar-user-role"
+                    >
+                        <span class="online-dot"></span>
+                        Online
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <nav class="app-menu">
+
+                <div class="menu-section-title">
+                    MENU UTAMA
+                </div>
+
+
+                <!-- DASHBOARD -->
+
+                <a
+                    href="dashboard.html"
+                    class="app-menu-link"
+                    data-page="dashboard.html"
+                >
+
+                    <i class="fa-solid fa-gauge-high"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+                <!-- DATA MASTER -->
+
+                <button
+                    type="button"
+                    id="masterMenuButton"
+                    class="app-menu-link menu-parent"
+                >
+
+                    <i class="fa-solid fa-database"></i>
+
+                    <span>
+                        Data Master
+                    </span>
+
+                    <i class="fa-solid fa-chevron-down menu-arrow"></i>
+
+                </button>
+
+
+                <div
+                    id="masterSubmenu"
+                    class="app-submenu"
+                >
+
+                    <a
+                        href="siswa.html"
+                        class="app-submenu-link admin-only"
+                        data-page="siswa.html"
+                    >
+
+                        <i class="fa-solid fa-user-graduate"></i>
+
+                        <span>
+                            Data Siswa
+                        </span>
+
+                    </a>
+
+
+                    <a
+                        href="guru.html"
+                        class="app-submenu-link admin-only"
+                        data-page="guru.html"
+                    >
+
+                        <i class="fa-solid fa-chalkboard-user"></i>
+
+                        <span>
+                            Data Guru
+                        </span>
+
+                    </a>
+
+
+                    <a
+                        href="kelas.html"
+                        class="app-submenu-link admin-only"
+                        data-page="kelas.html"
+                    >
+
+                        <i class="fa-solid fa-school"></i>
+
+                        <span>
+                            Data Kelas
+                        </span>
+
+                    </a>
+
+                </div>
+
+
+                <!-- PRESENSI -->
+
+                <a
+                    href="presensi.html"
+                    class="app-menu-link guru-only"
+                    data-page="presensi.html"
+                >
+
+                    <i class="fa-solid fa-calendar-check"></i>
+
+                    <span>
+                        Presensi
+                    </span>
+
+                </a>
+
+
+                <!-- SCAN -->
+
+                <a
+                    href="scan.html"
+                    class="app-menu-link"
+                    data-page="scan.html"
+                >
+
+                    <i class="fa-solid fa-qrcode"></i>
+
+                    <span>
+                        Scan QR
+                    </span>
+
+                </a>
+
+
+                <!-- LAPORAN -->
+
+                <a
+                    href="absen-bulanan.html"
+                    class="app-menu-link"
+                    data-page="absen-bulanan.html"
+                >
+
+                    <i class="fa-solid fa-calendar-days"></i>
+
+                    <span>
+                        Laporan Bulanan
+                    </span>
+
+                </a>
+
+
+                <!-- KARTU -->
+
+                <a
+                    href="kartu.html"
+                    class="app-menu-link admin-only"
+                    data-page="kartu.html"
+                >
+
+                    <i class="fa-solid fa-id-card"></i>
+
+                    <span>
+                        Kartu Siswa
+                    </span>
+
+                </a>
+
+
+                <!-- PENGATURAN -->
+
+                <a
+                    href="pengaturan.html"
+                    class="app-menu-link admin-only"
+                    data-page="pengaturan.html"
+                >
+
+                    <i class="fa-solid fa-gear"></i>
+
+                    <span>
+                        Pengaturan
+                    </span>
+
+                </a>
+
+
+                <div class="menu-section-title account-title">
+                    AKUN
+                </div>
+
+
+                <button
+                    type="button"
+                    id="profileButton"
+                    class="app-menu-link"
+                >
+
+                    <i class="fa-solid fa-user"></i>
+
+                    <span>
+                        Profil
+                    </span>
+
+                </button>
+
+
+                <button
+                    type="button"
+                    id="logoutButton"
+                    class="app-menu-link logout-link"
+                >
+
+                    <i class="fa-solid fa-right-from-bracket"></i>
+
+                    <span>
+                        Keluar
+                    </span>
+
+                </button>
+
+            </nav>
+
         `;
+
+
+        /*
+        ==================================================
+        MAIN
+        ==================================================
+        */
+
+        const main =
+            document.createElement("div");
+
+        main.id =
+            "appMain";
+
+        main.className =
+            "app-main";
+
+
+        main.innerHTML = `
+
+            <header class="app-topbar">
+
+                <div class="topbar-left">
+
+                    <button
+                        type="button"
+                        id="sidebarToggle"
+                        class="sidebar-toggle"
+                        title="Menu"
+                    >
+
+                        <i class="fa-solid fa-bars"></i>
+
+                    </button>
+
+
+                    <div class="topbar-heading">
+
+                        <div
+                            id="layoutPageTitle"
+                            class="topbar-title"
+                        >
+                            ${escapeHTML(config.title)}
+                        </div>
+
+                        <div
+                            id="layoutPageSubtitle"
+                            class="topbar-subtitle"
+                        >
+                            ${escapeHTML(config.subtitle)}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="topbar-right">
+
+                    <div class="topbar-school">
+                        SD Negeri Jatiwaringin XIII
+                    </div>
+
+
+                    <div class="topbar-user">
+
+                        <div class="topbar-avatar">
+
+                            <i class="fa-solid fa-user"></i>
+
+                        </div>
+
+                        <div
+                            id="layoutTopUserName"
+                            class="topbar-user-name"
+                        >
+                            Administrator
+                        </div>
+
+                        <i
+                            class="fa-solid fa-chevron-down topbar-chevron"
+                        ></i>
+
+                    </div>
+
+                </div>
+
+            </header>
+
+
+            <main class="app-page-content">
+
+                <div class="page-breadcrumb">
+
+                    <i class="fa-solid fa-house"></i>
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                    <i class="fa-solid fa-angle-right"></i>
+
+                    <strong>
+                        ${escapeHTML(config.title)}
+                    </strong>
+
+                </div>
+
+            </main>
+
+        `;
+
+
+        /*
+        Masukkan isi halaman lama
+        ke dalam area konten.
+        */
+
+        main
+            .querySelector(".app-page-content")
+            .appendChild(pageContent);
+
+
+        /*
+        Overlay mobile.
+        */
+
+        const overlay =
+            document.createElement("div");
+
+        overlay.id =
+            "appOverlay";
+
+        overlay.className =
+            "app-overlay";
+
+
+        /*
+        Masukkan semuanya ke body.
+        */
+
+        document.body.appendChild(sidebar);
+
+        document.body.appendChild(main);
+
+        document.body.appendChild(overlay);
 
     }
 
+
+    /*
+    ======================================================
+    SET USER
+    ======================================================
+    */
 
     function setupUser() {
 
@@ -558,10 +700,21 @@ SD NEGERI JATIWARINGIN XIII
             ).toUpperCase();
 
 
-        const roleText =
-            role === "ADMIN"
-                ? "Administrator"
-                : "Guru / Wali Kelas";
+        let roleText =
+            "Pengguna";
+
+
+        if (role === "ADMIN") {
+
+            roleText =
+                "Administrator";
+
+        } else if (role === "GURU") {
+
+            roleText =
+                "Guru / Wali Kelas";
+
+        }
 
 
         const userName =
@@ -586,6 +739,15 @@ SD NEGERI JATIWARINGIN XIII
 
             userName.textContent =
                 name;
+
+        }
+
+
+        if (topUser) {
+
+            topUser.textContent =
+                name;
+
         }
 
 
@@ -595,123 +757,137 @@ SD NEGERI JATIWARINGIN XIII
                 <span class="online-dot"></span>
                 ${escapeHTML(roleText)}
             `;
-        }
 
-
-        if (topUser) {
-
-            topUser.textContent =
-                name;
         }
 
 
         /*
-        ADMIN
+        ==============================================
+        MENU ADMIN
+        ==============================================
         */
 
         if (role === "ADMIN") {
 
             document
                 .querySelectorAll(".guru-only")
-                .forEach(
-                    element => {
-                        element.style.display =
-                            "none";
-                    }
-                );
+                .forEach(function (element) {
+
+                    element.style.display =
+                        "none";
+
+                });
+
         }
 
 
         /*
-        GURU
+        ==============================================
+        MENU GURU
+        ==============================================
         */
 
         if (role === "GURU") {
 
             document
                 .querySelectorAll(".admin-only")
-                .forEach(
-                    element => {
-                        element.style.display =
-                            "none";
-                    }
-                );
+                .forEach(function (element) {
+
+                    element.style.display =
+                        "none";
+
+                });
 
         }
 
     }
 
 
+    /*
+    ======================================================
+    ACTIVE MENU
+    ======================================================
+    */
+
     function setupActiveMenu() {
 
         document
-            .querySelectorAll(
-                "[data-page]"
-            )
-            .forEach(
-                element => {
+            .querySelectorAll("[data-page]")
+            .forEach(function (element) {
 
-                    const target =
-                        element.getAttribute(
-                            "data-page"
+                const target =
+                    element.getAttribute(
+                        "data-page"
+                    );
+
+
+                if (
+                    target !== currentPage
+                ) {
+
+                    return;
+
+                }
+
+
+                element.classList.add(
+                    "active"
+                );
+
+
+                /*
+                Jika halaman berada di
+                submenu Data Master,
+                buka submenu.
+                */
+
+                if (
+                    element.classList.contains(
+                        "app-submenu-link"
+                    )
+                ) {
+
+                    const submenu =
+                        document.getElementById(
+                            "masterSubmenu"
                         );
 
 
-                    if (
-                        target === page
-                    ) {
-
-                        element.classList.add(
-                            "active"
+                    const button =
+                        document.getElementById(
+                            "masterMenuButton"
                         );
 
 
-                        /*
-                        Jika submenu aktif,
-                        buka Data Master.
-                        */
+                    if (submenu) {
 
-                        if (
-                            element.classList.contains(
-                                "app-submenu-link"
-                            )
-                        ) {
+                        submenu.classList.add(
+                            "open"
+                        );
 
-                            const submenu =
-                                document.getElementById(
-                                    "masterSubmenu"
-                                );
+                    }
 
 
-                            const button =
-                                document.getElementById(
-                                    "masterMenuButton"
-                                );
+                    if (button) {
 
-
-                            if (submenu) {
-
-                                submenu.classList.add(
-                                    "open"
-                                );
-                            }
-
-
-                            if (button) {
-
-                                button.classList.add(
-                                    "active-parent"
-                                );
-                            }
-                        }
+                        button.classList.add(
+                            "active-parent"
+                        );
 
                     }
 
                 }
-            );
+
+            });
 
     }
 
+
+    /*
+    ======================================================
+    SIDEBAR
+    ======================================================
+    */
 
     function setupSidebar() {
 
@@ -727,15 +903,15 @@ SD NEGERI JATIWARINGIN XIII
             );
 
 
-        const overlay =
-            document.getElementById(
-                "appOverlay"
-            );
-
-
         const toggle =
             document.getElementById(
                 "sidebarToggle"
+            );
+
+
+        const overlay =
+            document.getElementById(
+                "appOverlay"
             );
 
 
@@ -744,13 +920,19 @@ SD NEGERI JATIWARINGIN XIII
             !main ||
             !toggle
         ) {
+
             return;
+
         }
 
 
         toggle.addEventListener(
             "click",
             function () {
+
+                /*
+                MOBILE
+                */
 
                 if (
                     window.innerWidth <= 768
@@ -760,20 +942,32 @@ SD NEGERI JATIWARINGIN XIII
                         "mobile-open"
                     );
 
-                    overlay.classList.toggle(
-                        "show"
-                    );
 
-                } else {
+                    if (overlay) {
 
-                    sidebar.classList.toggle(
-                        "collapsed"
-                    );
+                        overlay.classList.toggle(
+                            "show"
+                        );
 
-                    main.classList.toggle(
-                        "expanded"
-                    );
+                    }
+
+                    return;
+
                 }
+
+
+                /*
+                DESKTOP
+                */
+
+                sidebar.classList.toggle(
+                    "collapsed"
+                );
+
+
+                main.classList.toggle(
+                    "expanded"
+                );
 
             }
         );
@@ -788,6 +982,7 @@ SD NEGERI JATIWARINGIN XIII
                     sidebar.classList.remove(
                         "mobile-open"
                     );
+
 
                     overlay.classList.remove(
                         "show"
@@ -811,9 +1006,15 @@ SD NEGERI JATIWARINGIN XIII
                         "mobile-open"
                     );
 
-                    overlay.classList.remove(
-                        "show"
-                    );
+
+                    if (overlay) {
+
+                        overlay.classList.remove(
+                            "show"
+                        );
+
+                    }
+
                 }
 
             }
@@ -821,6 +1022,12 @@ SD NEGERI JATIWARINGIN XIII
 
     }
 
+
+    /*
+    ======================================================
+    DATA MASTER DROPDOWN
+    ======================================================
+    */
 
     function setupMasterMenu() {
 
@@ -840,7 +1047,9 @@ SD NEGERI JATIWARINGIN XIII
             !button ||
             !submenu
         ) {
+
             return;
+
         }
 
 
@@ -852,6 +1061,7 @@ SD NEGERI JATIWARINGIN XIII
                     "open"
                 );
 
+
                 button.classList.toggle(
                     "open"
                 );
@@ -861,6 +1071,12 @@ SD NEGERI JATIWARINGIN XIII
 
     }
 
+
+    /*
+    ======================================================
+    LOGOUT
+    ======================================================
+    */
 
     function setupLogout() {
 
@@ -880,7 +1096,7 @@ SD NEGERI JATIWARINGIN XIII
             function () {
 
                 const yakin =
-                    confirm(
+                    window.confirm(
                         "Apakah Anda yakin ingin keluar?"
                     );
 
@@ -897,21 +1113,30 @@ SD NEGERI JATIWARINGIN XIII
 
                     Auth.logout();
 
-                } else {
+                    return;
 
-                    localStorage.removeItem(
-                        "presensiUser"
-                    );
-
-                    location.href =
-                        "index.html";
                 }
+
+
+                localStorage.removeItem(
+                    "presensiUser"
+                );
+
+
+                window.location.href =
+                    "index.html";
 
             }
         );
 
     }
 
+
+    /*
+    ======================================================
+    PROFILE
+    ======================================================
+    */
 
     function setupProfile() {
 
@@ -939,7 +1164,13 @@ SD NEGERI JATIWARINGIN XIII
                 }
 
 
-                alert(
+                const role =
+                    String(
+                        user.role || "-"
+                    ).toUpperCase();
+
+
+                window.alert(
                     "PROFIL PENGGUNA\n\n" +
                     "Nama: " +
                     (
@@ -952,8 +1183,10 @@ SD NEGERI JATIWARINGIN XIII
                         "-"
                     ) +
                     "\nRole: " +
+                    role +
+                    "\nID Guru: " +
                     (
-                        user.role ||
+                        user.idGuru ||
                         "-"
                     )
                 );
@@ -964,21 +1197,25 @@ SD NEGERI JATIWARINGIN XIII
     }
 
 
+    /*
+    ======================================================
+    INIT
+    ======================================================
+    */
+
     function init() {
 
-        /*
-        Jangan jalankan layout pada halaman login.
-        */
-
         if (
-            page === "index.html" ||
-            page === ""
+            currentPage === "index.html" ||
+            currentPage === ""
         ) {
+
             return;
+
         }
 
 
-        createLayout();
+        buildLayout();
 
         setupUser();
 
@@ -996,7 +1233,9 @@ SD NEGERI JATIWARINGIN XIII
 
 
     /*
-    Jalankan setelah DOM tersedia.
+    ======================================================
+    JALANKAN
+    ======================================================
     */
 
     if (
@@ -1013,6 +1252,5 @@ SD NEGERI JATIWARINGIN XIII
         init();
 
     }
-
 
 })();
