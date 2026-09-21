@@ -1,166 +1,76 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <title>Kartu QR Siswa</title>
+    <title>
+        Kartu Siswa - SDN Jatiwaringin XIII
+    </title>
 
-  <meta
-    name="theme-color"
-    content="#1565c0"
-  >
 
-  <link
-    rel="manifest"
-    href="manifest.json"
-  >
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
 </head>
 
+
 <body>
 
-<header class="topbar no-print">
+    <div class="card">
 
-  <div class="topbar-left">
+        <div class="card-header">
 
-    <div class="topbar-logo">
-      SD
-    </div>
+            <div class="card-title">
 
-    <div>
+                <i class="fa-solid fa-id-card"></i>
 
-      <div class="topbar-title">
-        Kartu QR Siswa
-      </div>
+                Kartu Siswa
 
-      <div class="topbar-school">
-        SD Negeri Jatiwaringin XIII
-      </div>
+            </div>
 
-    </div>
-
-  </div>
+        </div>
 
 
-  <div class="topbar-right">
+        <div class="card-body">
 
-    <button
-      class="btn btn-secondary btn-small"
-      onclick="location.href='dashboard.html'"
-    >
-      Dashboard
-    </button>
-
-    <button
-      class="btn btn-primary btn-small"
-      onclick="window.print()"
-    >
-      Cetak
-    </button>
-
-    <button
-      class="btn btn-danger btn-small"
-      onclick="Auth.logout()"
-    >
-      Keluar
-    </button>
-
-  </div>
-
-</header>
+            <div
+                id="kartuMessage"
+            ></div>
 
 
-<main class="container">
+            <div
+                id="kartuContainer"
+            ></div>
 
-  <div class="page-header no-print">
-
-    <div>
-
-      <h1>Kartu QR Siswa</h1>
-
-      <p>
-        QR Code digunakan untuk presensi siswa.
-      </p>
+        </div>
 
     </div>
 
-  </div>
 
-
-  <section class="card no-print">
-
-    <div class="toolbar">
-
-      <div class="form-group">
-
-        <label for="kartuKelas">
-          Kelas
-        </label>
-
-        <select id="kartuKelas">
-
-          <option value="">
-            Semua Kelas
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label for="kartuSearch">
-          Cari Siswa
-        </label>
-
-        <input
-          type="search"
-          id="kartuSearch"
-          placeholder="Nama / NISN"
-        >
-
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <section>
-
-    <div
-      id="kartuContainer"
-      class="kartu-grid"
-    >
-
-      <div class="card">
-        Memuat kartu...
-      </div>
-
-    </div>
-
-  </section>
-
-</main>
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-
-<script src="auth.js"></script>
-<script src="kartu.js"></script>
-<script src="pwa.js"></script>
+    <script src="auth.js"></script>
+    <script src="layout.js"></script>
+    <script src="kartu.js"></script>
+    <script src="pwa.js"></script>
 
 </body>
+
 </html>
