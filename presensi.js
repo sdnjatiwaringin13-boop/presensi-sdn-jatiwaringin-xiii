@@ -1,322 +1,260 @@
+"use strict";
+
 (function () {
 
-  "use strict";
+  let semuaSiswa = [];
+  let siswaTampil = [];
+  let user = null;
 
+  const $ = (id) =>
+    document.getElementById(id);
 
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
+  function init() {
 
+    user = getCurrentUser();
 
-  const currentUser =
-    Auth.requireRole("GURU");
+    if (!user) {
+      location.href = "index.html";
+      return;
+    }
 
+    const role =
+      String(user.role || "")
+        .toUpperCase();
 
-  let siswaList = [];
-  let existingAttendance = {};
+    if (
+      role !== "ADMIN" &&
+      role !== "GURU"
+    ) {
+      location.href =
+        "dashboard.html";
+      return;
+    }
 
+    bindEvents();
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    init
-  );
+    loadKelas();
 
-
-  async function init() {
-
-    document.getElementById(
-      "tanggalPresensi"
-    ).value =
-      getToday();
-
-
-    document
-      .getElementById(
-        "kelasPresensi"
-      )
-      .addEventListener(
-        "change",
-        loadSiswa
-      );
-
-
-    document
-      .getElementById(
-        "btnTampilkanSiswa"
-      )
-      .addEventListener(
-        "click",
-        loadSiswa
-      );
-
-
-    document
-      .getElementById(
-        "btnSimpanPresensi"
-      )
-      .addEventListener(
-        "click",
-        simpanSemua
-      );
-
-
-    await loadKelas();
-
+    loadSiswa();
   }
 
+  function bindEvents() {
+
+    $("kelasSelect")?.addEventListener(
+      "change",
+      filterSiswa
+    );
+
+    $("searchInput")?.addEventListener(
+      "input",
+      filterSiswa
+    );
+
+    $("refreshButton")?.addEventListener(
+      "click",
+      async function () {
+        await loadSiswa();
+      }
+    );
+
+    $("simpanButton")?.addEventListener(
+      "click",
+      simpanSemua
+    );
+  }
 
   async function loadKelas() {
+
+    const select =
+      $("kelasSelect");
+
+    if (!select) return;
+
+    try {
+
+      let result;
+
+      if (
+        String(user.role)
+          .toUpperCase() === "GURU"
+      ) {
+
+        result = await callAPI({
+          action: "getKelasGuru",
+          idGuru: user.idGuru
+        });
+
+      } else {
+
+        result = await callAPI({
+          action: "getKelas"
+        });
+
+      }
+
+      if (!result.success) {
+        throw new Error(
+          result.message ||
+          "Gagal mengambil kelas."
+        );
+      }
+
+      const kelas =
+        Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      select.innerHTML = `
+        <option value="">
+          Semua Kelas
+        </option>
+
+        ${kelas.map(item => `
+          <option value="${escapeAttr(
+            item.NAMA_KELAS
+          )}">
+            ${escapeHTML(
+              item.NAMA_KELAS
+            )}
+          </option>
+        `).join("")}
+      `;
+
+    } catch (error) {
+
+      console.error(error);
+
+      select.innerHTML = `
+        <option value="">
+          Gagal memuat kelas
+        </option>
+      `;
+    }
+  }
+
+  async function loadSiswa() {
+
+    const table =
+      $("siswaTable");
+
+    if (table) {
+      table.innerHTML = `
+        <tr>
+          <td colspan="7" class="loading">
+            Memuat data siswa...
+          </td>
+        </tr>
+      `;
+    }
 
     try {
 
       const result =
         await callAPI({
-
-          action:
-            "getKelasGuru",
-
-          idGuru:
-            currentUser.idGuru
-
+          action: "getSiswa",
+          aktifOnly: true
         });
-
 
       if (!result.success) {
-        throw new Error(result.message);
-      }
-
-
-      const select =
-        document.getElementById(
-          "kelasPresensi"
+        throw new Error(
+          result.message ||
+          "Gagal mengambil siswa."
         );
-
-
-      select.innerHTML = `
-        <option value="">
-          Pilih kelas
-        </option>
-      `;
-
-
-      (result.data || []).forEach(
-        kelas => {
-
-          const option =
-            document.createElement(
-              "option"
-            );
-
-
-          option.value =
-            kelas.NAMA_KELAS;
-
-
-          option.textContent =
-            kelas.NAMA_KELAS;
-
-
-          select.appendChild(
-            option
-          );
-
-        }
-      );
-
-
-      if (
-        result.data &&
-        result.data.length === 1
-      ) {
-
-        select.value =
-          result.data[0].NAMA_KELAS;
-
-        await loadSiswa();
-
       }
+
+      semuaSiswa =
+        Array.isArray(result.data)
+          ? result.data
+          : [];
+
+      filterSiswa();
 
     } catch (error) {
 
-      tampilkanPesan(
-        error.message,
-        "error"
-      );
+      console.error(error);
 
+      if (table) {
+        table.innerHTML = `
+          <tr>
+            <td colspan="7" class="error">
+              ${escapeHTML(error.message)}
+            </td>
+          </tr>
+        `;
+      }
     }
-
   }
 
-
-  async function loadSiswa() {
+  function filterSiswa() {
 
     const kelas =
-      document.getElementById(
-        "kelasPresensi"
-      ).value;
-
-
-    const tanggal =
-      document.getElementById(
-        "tanggalPresensi"
-      ).value;
-
-
-    if (!kelas) {
-
-      document.getElementById(
-        "presensiTableBody"
-      ).innerHTML = `
-
-        <tr>
-
-          <td
-            colspan="6"
-            class="text-center"
-          >
-            Silakan pilih kelas.
-
-          </td>
-
-        </tr>
-
-      `;
-
-      return;
-
-    }
-
-
-    try {
-
-      const siswaResult =
-        await callAPI({
-
-          action:
-            "getSiswa",
-
-          kelas:
-            kelas,
-
-          aktifOnly:
-            true
-
-        });
-
-
-      if (!siswaResult.success) {
-        throw new Error(
-          siswaResult.message
-        );
-      }
-
-
-      siswaList =
-        siswaResult.data || [];
-
-
-      const rekapResult =
-        await callAPI({
-
-          action:
-            "getRekap",
-
-          tanggal:
-            tanggal,
-
-          kelas:
-            kelas
-
-        });
-
-
-      existingAttendance = {};
-
-
-      if (rekapResult.success) {
-
-        (rekapResult.data || [])
-          .forEach(row => {
-
-            const id =
-              String(row.ID || "");
-
-            existingAttendance[id] =
-              String(
-                row.STATUS || ""
-              ).toUpperCase();
-
-          });
-
-      }
-
-
-      renderTable();
-
-    } catch (error) {
-
-      tampilkanPesan(
-        error.message,
-        "error"
+      String(
+        $("kelasSelect")?.value || ""
       );
 
-    }
+    const keyword =
+      String(
+        $("searchInput")?.value || ""
+      )
+      .toLowerCase()
+      .trim();
 
+    siswaTampil =
+      semuaSiswa.filter(siswa => {
+
+        const cocokKelas =
+          !kelas ||
+          String(siswa.KELAS) === kelas;
+
+        const cocokKeyword =
+          !keyword ||
+          String(siswa.NISN || "")
+            .toLowerCase()
+            .includes(keyword) ||
+          String(siswa.NAMA || "")
+            .toLowerCase()
+            .includes(keyword);
+
+        return (
+          cocokKelas &&
+          cocokKeyword
+        );
+      });
+
+    renderSiswa();
   }
 
+  function renderSiswa() {
 
-  function renderTable() {
+    const table =
+      $("siswaTable");
 
-    const tbody =
-      document.getElementById(
-        "presensiTableBody"
-      );
+    if (!table) return;
 
+    if (!siswaTampil.length) {
 
-    if (!siswaList.length) {
-
-      tbody.innerHTML = `
-
+      table.innerHTML = `
         <tr>
-
-          <td
-            colspan="6"
-            class="text-center"
-          >
-            Tidak ada siswa aktif.
-
+          <td colspan="7" class="empty">
+            Tidak ada siswa.
           </td>
-
         </tr>
-
       `;
 
       return;
-
     }
 
-
-    tbody.innerHTML =
-      siswaList.map(
+    table.innerHTML =
+      siswaTampil.map(
         (siswa, index) => {
 
           const id =
-            String(siswa.ID);
-
-
-          const status =
-            existingAttendance[id]
-              || "HADIR";
-
-
-          const sudahAda =
-            Boolean(
-              existingAttendance[id]
+            escapeAttr(
+              siswa.ID
             );
 
-
           return `
-
-            <tr>
+            <tr data-siswa="${id}">
 
               <td>
                 ${index + 1}
@@ -324,431 +262,258 @@
 
               <td>
                 ${escapeHTML(
-                  siswa.NISN
+                  siswa.NISN || "-"
                 )}
               </td>
 
               <td>
                 ${escapeHTML(
-                  siswa.NAMA
+                  siswa.NAMA || "-"
                 )}
               </td>
 
               <td>
                 ${escapeHTML(
-                  siswa.KELAS
+                  siswa.KELAS || "-"
                 )}
               </td>
 
               <td>
                 ${escapeHTML(
-                  siswa.JK
+                  siswa.JK || "-"
                 )}
               </td>
 
               <td>
-
                 <select
-                  class="status-select"
-                  data-id="${escapeHTML(id)}"
-                  ${sudahAda ? "" : ""}
-                >
-
-                  <option
-                    value="HADIR"
-                    ${status === "HADIR" ? "selected" : ""}
-                  >
-                    HADIR
+                  class="status-presensi"
+                  data-id="${id}">
+                  <option value="HADIR">
+                    Hadir
                   </option>
-
-                  <option
-                    value="IZIN"
-                    ${status === "IZIN" ? "selected" : ""}
-                  >
-                    IZIN
+                  <option value="IZIN">
+                    Izin
                   </option>
-
-                  <option
-                    value="SAKIT"
-                    ${status === "SAKIT" ? "selected" : ""}
-                  >
-                    SAKIT
+                  <option value="SAKIT">
+                    Sakit
                   </option>
-
-                  <option
-                    value="ALPA"
-                    ${status === "ALPA" ? "selected" : ""}
-                  >
-                    ALPA
+                  <option value="ALPA">
+                    Alpa
                   </option>
-
                 </select>
+              </td>
 
-                ${
-                  sudahAda
-                    ? `<small class="text-muted">
-                        Sudah tersimpan
-                       </small>`
-                    : ""
-                }
-
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  data-simpan="${id}">
+                  Simpan
+                </button>
               </td>
 
             </tr>
-
           `;
-
         }
       ).join("");
 
+    table.querySelectorAll(
+      "[data-simpan]"
+    ).forEach(button => {
 
-    updateSummary();
+      button.addEventListener(
+        "click",
+        () => simpanSatu(
+          button.dataset.simpan,
+          button
+        )
+      );
 
+    });
   }
-
 
   async function simpanSemua() {
 
-    const tanggal =
-      document.getElementById(
-        "tanggalPresensi"
-      ).value;
-
-
-    const kelas =
-      document.getElementById(
-        "kelasPresensi"
-      ).value;
-
-
-    if (!tanggal || !kelas) {
-
-      tampilkanPesan(
-        "Tanggal dan kelas wajib dipilih.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    if (!siswaList.length) {
-
-      tampilkanPesan(
-        "Tidak ada siswa untuk disimpan.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    const selects =
+    const buttons =
       document.querySelectorAll(
-        ".status-select"
+        "[data-simpan]"
       );
 
+    if (!buttons.length) {
+      alert("Tidak ada siswa.");
+      return;
+    }
 
-    const button =
-      document.getElementById(
-        "btnSimpanPresensi"
-      );
+    if (
+      !confirm(
+        `Simpan presensi untuk ${buttons.length} siswa?`
+      )
+    ) {
+      return;
+    }
 
+    const simpanButton =
+      $("simpanButton");
 
-    button.disabled = true;
-    button.textContent =
-      "Menyimpan...";
-
+    if (simpanButton) {
+      simpanButton.disabled = true;
+    }
 
     let berhasil = 0;
-    let dilewati = 0;
     let gagal = 0;
-
 
     try {
 
-      for (const select of selects) {
+      for (const button of buttons) {
 
-        const id =
-          select.dataset.id;
-
-
-        if (existingAttendance[id]) {
-
-          dilewati++;
-
-          continue;
-
-        }
-
-
-        const siswa =
-          siswaList.find(
-            item =>
-              String(item.ID) ===
-              String(id)
+        const ok =
+          await simpanSatu(
+            button.dataset.simpan,
+            button,
+            true
           );
 
-
-        if (!siswa) {
-
+        if (ok) {
+          berhasil++;
+        } else {
           gagal++;
-
-          continue;
-
         }
-
-
-        try {
-
-          const result =
-            await callAPI({
-
-              action:
-                "simpanPresensi",
-
-              id:
-                siswa.ID,
-
-              nisn:
-                siswa.NISN,
-
-              nama:
-                siswa.NAMA,
-
-              kelas:
-                siswa.KELAS,
-
-              status:
-                select.value,
-
-              idGuru:
-                currentUser.idGuru,
-
-              sumber:
-                "WEB",
-
-              tanggal:
-                tanggal
-
-            });
-
-
-          if (result.success) {
-
-            berhasil++;
-
-            existingAttendance[id] =
-              select.value;
-
-          } else {
-
-            gagal++;
-
-          }
-
-        } catch (error) {
-
-          gagal++;
-
-          console.error(error);
-
-        }
-
       }
 
-
-      renderTable();
-
-
-      tampilkanPesan(
-
-        `Presensi selesai. Berhasil: ${berhasil}, dilewati: ${dilewati}, gagal: ${gagal}.`,
-
-        gagal
-          ? "error"
-          : "success"
-
+      alert(
+        `Presensi selesai.\n\n` +
+        `Berhasil: ${berhasil}\n` +
+        `Gagal: ${gagal}`
       );
-
 
     } finally {
 
-      button.disabled = false;
-
-      button.textContent =
-        "Simpan Presensi";
-
-    }
-
-  }
-
-
-  function updateSummary() {
-
-    const summary =
-      document.getElementById(
-        "presensiSummary"
-      );
-
-
-    const counts = {
-
-      HADIR: 0,
-      IZIN: 0,
-      SAKIT: 0,
-      ALPA: 0
-
-    };
-
-
-    document
-      .querySelectorAll(
-        ".status-select"
-      )
-      .forEach(select => {
-
-        if (counts[select.value] !== undefined) {
-
-          counts[select.value]++;
-
-        }
-
-      });
-
-
-    summary.innerHTML = `
-
-      H: ${counts.HADIR}
-      &nbsp; | &nbsp;
-      I: ${counts.IZIN}
-      &nbsp; | &nbsp;
-      S: ${counts.SAKIT}
-      &nbsp; | &nbsp;
-      A: ${counts.ALPA}
-
-    `;
-
-  }
-
-
-  document.addEventListener(
-    "change",
-    event => {
-
-      if (
-        event.target.classList.contains(
-          "status-select"
-        )
-      ) {
-
-        updateSummary();
-
+      if (simpanButton) {
+        simpanButton.disabled = false;
       }
-
     }
-  );
-
-
-  async function callAPI(payload) {
-
-    const response =
-      await fetch(
-        API_URL,
-        {
-
-          method:
-            "POST",
-
-          headers: {
-            "Content-Type":
-              "text/plain;charset=utf-8"
-          },
-
-          body:
-            JSON.stringify(payload)
-
-        }
-      );
-
-
-    return await response.json();
-
   }
 
-
-  function getToday() {
-
-    const now =
-      new Date();
-
-
-    return [
-
-      now.getFullYear(),
-
-      String(
-        now.getMonth() + 1
-      ).padStart(2, "0"),
-
-      String(
-        now.getDate()
-      ).padStart(2, "0")
-
-    ].join("-");
-
-  }
-
-
-  function tampilkanPesan(
-    message,
-    type
+  async function simpanSatu(
+    id,
+    button,
+    silent = false
   ) {
 
-    const element =
-      document.getElementById(
-        "presensiMessage"
+    const siswa =
+      semuaSiswa.find(
+        item =>
+          String(item.ID) ===
+          String(id)
       );
 
+    if (!siswa) {
+      if (!silent) {
+        alert("Data siswa tidak ditemukan.");
+      }
+      return false;
+    }
 
-    element.textContent =
-      message;
+    const row =
+      button.closest("tr");
 
-
-    element.className =
-      "message " +
-      (
-        type === "success"
-          ? "message-success"
-          : "message-error"
+    const select =
+      row?.querySelector(
+        ".status-presensi"
       );
 
+    const status =
+      select?.value || "HADIR";
 
-    element.style.display =
-      "block";
+    try {
 
+      button.disabled = true;
+      button.textContent =
+        "Menyimpan...";
 
-    setTimeout(() => {
+      const result =
+        await callAPI({
+          action: "simpanPresensi",
 
-      element.style.display =
-        "none";
+          id: siswa.ID,
 
-    }, 5000);
+          nisn: siswa.NISN,
 
+          nama: siswa.NAMA,
+
+          kelas: siswa.KELAS,
+
+          status,
+
+          idGuru:
+            user.idGuru || "",
+
+          sumber:
+            "MANUAL"
+        });
+
+      if (!result.success) {
+        throw new Error(
+          result.message ||
+          "Gagal menyimpan presensi."
+        );
+      }
+
+      button.textContent =
+        "Tersimpan";
+
+      button.classList.add(
+        "btn-success"
+      );
+
+      if (!silent) {
+        alert(
+          `${siswa.NAMA}: presensi berhasil disimpan.`
+        );
+      }
+
+      return true;
+
+    } catch (error) {
+
+      console.error(error);
+
+      button.textContent =
+        "Gagal";
+
+      if (!silent) {
+        alert(error.message);
+      }
+
+      return false;
+
+    } finally {
+
+      setTimeout(() => {
+
+        button.disabled = false;
+
+        if (
+          button.textContent !==
+          "Tersimpan"
+        ) {
+          button.textContent =
+            "Simpan";
+        }
+
+      }, 1500);
+    }
   }
 
+  window.loadSiswaPresensi =
+    loadSiswa;
 
-  function escapeHTML(value) {
+  window.simpanPresensiSatu =
+    simpanSatu;
 
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-
-  }
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
 
 })();
