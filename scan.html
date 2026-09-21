@@ -1,184 +1,87 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <title>Scan Presensi</title>
+    <title>
+        Scan QR - SDN Jatiwaringin XIII
+    </title>
 
-  <meta
-    name="theme-color"
-    content="#1565c0"
-  >
 
-  <link
-    rel="manifest"
-    href="manifest.json"
-  >
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
 </head>
 
+
 <body>
 
-<header class="topbar">
+    <div class="card">
 
-  <div class="topbar-left">
+        <div class="card-header">
 
-    <div class="topbar-logo">
-      SD
-    </div>
+            <div class="card-title">
 
-    <div>
+                <i class="fa-solid fa-qrcode"></i>
 
-      <div class="topbar-title">
-        Scan Presensi
-      </div>
+                Scan QR Presensi
 
-      <div class="topbar-school">
-        SD Negeri Jatiwaringin XIII
-      </div>
+            </div>
 
-    </div>
-
-  </div>
+        </div>
 
 
-  <div class="topbar-right">
+        <div class="card-body">
 
-    <button
-      class="btn btn-secondary btn-small"
-      onclick="location.href='dashboard.html'"
-    >
-      Dashboard
-    </button>
-
-    <button
-      class="btn btn-danger btn-small"
-      onclick="Auth.logout()"
-    >
-      Keluar
-    </button>
-
-  </div>
-
-</header>
+            <div
+                id="reader"
+                style="
+                    max-width:500px;
+                    margin:0 auto;
+                "
+            ></div>
 
 
-<main class="container">
+            <div
+                id="scanMessage"
+                class="alert alert-info"
+            >
+                Silakan arahkan kamera ke QR Code siswa.
+            </div>
 
-  <div class="page-header">
-
-    <div>
-
-      <h1>Scan QR Presensi</h1>
-
-      <p>
-        Arahkan kamera ke QR siswa.
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <section class="card">
-
-    <div class="form-group">
-
-      <label for="scanKelas">
-        Kelas
-      </label>
-
-      <select id="scanKelas">
-
-        <option value="">
-          Pilih kelas
-        </option>
-
-      </select>
+        </div>
 
     </div>
 
 
-    <div class="qr-scanner-wrapper">
+    <script
+        src="https://unpkg.com/html5-qrcode"
+    ></script>
 
-      <div id="reader"></div>
-
-    </div>
-
-
-    <div class="form-actions">
-
-      <button
-        class="btn btn-primary"
-        id="btnStartScan"
-      >
-        Mulai Kamera
-      </button>
-
-      <button
-        class="btn btn-secondary"
-        id="btnStopScan"
-      >
-        Hentikan Kamera
-      </button>
-
-    </div>
-
-
-    <div
-      id="scanResult"
-      class="scan-result"
-    >
-      Kamera belum dimulai.
-    </div>
-
-
-    <div
-      id="scanMessage"
-      class="message"
-      style="display:none;"
-    ></div>
-
-  </section>
-
-
-  <section class="card">
-
-    <div class="card-header">
-
-      <h2>Presensi Terakhir</h2>
-
-    </div>
-
-
-    <div
-      id="lastStudent"
-      class="last-student"
-    >
-      Belum ada siswa yang discan.
-    </div>
-
-  </section>
-
-</main>
-
-
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
-<script src="auth.js"></script>
-<script src="scan.js"></script>
-<script src="pwa.js"></script>
+    <script src="auth.js"></script>
+    <script src="layout.js"></script>
+    <script src="scan.js"></script>
+    <script src="pwa.js"></script>
 
 </body>
+
 </html>
