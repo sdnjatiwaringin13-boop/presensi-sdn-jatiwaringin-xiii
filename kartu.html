@@ -1,498 +1,998 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Kartu Pelajar - SD Negeri Jatiwaringin XIII</title>
-
-  <link rel="stylesheet" href="style.css">
-
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #eeeeee;
-      color: #111;
-    }
-
-    .page {
-      padding: 20px;
-    }
-
-    .toolbar {
-      background: white;
-      padding: 15px;
-      margin-bottom: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.08);
-
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .toolbar input,
-    .toolbar select,
-    .toolbar button {
-      height: 40px;
-      padding: 0 12px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .toolbar input {
-      width: 250px;
-    }
-
-    .toolbar select {
-      min-width: 150px;
-    }
-
-    .toolbar button {
-      cursor: pointer;
-      background: #c91f26;
-      color: white;
-      border: none;
-      font-weight: bold;
-    }
-
-    .toolbar button:hover {
-      background: #a9151b;
-    }
-
-    #kartuContainer {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 25px;
-      justify-items: center;
-    }
-
-    /* =========================
-       KARTU PELAJAR
-       UKURAN KTP PORTRAIT
-       ========================= */
-
-    .student-card {
-      width: 53.98mm;
-      height: 85.60mm;
-
-      background: #f8f8f8;
-
-      position: relative;
-      overflow: hidden;
-
-      border-radius: 3mm;
-
-      box-shadow:
-        0 4px 12px rgba(0,0,0,.25);
-
-      page-break-inside: avoid;
-      break-inside: avoid;
-    }
-
-    /* =========================
-       DEKORASI ATAS
-       ========================= */
-
-    .top-red {
-      position: absolute;
-      top: 0;
-      left: 0;
 
-      width: 100%;
-      height: 24mm;
+    <meta charset="UTF-8">
 
-      background: linear-gradient(
-        135deg,
-        #ff2c32,
-        #c9141b
-      );
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-      border-radius: 0 0 4mm 0;
-    }
+    <title>Kartu Siswa - SD Negeri Jatiwaringin XIII</title>
 
-    .top-gray {
-      position: absolute;
-      top: 6mm;
-      left: 0;
 
-      width: 58%;
-      height: 7mm;
+    <!-- FONT AWESOME -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
-      background: #d8d8d8;
 
-      border-radius: 0 4mm 4mm 0;
-    }
+    <!-- STYLE UTAMA DASHBOARD -->
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
-    .top-yellow {
-      position: absolute;
-      top: 12mm;
-      left: 0;
 
-      width: 22%;
-      height: 5mm;
+    <style>
 
-      background: #ffc31d;
+        /* =====================================================
+           HALAMAN KARTU
+        ===================================================== */
 
-      border-radius: 0 3mm 3mm 0;
-    }
+        .kartu-page {
+            width: 100%;
+        }
 
-    .yellow-dots {
-      position: absolute;
-      top: 2mm;
-      right: 2mm;
 
-      width: 18mm;
-      height: 12mm;
+        /* =====================================================
+           TOOLBAR
+        ===================================================== */
 
-      background-image: radial-gradient(
-        #ffc21c 1px,
-        transparent 1px
-      );
+        .kartu-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
 
-      background-size: 3mm 3mm;
-    }
 
-    .circle-decoration {
-      position: absolute;
-      top: 1mm;
-      left: 3mm;
+        .kartu-toolbar .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
 
-      display: flex;
-      gap: 2mm;
-    }
 
-    .circle-decoration span {
-      width: 3mm;
-      height: 3mm;
+        .kartu-toolbar .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 12px;
+        }
 
-      background: #ffc21c;
 
-      border-radius: 50%;
-    }
+        .kartu-toolbar input {
+            width: 100%;
+            height: 38px;
 
-    /* =========================
-       HEADER
-       ========================= */
+            padding: 0 12px 0 35px;
 
-    .school-header {
-      position: absolute;
-      top: 9mm;
-      left: 3mm;
-      right: 3mm;
+            border: 1px solid #dfe4e7;
+            border-radius: 6px;
 
-      height: 12mm;
+            background: #fff;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+            font-family: inherit;
+            font-size: 12px;
 
-      z-index: 5;
-    }
+            outline: none;
+        }
 
-    .school-title {
-      color: white;
 
-      font-size: 4.1mm;
-      line-height: 1.15;
+        .kartu-toolbar input:focus {
+            border-color: #3b94bd;
+            box-shadow: 0 0 0 2px rgba(59,148,189,.08);
+        }
 
-      font-weight: 800;
 
-      text-align: center;
+        .kartu-toolbar select {
+            height: 38px;
+            min-width: 150px;
 
-      text-shadow:
-        0 1px 1px rgba(0,0,0,.3);
-    }
+            padding: 0 12px;
 
-    /* =========================
-       JUDUL
-       ========================= */
+            border: 1px solid #dfe4e7;
+            border-radius: 6px;
 
-    .card-title {
-      position: absolute;
+            background: #fff;
 
-      top: 25mm;
-      left: 0;
-      right: 0;
+            font-family: inherit;
+            font-size: 12px;
 
-      text-align: center;
+            outline: none;
+        }
 
-      font-size: 4.7mm;
-      font-weight: 900;
 
-      line-height: 1.1;
+        .kartu-toolbar button {
+            height: 38px;
 
-      z-index: 5;
-    }
+            padding: 0 14px;
 
-    /* =========================
-       QR CODE
-       ========================= */
+            border: 0;
+            border-radius: 6px;
 
-    .qr-wrapper {
-      position: absolute;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
 
-      top: 32mm;
-      left: 50%;
+            cursor: pointer;
+        }
 
-      transform: translateX(-50%);
 
-      width: 27mm;
-      height: 27mm;
+        #refreshButton {
+            background: #eef3f6;
+            color: #52616a;
+        }
 
-      background: white;
 
-      border: 0.7mm solid #d71920;
+        #refreshButton:hover {
+            background: #e1e8ec;
+        }
 
-      border-radius: 1.5mm;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+        #printButton {
+            background: #3b94bd;
+            color: #fff;
+        }
 
-      z-index: 5;
-    }
 
-    .qr-code {
-      width: 24mm;
-      height: 24mm;
-    }
+        #printButton:hover {
+            background: #287ba3;
+        }
 
-    .qr-code img,
-    .qr-code canvas {
-      width: 24mm !important;
-      height: 24mm !important;
-      display: block;
-    }
 
-    /* =========================
-       DATA SISWA
-       ========================= */
+        /* =====================================================
+           CONTAINER KARTU
+        ===================================================== */
 
-    .student-info {
-      position: absolute;
+        #kartuContainer {
 
-      left: 5mm;
-      right: 4mm;
+            width: 100%;
 
-      top: 61mm;
+            display: grid;
 
-      z-index: 5;
-    }
+            grid-template-columns:
+                repeat(
+                    auto-fill,
+                    minmax(250px, 1fr)
+                );
 
-    .student-row {
-      display: grid;
+            gap: 18px;
 
-      grid-template-columns: 15mm 3mm 1fr;
+            align-items: start;
+        }
 
-      min-height: 6mm;
 
-      align-items: center;
+        /* =====================================================
+           KARTU PELAJAR
+           UKURAN ASLI KTP PORTRAIT
+        ===================================================== */
 
-      font-size: 2.8mm;
+        .student-card {
 
-      line-height: 1.1;
-    }
+            position: relative;
 
-    .student-label {
-      font-weight: 700;
-    }
+            width: 53.98mm;
+            height: 85.60mm;
 
-    .student-separator {
-      font-weight: 700;
-      text-align: center;
-    }
+            min-width: 53.98mm;
+            max-width: 53.98mm;
 
-    .student-value {
-      font-weight: 500;
+            min-height: 85.60mm;
+            max-height: 85.60mm;
 
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
+            overflow: hidden;
 
-    /* =========================
-       FOOTER
-       ========================= */
+            background: #f7f7f7;
 
-    .bottom-red {
-      position: absolute;
+            border-radius: 3mm;
 
-      left: 0;
-      right: 0;
-      bottom: 0;
+            box-shadow:
+                0 5px 16px rgba(0,0,0,.16);
 
-      height: 4mm;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
 
-      background: #ff292f;
+            color: #111;
 
-      z-index: 3;
-    }
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
 
-    .bottom-yellow {
-      position: absolute;
 
-      right: 0;
-      bottom: 0;
+        /* =====================================================
+           HEADER MERAH
+        ===================================================== */
 
-      width: 8mm;
-      height: 4mm;
+        .student-card .card-red {
 
-      background: #ffc21c;
+            position: absolute;
 
-      transform: skewX(-35deg);
+            left: 0;
+            top: 0;
 
-      z-index: 4;
-    }
+            width: 100%;
+            height: 25mm;
 
-    .chevron {
-      position: absolute;
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff3036 0%,
+                    #d71920 100%
+                );
 
-      left: 3mm;
-      bottom: 2.5mm;
+            border-radius:
+                0 0 4mm 0;
 
-      width: 13mm;
-      height: 5mm;
+            z-index: 1;
+        }
 
-      z-index: 5;
-    }
 
-    .chevron span {
-      position: absolute;
+        /* =====================================================
+           HEADER ABU-ABU
+        ===================================================== */
 
-      width: 6mm;
-      height: 2mm;
+        .student-card .card-gray {
 
-      transform: skewX(-40deg);
+            position: absolute;
 
-      background: #333;
-    }
+            left: 0;
+            top: 6mm;
 
-    .chevron span:nth-child(1) {
-      left: 0;
-      top: 0;
-    }
+            width: 60%;
+            height: 7mm;
 
-    .chevron span:nth-child(2) {
-      left: 3mm;
-      top: 0;
-    }
+            background: #d5d5d5;
 
-    .chevron span:nth-child(3) {
-      left: 6mm;
-      top: 0;
-    }
+            border-radius:
+                0 4mm 4mm 0;
 
-    /* =========================
-       RESPONSIVE
-       ========================= */
+            z-index: 2;
+        }
 
-    @media screen and (max-width: 600px) {
-      .page {
-        padding: 10px;
-      }
 
-      #kartuContainer {
-        grid-template-columns: 1fr;
-      }
-    }
+        /* =====================================================
+           HEADER KUNING
+        ===================================================== */
 
-    /* =========================
-       PRINT
-       ========================= */
+        .student-card .card-yellow {
 
-    @media print {
+            position: absolute;
 
-      @page {
-        size: A4;
-        margin: 8mm;
-      }
+            left: 0;
+            top: 12mm;
 
-      body {
-        background: white;
-      }
+            width: 25%;
+            height: 5mm;
 
-      .toolbar {
-        display: none !important;
-      }
+            background: #ffc21c;
 
-      .page {
-        padding: 0;
-      }
+            border-radius:
+                0 3mm 3mm 0;
 
-      #kartuContainer {
-        display: grid;
+            z-index: 3;
+        }
 
-        grid-template-columns:
-          repeat(3, 53.98mm);
 
-        gap: 5mm;
+        /* =====================================================
+           BULATAN ATAS
+        ===================================================== */
 
-        justify-content: start;
-      }
+        .card-circles {
 
-      .student-card {
-        box-shadow: none;
+            position: absolute;
 
-        width: 53.98mm;
-        height: 85.60mm;
-      }
-    }
-  </style>
+            top: 1.2mm;
+            left: 3mm;
+
+            display: flex;
+
+            gap: 1.7mm;
+
+            z-index: 10;
+        }
+
+
+        .card-circles span {
+
+            width: 2.7mm;
+            height: 2.7mm;
+
+            border-radius: 50%;
+
+            background: #ffc21c;
+        }
+
+
+        /* =====================================================
+           DOT KUNING
+        ===================================================== */
+
+        .card-dots {
+
+            position: absolute;
+
+            top: 2mm;
+            right: 2mm;
+
+            width: 17mm;
+            height: 12mm;
+
+            background-image:
+                radial-gradient(
+                    #ffc21c 1px,
+                    transparent 1px
+                );
+
+            background-size:
+                3mm 3mm;
+
+            z-index: 4;
+        }
+
+
+        /* =====================================================
+           JUDUL SEKOLAH
+        ===================================================== */
+
+        .student-card .school-name {
+
+            position: absolute;
+
+            top: 9mm;
+            left: 4mm;
+            right: 4mm;
+
+            color: #fff;
+
+            text-align: center;
+
+            font-size: 4mm;
+
+            line-height: 1.12;
+
+            font-weight: 900;
+
+            z-index: 20;
+
+            text-shadow:
+                0 1px 1px rgba(0,0,0,.2);
+        }
+
+
+        /* =====================================================
+           JUDUL KARTU
+        ===================================================== */
+
+        .student-card .card-heading {
+
+            position: absolute;
+
+            top: 26mm;
+
+            left: 0;
+            right: 0;
+
+            text-align: center;
+
+            font-size: 4.4mm;
+
+            line-height: 1;
+
+            font-weight: 900;
+
+            z-index: 20;
+        }
+
+
+        /* =====================================================
+           QR CODE
+           HANYA SATU
+        ===================================================== */
+
+        .student-card .qr-box {
+
+            position: absolute;
+
+            top: 32mm;
+            left: 50%;
+
+            transform:
+                translateX(-50%);
+
+            width: 27mm;
+            height: 27mm;
+
+            padding: 1mm;
+
+            background: #fff;
+
+            border:
+                .6mm solid #d71920;
+
+            border-radius: 1.5mm;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            z-index: 20;
+        }
+
+
+        .student-card .qr-code {
+
+            width: 24mm;
+            height: 24mm;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            background: #fff;
+
+            overflow: hidden;
+        }
+
+
+        .student-card .qr-code canvas {
+
+            display: block !important;
+
+            width: 24mm !important;
+            height: 24mm !important;
+
+            max-width: none !important;
+            max-height: none !important;
+
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+
+        .student-card .qr-code img {
+
+            display: block !important;
+
+            width: 24mm !important;
+            height: 24mm !important;
+
+            max-width: none !important;
+            max-height: none !important;
+
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+
+        /* =====================================================
+           DATA SISWA
+        ===================================================== */
+
+        .student-card .student-data {
+
+            position: absolute;
+
+            left: 4.5mm;
+            right: 3.5mm;
+
+            top: 61mm;
+
+            z-index: 20;
+        }
+
+
+        .student-card .data-row {
+
+            display: grid;
+
+            grid-template-columns:
+                16mm 3mm 1fr;
+
+            align-items: center;
+
+            min-height: 6mm;
+
+            font-size: 2.7mm;
+
+            line-height: 1.1;
+        }
+
+
+        .student-card .data-label {
+
+            font-weight: 800;
+
+            white-space: nowrap;
+        }
+
+
+        .student-card .data-colon {
+
+            font-weight: 800;
+
+            text-align: center;
+        }
+
+
+        .student-card .data-value {
+
+            min-width: 0;
+
+            font-weight: 500;
+
+            white-space: nowrap;
+
+            overflow: hidden;
+
+            text-overflow: ellipsis;
+        }
+
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
+        .card-footer-red {
+
+            position: absolute;
+
+            left: 0;
+            bottom: 0;
+
+            width: 100%;
+            height: 4mm;
+
+            background: #ff2930;
+
+            z-index: 5;
+        }
+
+
+        .card-footer-yellow {
+
+            position: absolute;
+
+            right: -2mm;
+            bottom: 0;
+
+            width: 9mm;
+            height: 4mm;
+
+            background: #ffc21c;
+
+            transform: skewX(-35deg);
+
+            z-index: 6;
+        }
+
+
+        .card-chevron {
+
+            position: absolute;
+
+            left: 3mm;
+            bottom: 2.5mm;
+
+            width: 14mm;
+            height: 4mm;
+
+            z-index: 20;
+        }
+
+
+        .card-chevron span {
+
+            position: absolute;
+
+            top: 0;
+
+            width: 6mm;
+            height: 2mm;
+
+            background: #444;
+
+            transform: skewX(-40deg);
+        }
+
+
+        .card-chevron span:nth-child(1) {
+            left: 0;
+        }
+
+        .card-chevron span:nth-child(2) {
+            left: 3mm;
+        }
+
+        .card-chevron span:nth-child(3) {
+            left: 6mm;
+        }
+
+
+        /* =====================================================
+           LOADING
+        ===================================================== */
+
+        .kartu-loading {
+
+            grid-column: 1 / -1;
+
+            padding: 40px;
+
+            text-align: center;
+
+            color: #888;
+        }
+
+
+        /* =====================================================
+           EMPTY
+        ===================================================== */
+
+        .kartu-empty {
+
+            grid-column: 1 / -1;
+
+            padding: 40px;
+
+            text-align: center;
+
+            background: #fff;
+
+            border:
+                1px solid #e5e5e5;
+
+            border-radius: 8px;
+
+            color: #888;
+        }
+
+
+        /* =====================================================
+           PRINT
+        ===================================================== */
+
+        @media print {
+
+            html,
+            body {
+
+                margin: 0 !important;
+                padding: 0 !important;
+
+                width: 210mm;
+                min-height: 297mm;
+
+                background: #fff !important;
+            }
+
+
+            /* SEMBUNYIKAN DASHBOARD */
+
+            .app-sidebar,
+            .app-topbar,
+            .mobile-overlay,
+            .kartu-toolbar,
+            .page-breadcrumb,
+            .card-header,
+            .no-print {
+
+                display: none !important;
+            }
+
+
+            .app-main {
+
+                margin: 0 !important;
+
+                width: 210mm !important;
+
+                min-height: 297mm !important;
+            }
+
+
+            .app-page-content {
+
+                margin: 0 !important;
+
+                padding: 0 !important;
+
+                width: 210mm !important;
+            }
+
+
+            .legacy-page-content {
+
+                margin: 0 !important;
+
+                padding: 0 !important;
+
+                width: 210mm !important;
+            }
+
+
+            .card {
+
+                margin: 0 !important;
+
+                padding: 0 !important;
+
+                border: 0 !important;
+
+                box-shadow: none !important;
+
+                background: transparent !important;
+            }
+
+
+            .card-body {
+
+                margin: 0 !important;
+
+                padding: 0 !important;
+            }
+
+
+            #kartuContainer {
+
+                width: 210mm !important;
+
+                margin: 0 !important;
+
+                padding: 8mm !important;
+
+                display: grid !important;
+
+                grid-template-columns:
+                    repeat(
+                        3,
+                        53.98mm
+                    ) !important;
+
+                grid-template-rows:
+                    repeat(
+                        3,
+                        85.60mm
+                    ) !important;
+
+                column-gap: 5mm !important;
+
+                row-gap: 5mm !important;
+
+                align-items: start !important;
+
+                justify-content: start !important;
+            }
+
+
+            .student-card {
+
+                width: 53.98mm !important;
+
+                height: 85.60mm !important;
+
+                min-width: 53.98mm !important;
+
+                max-width: 53.98mm !important;
+
+                min-height: 85.60mm !important;
+
+                max-height: 85.60mm !important;
+
+                margin: 0 !important;
+
+                padding: 0 !important;
+
+                box-shadow: none !important;
+
+                border:
+                    0.2mm solid #ddd !important;
+
+                border-radius: 3mm !important;
+
+                overflow: hidden !important;
+
+                page-break-inside: avoid !important;
+
+                break-inside: avoid !important;
+
+                print-color-adjust: exact !important;
+
+                -webkit-print-color-adjust: exact !important;
+            }
+
+
+            .student-card .qr-code canvas {
+
+                width: 24mm !important;
+                height: 24mm !important;
+            }
+
+
+            @page {
+
+                size: A4 portrait;
+
+                margin: 0;
+            }
+        }
+
+
+        /* =====================================================
+           MOBILE
+        ===================================================== */
+
+        @media screen and (max-width: 700px) {
+
+            #kartuContainer {
+
+                grid-template-columns:
+                    1fr;
+
+                justify-items: center;
+            }
+
+        }
+
+    </style>
+
 </head>
+
 
 <body>
 
-  <div class="page">
 
-    <!-- TOOLBAR -->
-    <div class="toolbar">
+    <!-- =====================================================
+         CARD DASHBOARD
+    ===================================================== -->
 
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Cari nama / NISN..."
-      >
+    <div class="card kartu-page">
 
-      <select id="kelasFilter">
-        <option value="">Semua Kelas</option>
-      </select>
 
-      <button id="refreshButton">
-        ↻ Refresh
-      </button>
+        <!-- HEADER DASHBOARD -->
 
-      <button id="printButton">
-        🖨 Cetak Kartu
-      </button>
+        <div class="card-header">
+
+            <div class="card-title">
+
+                <i class="fa-solid fa-id-card"></i>
+
+                Kartu Siswa
+
+            </div>
+
+
+            <button
+                type="button"
+                id="printButton"
+                class="btn btn-primary"
+            >
+
+                <i class="fa-solid fa-print"></i>
+
+                Cetak Kartu
+
+            </button>
+
+        </div>
+
+
+        <!-- BODY -->
+
+        <div class="card-body">
+
+
+            <!-- TOOLBAR -->
+
+            <div class="kartu-toolbar no-print">
+
+
+                <div class="search-box">
+
+                    <i class="fa-solid fa-search"></i>
+
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Cari nama atau NISN..."
+                        autocomplete="off"
+                    >
+
+                </div>
+
+
+                <select id="kelasFilter">
+
+                    <option value="">
+                        Semua Kelas
+                    </option>
+
+                </select>
+
+
+                <button
+                    type="button"
+                    id="refreshButton"
+                >
+
+                    <i class="fa-solid fa-rotate"></i>
+
+                    Refresh
+
+                </button>
+
+
+            </div>
+
+
+            <!-- CONTAINER KARTU -->
+
+            <div id="kartuContainer">
+
+                <div class="kartu-loading">
+
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+
+                    Memuat kartu siswa...
+
+                </div>
+
+            </div>
+
+
+        </div>
 
     </div>
 
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ===================================================== -->
+
+
+    <!-- API -->
+
+    <script src="api.js"></script>
+
+
+    <!-- AUTH -->
+
+    <script src="auth.js"></script>
+
+
+    <!-- LAYOUT DASHBOARD -->
+
+    <script src="layout.js"></script>
+
+
+    <!-- SATU-SATUNYA QR LIBRARY -->
+
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+    ></script>
+
+
     <!-- KARTU -->
-    <div id="kartuContainer"></div>
 
-  </div>
+    <script src="kartu.js"></script>
 
-  <!-- API -->
-  <script src="api.js"></script>
 
-  <!-- AUTH -->
-  <script src="auth.js"></script>
+    <!-- PWA -->
 
-  <!-- QR CODE -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
-  </script>
+    <script src="pwa.js"></script>
 
-  <!-- KARTU -->
-  <script src="kartu.js"></script>
 
 </body>
+
 </html>
