@@ -2,86 +2,90 @@
 <html lang="id">
 
 <head>
+  <meta charset="UTF-8">
 
-    <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+  <title>
+    Scan QR Presensi
+  </title>
 
-    <title>
-        Scan QR - SDN Jatiwaringin XIII
-    </title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
 
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
 
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
-
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
-
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 </head>
-
 
 <body>
 
-    <div class="card">
+  <div class="card">
 
-        <div class="card-header">
+    <div class="card-header">
 
-            <div class="card-title">
-
-                <i class="fa-solid fa-qrcode"></i>
-
-                Scan QR Presensi
-
-            </div>
-
-        </div>
-
-
-        <div class="card-body">
-
-            <div
-                id="reader"
-                style="
-                    max-width:500px;
-                    margin:0 auto;
-                "
-            ></div>
-
-
-            <div
-                id="scanMessage"
-                class="alert alert-info"
-            >
-                Silakan arahkan kamera ke QR Code siswa.
-            </div>
-
-        </div>
+      <div class="card-title">
+        <i class="fa-solid fa-qrcode"></i>
+        Scan QR Presensi
+      </div>
 
     </div>
 
+    <div class="card-body">
 
-    <script
-        src="https://unpkg.com/html5-qrcode"
-    ></script>
+      <div
+        id="guruInfo"
+        style="
+          text-align:center;
+          margin-bottom:15px;
+        "
+      ></div>
 
-    <script src="auth.js"></script>
-    <script src="layout.js"></script>
-    <script src="scan.js"></script>
-    <script src="pwa.js"></script>
+      <div
+        id="reader"
+        style="
+          max-width:500px;
+          margin:0 auto;
+        "
+      ></div>
+
+      <div
+        id="scanStatus"
+        class="alert alert-info"
+        style="margin-top:15px;"
+      >
+        Menyiapkan kamera...
+      </div>
+
+      <div
+        id="result"
+        style="margin-top:15px;"
+      ></div>
+
+    </div>
+
+  </div>
+
+  <script
+    src="https://unpkg.com/html5-qrcode"
+  ></script>
+
+  <script src="api.js"></script>
+  <script src="auth.js"></script>
+  <script src="layout.js"></script>
+  <script src="scan.js"></script>
+  <script src="pwa.js"></script>
 
 </body>
-
 </html>
