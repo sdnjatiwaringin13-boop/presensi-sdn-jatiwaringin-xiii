@@ -2138,3 +2138,31 @@ tbody tr:hover {
 .report-keterangan strong {
     margin-right: 5px;
 }
+
+/* =========================================================
+   FIX 2026 - UNIFIED LAYOUT / DASHBOARD / LOGIN / CARDS
+========================================================= */
+body{overflow-x:hidden}
+.app-page-content{min-height:calc(100vh - 58px)}
+.app-menu-link{border:0;cursor:pointer;font-family:inherit;width:100%;text-align:left}
+.app-menu-link.active,.app-menu-link.active-parent{background:rgba(59,148,189,.18);color:#fff}
+.app-submenu{display:none}
+.app-submenu.open{display:block}
+.menu-parent{display:flex;align-items:center;gap:10px}
+.menu-parent .menu-arrow{margin-left:auto}
+.live-clock{font-variant-numeric:tabular-nums;font-weight:800;font-size:12px;letter-spacing:.5px;min-width:68px;text-align:center}
+
+.welcome-card{display:flex;align-items:center;justify-content:space-between;gap:20px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:18px 20px;margin-bottom:15px;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.welcome-title{font-size:19px;font-weight:800;color:#24313a}.welcome-subtitle{font-size:11px;color:#8a949a;margin-top:4px}.dashboard-date{font-size:12px;font-weight:700;color:#2789bd;text-align:right}
+.dashboard-panels{grid-template-columns:1.2fr 1.2fr .8fr}.summary-box{padding:10px 14px}.summary-row{display:grid;grid-template-columns:1fr 50px 55px;align-items:center;gap:8px;padding:13px 0;border-bottom:1px solid #eee;font-size:12px}.summary-row:last-child{border-bottom:0}.summary-row strong{text-align:center;font-size:15px}.summary-row em{text-align:right;color:#888;font-style:normal;font-size:11px}
+
+.menu-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.menu-card{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--border);border-radius:10px;padding:18px;color:var(--text);text-decoration:none;transition:.2s;box-shadow:0 2px 5px rgba(0,0,0,.03)}.menu-card:hover{transform:translateY(-2px);box-shadow:0 7px 18px rgba(0,0,0,.08);border-color:#b9dbea}.menu-card>i{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#e8f5fb;color:#2789bd;font-size:21px}.menu-card h3{margin:0 0 4px;font-size:14px}.menu-card p{margin:0;color:#8a949a;font-size:11px;line-height:1.5}
+
+.student-card{background:#fff;border:1px solid #dfe4e7;border-radius:10px;overflow:hidden;box-shadow:0 3px 9px rgba(0,0,0,.06);break-inside:avoid}.student-card-head{display:flex;align-items:center;gap:10px;padding:11px 14px;background:#2789bd;color:#fff}.student-card-head strong{display:block;font-size:11px}.student-card-head small{display:block;font-size:8px;opacity:.8;margin-top:2px}.school-mark{width:34px;height:34px;border-radius:8px;background:#fff;color:#2789bd;display:flex;align-items:center;justify-content:center;font-weight:900}.student-card-body{display:flex;justify-content:space-between;gap:14px;padding:15px}.student-info{min-width:0}.student-info h3{margin:0 0 12px;font-size:15px}.student-info p{display:grid;grid-template-columns:90px 1fr;gap:6px;margin:6px 0;font-size:11px}.student-info p b{color:#777}.qr-wrap{text-align:center;flex:0 0 145px}.qr-code{width:128px;height:128px;margin:auto;display:flex;align-items:center;justify-content:center;background:#fff}.qr-code img,.qr-code canvas{display:block!important;max-width:128px;max-height:128px}.qr-wrap small{display:block;margin-top:5px;color:#888;font-size:9px}
+#kartuContainer{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.table-responsive{overflow-x:auto;width:100%}
+
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at top left,#dff3fb 0,#edf5f8 38%,#dce9ef 100%)}.login-shell{width:min(900px,100%);display:grid;grid-template-columns:1fr 1fr;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 18px 55px rgba(20,62,80,.16)}.login-hero{padding:50px 42px;background:linear-gradient(145deg,#2789bd,#1e668c);color:#fff;display:flex;flex-direction:column;justify-content:center;min-height:500px}.login-logo{width:76px;height:76px;border-radius:22px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:24px}.login-hero h1{margin:0;font-size:30px}.login-hero p{margin:8px 0 25px;font-size:14px;opacity:.85}.login-clock{font-size:18px;font-weight:800;letter-spacing:1px}.login-body{padding:42px}.login-welcome h2{margin:0;font-size:24px;color:#24313a}.login-welcome p{margin:7px 0 25px;color:#8a949a;font-size:12px}.input-icon{position:relative}.input-icon>i:first-child{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#9aa4aa}.input-icon input{padding-left:40px;padding-right:42px}.password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:#8a949a;cursor:pointer}.login-footer{text-align:center;margin-top:25px;padding-top:15px;border-top:1px solid #eee;color:#9aa4aa;font-size:10px;line-height:1.5}.btn-full{width:100%;height:44px}.message{margin-top:13px;padding:10px 12px;border-radius:8px;font-size:11px}.message.error{background:#fff0f0;color:#c0392b;border:1px solid #ffd1d1}.message.info{background:#eef7ff;color:#2168a5;border:1px solid #cfe7fa}.message.success{background:#edfff6;color:#087a43;border:1px solid #c9f1dc}
+
+@media(max-width:1000px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-panels{grid-template-columns:1fr}.login-shell{max-width:700px}.login-hero{min-height:380px}}
+@media(max-width:700px){.welcome-card{align-items:flex-start;flex-direction:column}.dashboard-date{text-align:left}.menu-grid{grid-template-columns:1fr}.login-shell{grid-template-columns:1fr}.login-hero{min-height:auto;padding:30px}.login-body{padding:28px}.live-clock{display:none}#kartuContainer{grid-template-columns:1fr}}
+@media print{.student-card{box-shadow:none}.student-card-head{print-color-adjust:exact;-webkit-print-color-adjust:exact}#kartuContainer{grid-template-columns:1fr 1fr}}

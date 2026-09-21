@@ -1,12 +1,2 @@
 "use strict";
-
-document.addEventListener(
-  "DOMContentLoaded",
-  function () {
-
-    Auth.requireRole(
-      "ADMIN"
-    );
-
-  }
-);
+document.addEventListener("DOMContentLoaded",()=>{ Auth.requireAdmin(); });

@@ -19,9 +19,10 @@ document.addEventListener(
 
     try {
 
-      await loadSiswa();
-
-      await loadFilterKelas();
+      await Promise.all([
+        loadSiswa(),
+        loadFilterKelas()
+      ]);
 
       bindSiswaEvents();
 
