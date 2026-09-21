@@ -1,12 +1,17 @@
-const CACHE_NAME =
-  "presensi-sdn-jatiwaringin-v1";
+"use strict";
 
+const CACHE_NAME =
+  "presensi-sdn-jatiwaringin-xiii-v3";
 
 const APP_FILES = [
-
   "./",
-
   "./index.html",
+
+  "./api.js",
+  "./auth.js",
+  "./script.js",
+  "./layout.js",
+  "./style.css",
 
   "./dashboard.html",
   "./dashboard.js",
@@ -38,146 +43,145 @@ const APP_FILES = [
   "./pengaturan.html",
   "./pengaturan.js",
 
-  "./auth.js",
-  "./script.js",
-  "./style.css",
-
   "./manifest.json",
-
   "./pwa.js"
-
 ];
-
 
 self.addEventListener(
   "install",
-  event => {
+  function (event) {
 
     event.waitUntil(
-
       caches
         .open(CACHE_NAME)
-        .then(cache =>
-          cache.addAll(
-            APP_FILES
-          )
-        )
+        .then(function (cache) {
 
+          return cache.addAll(
+            APP_FILES
+          );
+        })
     );
 
     self.skipWaiting();
-
   }
 );
-
 
 self.addEventListener(
   "activate",
-  event => {
+  function (event) {
 
     event.waitUntil(
-
       caches
         .keys()
-        .then(keys =>
-          Promise.all(
+        .then(function (keys) {
 
+          return Promise.all(
             keys
               .filter(
                 key =>
-                  key !== CACHE_NAME
+                  key !==
+                  CACHE_NAME
               )
               .map(
                 key =>
-                  caches.delete(key)
+                  caches.delete(
+                    key
+                  )
               )
-
-          )
-        )
-
+          );
+        })
     );
 
     self.clients.claim();
-
   }
 );
 
-
 self.addEventListener(
   "fetch",
-  event => {
+  function (event) {
 
     const request =
       event.request;
 
-
     if (
-      request.method !== "GET"
+      request.method !==
+      "GET"
     ) {
       return;
     }
-
 
     const url =
       new URL(
         request.url
       );
 
-
-    /*
-      API Apps Script tidak
-      dicache oleh service worker.
-    */
-
     if (
       url.hostname.includes(
         "script.google.com"
+      ) ||
+      url.hostname.includes(
+        "script.googleusercontent.com"
       )
     ) {
       return;
     }
 
+    if (
+      url.origin !==
+      self.location.origin
+    ) {
+      return;
+    }
 
     event.respondWith(
-
       fetch(request)
-        .then(response => {
+        .then(
+          function (response) {
 
-          if (
-            response &&
-            response.status === 200
-          ) {
+            if (
+              response &&
+              response.ok
+            ) {
 
-            const copy =
-              response.clone();
+              const copy =
+                response.clone();
 
-            caches
-              .open(CACHE_NAME)
-              .then(cache =>
-                cache.put(
-                  request,
-                  copy
+              caches
+                .open(
+                  CACHE_NAME
                 )
-              );
+                .then(
+                  cache =>
+                    cache.put(
+                      request,
+                      copy
+                    )
+                );
+            }
 
+            return response;
           }
-
-          return response;
-
-        })
-        .catch(() =>
-          caches
-            .match(request)
-            .then(
-              cached =>
-                cached ||
-                caches.match(
-                  "./index.html"
-                )
-            )
         )
+        .catch(
+          function () {
 
+            return caches
+              .match(request)
+              .then(
+                function (
+                  cached
+                ) {
+
+                  return (
+                    cached ||
+                    caches.match(
+                      "./index.html"
+                    )
+                  );
+                }
+              );
+          }
+        )
     );
-
   }
 );
