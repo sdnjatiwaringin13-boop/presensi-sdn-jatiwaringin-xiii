@@ -1,279 +1,112 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <title>Data Guru</title>
+    <title>
+        Data Guru - Presensi SDN Jatiwaringin XIII
+    </title>
 
-  <meta
-    name="theme-color"
-    content="#1565c0"
-  >
 
-  <link
-    rel="manifest"
-    href="manifest.json"
-  >
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
 </head>
 
+
 <body>
 
-<header class="topbar">
+    <div class="card">
 
-  <div class="topbar-left">
+        <div class="card-header">
 
-    <div class="topbar-logo">
-      SD
-    </div>
+            <div class="card-title">
 
-    <div>
+                <i class="fa-solid fa-chalkboard-user"></i>
 
-      <div class="topbar-title">
-        Data Guru
-      </div>
+                Data Guru
 
-      <div class="topbar-school">
-        SD Negeri Jatiwaringin XIII
-      </div>
+            </div>
 
-    </div>
-
-  </div>
-
-
-  <div class="topbar-right">
-
-    <button
-      class="btn btn-secondary btn-small"
-      onclick="location.href='dashboard.html'"
-    >
-      Dashboard
-    </button>
-
-    <button
-      class="btn btn-danger btn-small"
-      onclick="Auth.logout()"
-    >
-      Keluar
-    </button>
-
-  </div>
-
-</header>
-
-
-<main class="container">
-
-  <div class="page-header">
-
-    <div>
-
-      <h1>Data Guru</h1>
-
-      <p>
-        Kelola data guru dan wali kelas.
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <!-- FORM GURU -->
-
-  <section class="card">
-
-    <div class="card-header">
-
-      <h2 id="formTitle">
-        Tambah Guru
-      </h2>
-
-    </div>
-
-
-    <form id="guruForm">
-
-      <input
-        type="hidden"
-        id="guruId"
-      >
-
-
-      <div class="form-grid">
-
-        <div class="form-group">
-
-          <label for="guruNip">
-            NIP
-          </label>
-
-          <input
-            type="text"
-            id="guruNip"
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="guruNama">
-            Nama Guru
-          </label>
-
-          <input
-            type="text"
-            id="guruNama"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="guruEmail">
-            Email
-          </label>
-
-          <input
-            type="email"
-            id="guruEmail"
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="guruStatus">
-            Status
-          </label>
-
-          <select id="guruStatus">
-
-            <option value="AKTIF">
-              AKTIF
-            </option>
-
-            <option value="NONAKTIF">
-              NONAKTIF
-            </option>
-
-          </select>
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="submit"
-          class="btn btn-primary"
-          id="btnSimpanGuru"
-        >
-          Simpan
-        </button>
-
-
-        <button
-          type="button"
-          class="btn btn-secondary"
-          id="btnBatalGuru"
-          style="display:none;"
-        >
-          Batal
-        </button>
-
-      </div>
-
-    </form>
-
-
-    <div
-      id="guruMessage"
-      class="message"
-      style="display:none;"
-    ></div>
-
-  </section>
-
-
-  <!-- DATA GURU -->
-
-  <section class="card">
-
-    <div class="card-header">
-
-      <h2>Daftar Guru</h2>
-
-    </div>
-
-
-    <div class="table-wrapper">
-
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>No</th>
-            <th>ID Guru</th>
-            <th>NIP</th>
-            <th>Nama</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Aksi</th>
-
-          </tr>
-
-        </thead>
-
-
-        <tbody id="guruTableBody">
-
-          <tr>
-
-            <td
-              colspan="7"
-              class="text-center"
+            <button
+                id="btnTambah"
+                class="btn btn-primary"
             >
-              Memuat data...
 
-            </td>
+                <i class="fa-solid fa-plus"></i>
 
-          </tr>
+                Tambah Guru
 
-        </tbody>
+            </button>
 
-      </table>
+        </div>
+
+
+        <div class="card-body">
+
+            <div
+                id="guruMessage"
+            ></div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>No</th>
+                            <th>ID Guru</th>
+                            <th>NIP</th>
+                            <th>Nama</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="guruTableBody"
+                    ></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
 
     </div>
 
-  </section>
 
-</main>
-
-
-<script src="auth.js"></script>
-<script src="guru.js"></script>
-<script src="pwa.js"></script>
+    <script src="auth.js"></script>
+    <script src="layout.js"></script>
+    <script src="guru.js"></script>
+    <script src="pwa.js"></script>
 
 </body>
+
 </html>
