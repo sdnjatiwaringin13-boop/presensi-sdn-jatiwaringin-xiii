@@ -8,6 +8,17 @@
   id="presensiCounter"
   class="presensi-counter"
 >
+  .presensi-counter {
+  display: inline-block;
+  margin: 8px 0 12px;
+  padding: 8px 12px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+}
   Hadir: 0 | Sakit: 0 | Izin: 0 | Alpa: 0
 </div><div class="toolbar"><select id="kelasSelect"><option value="">Semua Kelas</option></select><input id="searchInput" type="text" placeholder="Cari NISN atau nama siswa..."><button id="simpanButton" class="btn btn-primary" type="button">Simpan Semua</button></div><div class="table-responsive"><table><thead><tr><th>No</th><th>NISN</th><th>Nama</th><th>Kelas</th><th>L/P</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="siswaTable"><tr><td colspan="7" class="loading">Memuat...</td></tr></tbody></table></div></div></div>
 <script src="api.js"></script><script src="auth.js"></script><script src="layout.js"></script><script src="presensi.js"></script><script src="pwa.js"></script></body></html>
