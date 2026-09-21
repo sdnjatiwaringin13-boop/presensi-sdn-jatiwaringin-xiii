@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Dashboard - Presensi Siswa</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .header {
+      background: #1d4ed8;
+      color: white;
+      padding: 20px;
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .header h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+    }
+
+    .header p {
+      margin: 0;
+      opacity: .9;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 25px auto;
+      padding: 0 16px;
+    }
+
+    .welcome {
+      margin-bottom: 20px;
+    }
+
+    .welcome h2 {
+      margin: 0 0 5px;
+    }
+
+    .welcome p {
+      margin: 0;
+      color: #6b7280;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow:
+        0 2px 8px rgba(0,0,0,.08);
+    }
+
+    .card-title {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .card-number {
+      font-size: 32px;
+      font-weight: bold;
+    }
+
+    .attendance {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(160px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .attendance-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow:
+        0 2px 8px rgba(0,0,0,.08);
+    }
+
+    .attendance-icon {
+      font-size: 32px;
+    }
+
+    .attendance-number {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .menu-title {
+      margin-bottom: 12px;
+    }
+
+    .menu {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    .menu-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      box-shadow:
+        0 2px 8px rgba(0,0,0,.08);
+      transition: .2s;
+    }
+
+    .menu-card:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 5px 15px rgba(0,0,0,.12);
+    }
+
+    .menu-card h3 {
+      margin: 0 0 8px;
+    }
+
+    .menu-card p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .logout {
+      margin-top: 25px;
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 8px;
+      background: #dc2626;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 30px;
+      color: #6b7280;
+    }
+
+    @media (max-width: 600px) {
+
+      .header h1 {
+        font-size: 20px;
+      }
+
+      .card-number {
+        font-size: 26px;
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<header class="header">
+
+  <div class="header-inner">
+
+    <h1>
+      🏫 SD NEGERI JATIWARINGIN XIII
+    </h1>
+
+    <p>
+      Sistem Informasi Presensi Siswa
+    </p>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+
+  <section class="welcome">
+
+    <h2 id="welcomeName">
+      Selamat Datang
+    </h2>
+
+    <p id="welcomeRole">
+      Memuat...
+    </p>
+
+  </section>
+
+
+  <!-- STATISTIK -->
+
+  <section
+    id="adminStats"
+    class="cards"
+  >
+
+    <div class="card">
+
+      <div class="card-title">
+        👨‍🎓 Total Siswa
+      </div>
+
+      <div
+        id="totalSiswa"
+        class="card-number"
+      >
+        -
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="card-title">
+        👨‍🏫 Total Guru
+      </div>
+
+      <div
+        id="totalGuru"
+        class="card-number"
+      >
+        -
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="card-title">
+        🏫 Total Kelas
+      </div>
+
+      <div
+        id="totalKelas"
+        class="card-number"
+      >
+        -
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- PRESENSI -->
+
+  <h3>
+    📊 Presensi Hari Ini
+  </h3>
+
+
+  <section class="attendance">
+
+
+    <div class="attendance-card">
+
+      <div class="attendance-icon">
+        🟢
+      </div>
+
+      <div
+        id="hadir"
+        class="attendance-number"
+      >
+        -
+      </div>
+
+      <div>
+        Hadir
+      </div>
+
+    </div>
+
+
+    <div class="attendance-card">
+
+      <div class="attendance-icon">
+        🔵
+      </div>
+
+      <div
+        id="izin"
+        class="attendance-number"
+      >
+        -
+      </div>
+
+      <div>
+        Izin
+      </div>
+
+    </div>
+
+
+    <div class="attendance-card">
+
+      <div class="attendance-icon">
+        🟠
+      </div>
+
+      <div
+        id="sakit"
+        class="attendance-number"
+      >
+        -
+      </div>
+
+      <div>
+        Sakit
+      </div>
+
+    </div>
+
+
+    <div class="attendance-card">
+
+      <div class="attendance-icon">
+        🔴
+      </div>
+
+      <div
+        id="alpa"
+        class="attendance-number"
+      >
+        -
+      </div>
+
+      <div>
+        Alpa
+      </div>
+
+    </div>
+
+
+  </section>
+
+
+  <!-- MENU -->
+
+  <h3 class="menu-title">
+    ⚡ Menu Utama
+  </h3>
+
+
+  <section
+    id="menu"
+    class="menu"
+  >
+
+    <div class="loading">
+      Memuat menu...
+    </div>
+
+  </section>
+
+
+  <button
+    class="logout"
+    onclick="logout()"
+  >
+    🚪 Keluar
+  </button>
+
+
+</main>
+
+
+<script src="dashboard.js"></script>
+
+
+</body>
+
+</html>
