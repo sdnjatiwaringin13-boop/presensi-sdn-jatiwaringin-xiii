@@ -1,348 +1,149 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <title>Data Siswa</title>
+    <title>
+        Data Siswa - Presensi SDN Jatiwaringin XIII
+    </title>
 
-  <meta
-    name="theme-color"
-    content="#1565c0"
-  >
 
-  <link
-    rel="manifest"
-    href="manifest.json"
-  >
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
 </head>
 
+
 <body>
 
-<header class="topbar">
+    <!-- ==========================================
+         KONTEN SISWA
+         Konten lama tetap dipertahankan
+    =========================================== -->
 
-  <div class="topbar-left">
+    <div class="card">
 
-    <div class="topbar-logo">
-      SD
-    </div>
+        <div class="card-header">
 
-    <div>
+            <div class="card-title">
 
-      <div class="topbar-title">
-        Data Siswa
-      </div>
+                <i class="fa-solid fa-user-graduate"></i>
 
-      <div class="topbar-school">
-        SD Negeri Jatiwaringin XIII
-      </div>
+                Data Siswa
 
-    </div>
+            </div>
 
-  </div>
-
-
-  <div class="topbar-right">
-
-    <button
-      class="btn btn-secondary btn-small"
-      onclick="location.href='dashboard.html'"
-    >
-      Dashboard
-    </button>
-
-    <button
-      class="btn btn-danger btn-small"
-      onclick="Auth.logout()"
-    >
-      Keluar
-    </button>
-
-  </div>
-
-</header>
-
-
-<main class="container">
-
-  <div class="page-header">
-
-    <div>
-
-      <h1>Data Siswa</h1>
-
-      <p>
-        Kelola data siswa sekolah.
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <!-- FORM -->
-
-  <section class="card">
-
-    <div class="card-header">
-
-      <h2 id="formTitle">
-        Tambah Siswa
-      </h2>
-
-    </div>
-
-
-    <form id="siswaForm">
-
-      <input
-        type="hidden"
-        id="siswaId"
-      >
-
-
-      <div class="form-grid">
-
-        <div class="form-group">
-
-          <label for="siswaNisn">
-            NISN
-          </label>
-
-          <input
-            type="text"
-            id="siswaNisn"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="siswaNama">
-            Nama Siswa
-          </label>
-
-          <input
-            type="text"
-            id="siswaNama"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="siswaKelas">
-            Kelas
-          </label>
-
-          <select
-            id="siswaKelas"
-            required
-          >
-
-            <option value="">
-              Pilih kelas
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="siswaJK">
-            Jenis Kelamin
-          </label>
-
-          <select
-            id="siswaJK"
-            required
-          >
-
-            <option value="">
-              Pilih
-            </option>
-
-            <option value="L">
-              Laki-laki
-            </option>
-
-            <option value="P">
-              Perempuan
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="siswaStatus">
-            Status
-          </label>
-
-          <select id="siswaStatus">
-
-            <option value="AKTIF">
-              AKTIF
-            </option>
-
-            <option value="NONAKTIF">
-              NONAKTIF
-            </option>
-
-          </select>
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="submit"
-          class="btn btn-primary"
-          id="btnSimpanSiswa"
-        >
-          Simpan
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-secondary"
-          id="btnBatalSiswa"
-          style="display:none;"
-        >
-          Batal
-        </button>
-
-      </div>
-
-    </form>
-
-
-    <div
-      id="siswaMessage"
-      class="message"
-      style="display:none;"
-    ></div>
-
-  </section>
-
-
-  <!-- DATA -->
-
-  <section class="card">
-
-    <div class="card-header">
-
-      <h2>Daftar Siswa</h2>
-
-    </div>
-
-
-    <div class="toolbar">
-
-      <div class="form-group">
-
-        <label for="filterKelas">
-          Kelas
-        </label>
-
-        <select id="filterKelas">
-
-          <option value="">
-            Semua Kelas
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div class="form-group">
-
-        <label for="searchSiswa">
-          Cari
-        </label>
-
-        <input
-          type="search"
-          id="searchSiswa"
-          placeholder="Cari nama / NISN"
-        >
-
-      </div>
-
-    </div>
-
-
-    <div class="table-wrapper">
-
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>No</th>
-            <th>NISN</th>
-            <th>Nama</th>
-            <th>Kelas</th>
-            <th>JK</th>
-            <th>Status</th>
-            <th>Aksi</th>
-
-          </tr>
-
-        </thead>
-
-        <tbody id="siswaTableBody">
-
-          <tr>
-
-            <td
-              colspan="7"
-              class="text-center"
+            <button
+                type="button"
+                id="btnTambah"
+                class="btn btn-primary"
             >
-              Memuat data...
 
-            </td>
+                <i class="fa-solid fa-plus"></i>
 
-          </tr>
+                Tambah Siswa
 
-        </tbody>
+            </button>
 
-      </table>
+        </div>
+
+
+        <div class="card-body">
+
+            <!--
+                Tempatkan konten siswa.js
+                yang sudah ada di sini.
+            -->
+
+            <div
+                id="siswaMessage"
+            ></div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                No
+                            </th>
+
+                            <th>
+                                ID
+                            </th>
+
+                            <th>
+                                NISN
+                            </th>
+
+                            <th>
+                                Nama
+                            </th>
+
+                            <th>
+                                Kelas
+                            </th>
+
+                            <th>
+                                JK
+                            </th>
+
+                            <th>
+                                Status
+                            </th>
+
+                            <th>
+                                Aksi
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="siswaTableBody"
+                    >
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
 
     </div>
 
-  </section>
 
-</main>
-
-
-<script src="auth.js"></script>
-<script src="siswa.js"></script>
-<script src="pwa.js"></script>
+    <script src="auth.js"></script>
+    <script src="layout.js"></script>
+    <script src="siswa.js"></script>
+    <script src="pwa.js"></script>
 
 </body>
+
 </html>
