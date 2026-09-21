@@ -1,18 +1,12 @@
-(function () {
+"use strict";
 
-  "use strict";
+document.addEventListener(
+  "DOMContentLoaded",
+  function () {
 
-  Auth.requireRole("ADMIN");
+    Auth.requireRole(
+      "ADMIN"
+    );
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    function () {
-
-      console.log(
-        "Halaman administrasi aktif."
-      );
-
-    }
-  );
-
-})();
+  }
+);
