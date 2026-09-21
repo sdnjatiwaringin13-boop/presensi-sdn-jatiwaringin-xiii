@@ -1,159 +1,321 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
+(function () {
+  "use strict";
 
-let guruData = [];
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
-function getUser() {
-  try {
-    return JSON.parse(localStorage.getItem("presensiUser") || "null");
-  } catch (e) {
-    return null;
-  }
-}
+  Auth.requireRole("ADMIN");
 
-function ensureAdmin() {
-  const user = getUser();
-  if (!user || user.role !== "ADMIN") {
-    alert("Akses hanya untuk ADMIN.");
-    location.href = "index.html";
-    return false;
-  }
-  return true;
-}
+  let guruList = [];
 
-async function callAPI(payload) {
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
-  });
-  const text = await response.text();
-  let result;
-  try { result = JSON.parse(text); }
-  catch (e) { throw new Error("Respons API bukan JSON: " + text.substring(0, 200)); }
-  return result;
-}
+  document.addEventListener("DOMContentLoaded", init);
 
-async function loadGuru() {
-  const result = await callAPI({ action: "getGuru" });
-  if (!result.success) throw new Error(result.message || "Gagal mengambil data guru.");
-  guruData = result.data || [];
-  renderGuru();
-}
+  async function init() {
+    document
+      .getElementById("guruForm")
+      .addEventListener("submit", simpanGuru);
 
-function renderGuru() {
-  const tbody = document.getElementById("guruTable");
-  const q = document.getElementById("searchInput").value.trim().toLowerCase();
-  const status = document.getElementById("statusFilter").value;
+    document
+      .getElementById("btnBatalGuru")
+      .addEventListener("click", resetForm);
 
-  const filtered = guruData.filter(g => {
-    const matchText = !q ||
-      String(g.NAMA || "").toLowerCase().includes(q) ||
-      String(g.NIP || "").toLowerCase().includes(q) ||
-      String(g.ID_GURU || "").toLowerCase().includes(q);
-    const matchStatus = !status || String(g.STATUS || "").toUpperCase() === status;
-    return matchText && matchStatus;
-  });
-
-  document.getElementById("guruCount").textContent =
-    `Total guru: ${guruData.length} | Ditampilkan: ${filtered.length}`;
-
-  if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="loading">Data tidak ditemukan.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = filtered.map((g, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td>${escapeHtml(g.ID_GURU)}</td>
-      <td>${escapeHtml(g.NIP)}</td>
-      <td>${escapeHtml(g.NAMA)}</td>
-      <td>${escapeHtml(g.EMAIL)}</td>
-      <td><span class="status-badge">${escapeHtml(g.STATUS)}</span></td>
-      <td class="action-buttons">
-        <button class="edit-button" onclick="editGuru('${escapeAttr(g.ID_GURU)}')">Edit</button>
-        <button class="delete-button" onclick="deleteGuru('${escapeAttr(g.ID_GURU)}')">Hapus</button>
-      </td>
-    </tr>
-  `).join("");
-}
-
-function openForm() {
-  document.getElementById("guruForm").classList.remove("hidden");
-  document.getElementById("editMode").value = "tambah";
-  document.getElementById("idGuru").disabled = false;
-  document.getElementById("guruForm").reset();
-  document.getElementById("status").value = "AKTIF";
-  document.getElementById("idGuru").focus();
-}
-
-function editGuru(id) {
-  const g = guruData.find(x => String(x.ID_GURU).trim() === String(id).trim());
-  if (!g) return alert("Data guru tidak ditemukan.");
-
-  document.getElementById("guruForm").classList.remove("hidden");
-  document.getElementById("editMode").value = "edit";
-  document.getElementById("idGuru").value = g.ID_GURU || "";
-  document.getElementById("idGuru").disabled = true;
-  document.getElementById("nip").value = g.NIP || "";
-  document.getElementById("nama").value = g.NAMA || "";
-  document.getElementById("email").value = g.EMAIL || "";
-  document.getElementById("status").value = g.STATUS || "AKTIF";
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-async function deleteGuru(id) {
-  if (!confirm("Hapus guru dengan ID " + id + "?")) return;
-  try {
-    const result = await callAPI({ action: "hapusGuru", idGuru: id });
-    if (!result.success) throw new Error(result.message || "Gagal menghapus guru.");
-    alert(result.message);
     await loadGuru();
-  } catch (e) {
-    alert("Gagal: " + e.message);
   }
-}
 
-document.getElementById("guruForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  const mode = document.getElementById("editMode").value;
-  const payload = {
-    action: mode === "edit" ? "updateGuru" : "tambahGuru",
-    idGuru: document.getElementById("idGuru").value.trim(),
-    nip: document.getElementById("nip").value.trim(),
-    nama: document.getElementById("nama").value.trim(),
-    email: document.getElementById("email").value.trim(),
-    status: document.getElementById("status").value
+  async function loadGuru() {
+    try {
+      const result = await callAPI({
+        action: "getGuru"
+      });
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      guruList = result.data || [];
+
+      renderTable();
+
+    } catch (error) {
+      tampilkanPesan(error.message, "error");
+    }
+  }
+
+  function renderTable() {
+    const tbody =
+      document.getElementById("guruTableBody");
+
+    if (!guruList.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="text-center">
+            Belum ada data guru.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = guruList.map((guru, index) => `
+      <tr>
+
+        <td>${index + 1}</td>
+
+        <td>
+          ${escapeHTML(guru.ID_GURU)}
+        </td>
+
+        <td>
+          ${escapeHTML(guru.NIP)}
+        </td>
+
+        <td>
+          ${escapeHTML(guru.NAMA)}
+        </td>
+
+        <td>
+          ${escapeHTML(guru.EMAIL)}
+        </td>
+
+        <td>
+          <span class="status-badge ${
+            String(guru.STATUS).toUpperCase() === "AKTIF"
+              ? "status-aktif"
+              : "status-nonaktif"
+          }">
+            ${escapeHTML(guru.STATUS)}
+          </span>
+        </td>
+
+        <td>
+
+          <div class="table-actions">
+
+            <button
+              class="btn btn-warning btn-small"
+              onclick="editGuru('${escapeJS(guru.ID_GURU)}')"
+            >
+              Edit
+            </button>
+
+            <button
+              class="btn btn-danger btn-small"
+              onclick="hapusGuru('${escapeJS(guru.ID_GURU)}')"
+            >
+              Hapus
+            </button>
+
+          </div>
+
+        </td>
+
+      </tr>
+    `).join("");
+  }
+
+  async function simpanGuru(event) {
+    event.preventDefault();
+
+    const id =
+      document.getElementById("guruId").value.trim();
+
+    const data = {
+      action: id ? "updateGuru" : "tambahGuru",
+
+      idGuru: id,
+
+      nip:
+        document.getElementById("guruNip").value.trim(),
+
+      nama:
+        document.getElementById("guruNama").value.trim(),
+
+      email:
+        document.getElementById("guruEmail").value.trim(),
+
+      status:
+        document.getElementById("guruStatus").value
+    };
+
+    if (!data.nama) {
+      tampilkanPesan(
+        "Nama guru wajib diisi.",
+        "error"
+      );
+      return;
+    }
+
+    const button =
+      document.getElementById("btnSimpanGuru");
+
+    button.disabled = true;
+    button.textContent = "Menyimpan...";
+
+    try {
+      const result = await callAPI(data);
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      tampilkanPesan(
+        result.message || "Data guru berhasil disimpan.",
+        "success"
+      );
+
+      resetForm();
+
+      await loadGuru();
+
+    } catch (error) {
+      tampilkanPesan(error.message, "error");
+
+    } finally {
+      button.disabled = false;
+      button.textContent = "Simpan";
+    }
+  }
+
+  window.editGuru = function (id) {
+    const guru =
+      guruList.find(
+        item =>
+          String(item.ID_GURU) === String(id)
+      );
+
+    if (!guru) return;
+
+    document.getElementById("guruId").value =
+      guru.ID_GURU || "";
+
+    document.getElementById("guruNip").value =
+      guru.NIP || "";
+
+    document.getElementById("guruNama").value =
+      guru.NAMA || "";
+
+    document.getElementById("guruEmail").value =
+      guru.EMAIL || "";
+
+    document.getElementById("guruStatus").value =
+      guru.STATUS || "AKTIF";
+
+    document.getElementById("formTitle").textContent =
+      "Edit Guru";
+
+    document.getElementById("btnBatalGuru").style.display =
+      "inline-flex";
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
   };
 
-  try {
-    const result = await callAPI(payload);
-    if (!result.success) throw new Error(result.message || "Gagal menyimpan guru.");
-    alert(result.message);
-    document.getElementById("guruForm").classList.add("hidden");
-    await loadGuru();
-  } catch (e) {
-    alert("Gagal: " + e.message);
+  window.hapusGuru = async function (id) {
+    const guru =
+      guruList.find(
+        item =>
+          String(item.ID_GURU) === String(id)
+      );
+
+    if (!guru) return;
+
+    const yakin = confirm(
+      "Hapus guru " + guru.NAMA + "?"
+    );
+
+    if (!yakin) return;
+
+    try {
+      const result = await callAPI({
+        action: "hapusGuru",
+        idGuru: id
+      });
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+      tampilkanPesan(
+        result.message || "Guru berhasil dihapus.",
+        "success"
+      );
+
+      await loadGuru();
+
+    } catch (error) {
+      tampilkanPesan(error.message, "error");
+    }
+  };
+
+  function resetForm() {
+    document.getElementById("guruForm").reset();
+
+    document.getElementById("guruId").value = "";
+
+    document.getElementById("guruStatus").value =
+      "AKTIF";
+
+    document.getElementById("formTitle").textContent =
+      "Tambah Guru";
+
+    document.getElementById("btnBatalGuru").style.display =
+      "none";
   }
-});
 
-document.getElementById("addButton").addEventListener("click", openForm);
-document.getElementById("cancelButton").addEventListener("click", () => document.getElementById("guruForm").classList.add("hidden"));
-document.getElementById("refreshButton").addEventListener("click", async () => {
-  try { await loadGuru(); } catch (e) { alert("Gagal: " + e.message); }
-});
-document.getElementById("searchInput").addEventListener("input", renderGuru);
-document.getElementById("statusFilter").addEventListener("change", renderGuru);
-document.getElementById("logoutButton").addEventListener("click", () => {
-  localStorage.removeItem("presensiUser");
-  location.href = "index.html";
-});
+  async function callAPI(payload) {
+    const response = await fetch(
+      API_URL,
+      {
+        method: "POST",
 
-function escapeHtml(value) {
-  return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[c]));
-}
-function escapeAttr(value) { return escapeHtml(value); }
+        headers: {
+          "Content-Type":
+            "text/plain;charset=utf-8"
+        },
 
-if (ensureAdmin()) {
-  loadGuru().catch(e => alert("Gagal memuat data guru: " + e.message));
-}
+        body: JSON.stringify(payload)
+      }
+    );
+
+    return await response.json();
+  }
+
+  function tampilkanPesan(message, type) {
+    const element =
+      document.getElementById("guruMessage");
+
+    element.textContent = message;
+
+    element.className =
+      "message " +
+      (
+        type === "success"
+          ? "message-success"
+          : "message-error"
+      );
+
+    element.style.display = "block";
+
+    setTimeout(() => {
+      element.style.display = "none";
+    }, 4000);
+  }
+
+  function escapeHTML(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  function escapeJS(value) {
+    return String(value ?? "")
+      .replace(/\\/g, "\\\\")
+      .replace(/'/g, "\\'");
+  }
+
+})();
