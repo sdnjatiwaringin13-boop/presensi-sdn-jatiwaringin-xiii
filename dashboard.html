@@ -1,975 +1,205 @@
 <!DOCTYPE html>
-
 <html lang="id">
-
 <head>
-
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <title>Dashboard - Presensi Siswa</title>
 
-  <title>
-    Dashboard - Presensi Siswa
-  </title>
+  <meta name="theme-color" content="#1565c0">
+  <link rel="manifest" href="manifest.json">
 
-
-  <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
-
-    body {
-
-      margin: 0;
-
-      font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-      background:
-        #f3f4f6;
-
-      color:
-        #111827;
-
-    }
-
-
-    /* =================================================
-       HEADER
-    ================================================= */
-
-    .header {
-
-      background:
-        #1d4ed8;
-
-      color:
-        white;
-
-      padding:
-        20px;
-
-    }
-
-
-    .header-inner {
-
-      max-width:
-        1200px;
-
-      margin:
-        auto;
-
-    }
-
-
-    .header-top {
-
-      display:
-        flex;
-
-      justify-content:
-        space-between;
-
-      align-items:
-        center;
-
-      gap:
-        15px;
-
-    }
-
-
-    .header h1 {
-
-      margin:
-        0 0 6px;
-
-      font-size:
-        24px;
-
-    }
-
-
-    .header p {
-
-      margin:
-        0;
-
-      opacity:
-        .9;
-
-    }
-
-
-    .logout-header {
-
-      border:
-        none;
-
-      background:
-        rgba(255,255,255,.15);
-
-      color:
-        white;
-
-      padding:
-        10px 15px;
-
-      border-radius:
-        8px;
-
-      cursor:
-        pointer;
-
-      font-size:
-        14px;
-
-    }
-
-
-    .logout-header:hover {
-
-      background:
-        rgba(255,255,255,.25);
-
-    }
-
-
-    /* =================================================
-       CONTAINER
-    ================================================= */
-
-    .container {
-
-      max-width:
-        1200px;
-
-      margin:
-        25px auto;
-
-      padding:
-        0 16px;
-
-    }
-
-
-    /* =================================================
-       WELCOME
-    ================================================= */
-
-    .welcome {
-
-      background:
-        white;
-
-      border-radius:
-        12px;
-
-      padding:
-        22px;
-
-      margin-bottom:
-        20px;
-
-      box-shadow:
-        0 2px 8px rgba(0,0,0,.07);
-
-    }
-
-
-    .welcome h2 {
-
-      margin:
-        0 0 6px;
-
-      font-size:
-        24px;
-
-    }
-
-
-    .welcome p {
-
-      margin:
-        0;
-
-      color:
-        #6b7280;
-
-    }
-
-
-    /* =================================================
-       STATISTICS
-    ================================================= */
-
-    .section-title {
-
-      margin:
-        25px 0 12px;
-
-      font-size:
-        18px;
-
-    }
-
-
-    .cards {
-
-      display:
-        grid;
-
-      grid-template-columns:
-        repeat(
-          auto-fit,
-          minmax(200px, 1fr)
-        );
-
-      gap:
-        15px;
-
-    }
-
-
-    .card {
-
-      background:
-        white;
-
-      border-radius:
-        12px;
-
-      padding:
-        20px;
-
-      box-shadow:
-        0 2px 8px rgba(0,0,0,.08);
-
-    }
-
-
-    .card-title {
-
-      color:
-        #6b7280;
-
-      font-size:
-        14px;
-
-      margin-bottom:
-        8px;
-
-    }
-
-
-    .card-number {
-
-      font-size:
-        32px;
-
-      font-weight:
-        bold;
-
-    }
-
-
-    /* =================================================
-       PRESENSI
-    ================================================= */
-
-    .attendance {
-
-      display:
-        grid;
-
-      grid-template-columns:
-        repeat(
-          auto-fit,
-          minmax(160px, 1fr)
-        );
-
-      gap:
-        15px;
-
-    }
-
-
-    .attendance-card {
-
-      background:
-        white;
-
-      padding:
-        20px;
-
-      border-radius:
-        12px;
-
-      text-align:
-        center;
-
-      box-shadow:
-        0 2px 8px rgba(0,0,0,.08);
-
-    }
-
-
-    .attendance-icon {
-
-      font-size:
-        30px;
-
-    }
-
-
-    .attendance-number {
-
-      font-size:
-        28px;
-
-      font-weight:
-        bold;
-
-      margin:
-        5px 0;
-
-    }
-
-
-    .attendance-label {
-
-      color:
-        #6b7280;
-
-    }
-
-
-    /* =================================================
-       MENU
-    ================================================= */
-
-    .menu {
-
-      display:
-        grid;
-
-      grid-template-columns:
-        repeat(
-          auto-fit,
-          minmax(220px, 1fr)
-        );
-
-      gap:
-        15px;
-
-    }
-
-
-    .menu-card {
-
-      background:
-        white;
-
-      border-radius:
-        12px;
-
-      padding:
-        20px;
-
-      cursor:
-        pointer;
-
-      box-shadow:
-        0 2px 8px rgba(0,0,0,.08);
-
-      transition:
-        .2s;
-
-    }
-
-
-    .menu-card:hover {
-
-      transform:
-        translateY(-3px);
-
-      box-shadow:
-        0 6px 16px rgba(0,0,0,.12);
-
-    }
-
-
-    .menu-icon {
-
-      font-size:
-        30px;
-
-      margin-bottom:
-        8px;
-
-    }
-
-
-    .menu-card h3 {
-
-      margin:
-        0 0 7px;
-
-    }
-
-
-    .menu-card p {
-
-      margin:
-        0;
-
-      color:
-        #6b7280;
-
-      font-size:
-        14px;
-
-      line-height:
-        1.5;
-
-    }
-
-
-    /* =================================================
-       GURU INFO
-    ================================================= */
-
-    .guru-info {
-
-      background:
-        white;
-
-      border-radius:
-        12px;
-
-      padding:
-        20px;
-
-      margin-bottom:
-        20px;
-
-      box-shadow:
-        0 2px 8px rgba(0,0,0,.08);
-
-    }
-
-
-    .guru-info-row {
-
-      display:
-        flex;
-
-      justify-content:
-        space-between;
-
-      padding:
-        8px 0;
-
-      border-bottom:
-        1px solid #e5e7eb;
-
-    }
-
-
-    .guru-info-row:last-child {
-
-      border-bottom:
-        none;
-
-    }
-
-
-    .guru-info-label {
-
-      color:
-        #6b7280;
-
-    }
-
-
-    .guru-info-value {
-
-      font-weight:
-        bold;
-
-    }
-
-
-    /* =================================================
-       LOADING
-    ================================================= */
-
-    .loading {
-
-      text-align:
-        center;
-
-      padding:
-        30px;
-
-      color:
-        #6b7280;
-
-      background:
-        white;
-
-      border-radius:
-        12px;
-
-    }
-
-
-    /* =================================================
-       ERROR
-    ================================================= */
-
-    .error-box {
-
-      display:
-        none;
-
-      background:
-        #fee2e2;
-
-      color:
-        #991b1b;
-
-      padding:
-        15px;
-
-      border-radius:
-        8px;
-
-      margin-bottom:
-        20px;
-
-    }
-
-
-    /* =================================================
-       MOBILE
-    ================================================= */
-
-    @media (
-      max-width: 600px
-    ) {
-
-      .header {
-
-        padding:
-          15px;
-
-      }
-
-
-      .header-top {
-
-        align-items:
-          flex-start;
-
-      }
-
-
-      .header h1 {
-
-        font-size:
-          19px;
-
-      }
-
-
-      .header p {
-
-        font-size:
-          13px;
-
-      }
-
-
-      .logout-header {
-
-        padding:
-          8px 10px;
-
-      }
-
-
-      .container {
-
-        margin-top:
-          15px;
-
-      }
-
-
-      .welcome h2 {
-
-        font-size:
-          20px;
-
-      }
-
-
-      .card-number {
-
-        font-size:
-          27px;
-
-      }
-
-
-      .guru-info-row {
-
-        flex-direction:
-          column;
-
-        gap:
-          3px;
-
-      }
-
-    }
-
-  </style>
-
+  <link rel="stylesheet" href="style.css">
 </head>
-
 
 <body>
 
+  <header class="topbar">
 
-<!-- ===================================================
-     HEADER
-=================================================== -->
-
-<header class="header">
-
-  <div class="header-inner">
-
-    <div class="header-top">
+    <div class="topbar-left">
+      <div class="topbar-logo">SD</div>
 
       <div>
+        <div class="topbar-title">
+          Presensi Siswa
+        </div>
 
-        <h1>
-          🏫 SD NEGERI JATIWARINGIN XIII
-        </h1>
+        <div class="topbar-school">
+          SD Negeri Jatiwaringin XIII
+        </div>
+      </div>
+    </div>
 
-        <p>
-          Sistem Informasi Presensi Siswa
-        </p>
+    <div class="topbar-right">
 
+      <div class="user-info">
+        <strong id="dashboardUserName">-</strong>
+        <span id="dashboardRole">-</span>
       </div>
 
-
       <button
-        class="logout-header"
-        onclick="logout()"
+        type="button"
+        class="btn btn-danger btn-small"
+        onclick="Auth.logout()"
       >
-
-        🚪 Keluar
-
+        Keluar
       </button>
 
     </div>
 
-  </div>
-
-</header>
+  </header>
 
 
-<!-- ===================================================
-     MAIN
-=================================================== -->
+  <main class="container">
 
-<main class="container">
+    <div class="page-header">
 
+      <div>
+        <h1>Dashboard</h1>
 
-  <div
-    id="errorBox"
-    class="error-box"
-  ></div>
-
-
-  <!-- WELCOME -->
-
-  <section class="welcome">
-
-    <h2 id="welcomeName">
-      Selamat Datang
-    </h2>
-
-    <p id="welcomeRole">
-      Memuat informasi pengguna...
-    </p>
-
-  </section>
-
-
-  <!-- =================================================
-       INFO GURU
-  ================================================== -->
-
-  <section
-    id="guruInfo"
-    class="guru-info"
-    style="display:none;"
-  >
-
-    <div class="guru-info-row">
-
-      <span class="guru-info-label">
-        Nama Guru
-      </span>
-
-      <span
-        id="guruNama"
-        class="guru-info-value"
-      >
-        -
-      </span>
+        <p id="dashboardGreeting">
+          Selamat datang.
+        </p>
+      </div>
 
     </div>
 
 
-    <div class="guru-info-row">
+    <!-- INFORMASI GURU -->
 
-      <span class="guru-info-label">
-        ID Guru
-      </span>
+    <section
+      id="guruInfoCard"
+      class="card"
+      style="display:none;"
+    >
 
-      <span
-        id="guruId"
-        class="guru-info-value"
-      >
-        -
-      </span>
+      <div class="card-header">
+        <h2>Informasi Guru</h2>
+      </div>
 
-    </div>
+      <div class="info-grid">
 
-
-    <div class="guru-info-row">
-
-      <span class="guru-info-label">
-        Kelas
-      </span>
-
-      <span
-        id="guruKelas"
-        class="guru-info-value"
-      >
-        Memuat...
-      </span>
-
-    </div>
-
-  </section>
-
-
-  <!-- =================================================
-       STATISTIK ADMIN
-  ================================================== -->
-
-  <div
-    id="adminSection"
-    style="display:none;"
-  >
-
-    <h3 class="section-title">
-      📊 Statistik Sekolah
-    </h3>
-
-
-    <section class="cards">
-
-
-      <div class="card">
-
-        <div class="card-title">
-          👨‍🎓 Total Siswa
+        <div class="info-item">
+          <span>Nama Guru</span>
+          <strong id="guruName">-</strong>
         </div>
 
-        <div
-          id="totalSiswa"
-          class="card-number"
-        >
-          -
+        <div class="info-item">
+          <span>Kelas</span>
+          <strong id="guruClass">-</strong>
         </div>
 
       </div>
-
-
-      <div class="card">
-
-        <div class="card-title">
-          👨‍🏫 Total Guru
-        </div>
-
-        <div
-          id="totalGuru"
-          class="card-number"
-        >
-          -
-        </div>
-
-      </div>
-
-
-      <div class="card">
-
-        <div class="card-title">
-          🏫 Total Kelas
-        </div>
-
-        <div
-          id="totalKelas"
-          class="card-number"
-        >
-          -
-        </div>
-
-      </div>
-
 
     </section>
 
-  </div>
+
+    <!-- STATISTIK ADMIN -->
+
+    <section
+      id="adminStats"
+      style="display:none;"
+    >
+
+      <div class="section-title">
+        <h2>Data Sekolah</h2>
+      </div>
+
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <div class="stat-icon">👨‍🎓</div>
+
+          <div>
+            <span>Total Siswa</span>
+            <strong id="totalSiswa">0</strong>
+          </div>
+        </div>
 
 
-  <!-- =================================================
-       PRESENSI HARI INI
-  ================================================== -->
+        <div class="stat-card">
+          <div class="stat-icon">👨‍🏫</div>
 
-  <h3 class="section-title">
-    📋 Presensi Hari Ini
-  </h3>
-
-
-  <section class="attendance">
+          <div>
+            <span>Total Guru</span>
+            <strong id="totalGuru">0</strong>
+          </div>
+        </div>
 
 
-    <div class="attendance-card">
+        <div class="stat-card">
+          <div class="stat-icon">🏫</div>
 
-      <div class="attendance-icon">
-        🟢
+          <div>
+            <span>Total Kelas</span>
+            <strong id="totalKelas">0</strong>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ABSENSI HARI INI -->
+
+    <section class="card">
+
+      <div class="card-header">
+        <h2>Presensi Hari Ini</h2>
+
+        <span id="tanggalHariIni"></span>
+      </div>
+
+
+      <div class="attendance-grid">
+
+        <div class="attendance-card hadir">
+          <span>Hadir</span>
+          <strong id="attendanceHadir">0</strong>
+        </div>
+
+        <div class="attendance-card izin">
+          <span>Izin</span>
+          <strong id="attendanceIzin">0</strong>
+        </div>
+
+        <div class="attendance-card sakit">
+          <span>Sakit</span>
+          <strong id="attendanceSakit">0</strong>
+        </div>
+
+        <div class="attendance-card alpa">
+          <span>Alpa</span>
+          <strong id="attendanceAlpa">0</strong>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- MENU -->
+
+    <section>
+
+      <div class="section-title">
+        <h2>Menu</h2>
       </div>
 
       <div
-        id="hadir"
-        class="attendance-number"
-      >
-        -
-      </div>
+        id="menuGrid"
+        class="menu-grid"
+      ></div>
 
-      <div class="attendance-label">
-        Hadir
-      </div>
+    </section>
 
-    </div>
+  </main>
 
 
-    <div class="attendance-card">
-
-      <div class="attendance-icon">
-        🔵
-      </div>
-
-      <div
-        id="izin"
-        class="attendance-number"
-      >
-        -
-      </div>
-
-      <div class="attendance-label">
-        Izin
-      </div>
-
-    </div>
-
-
-    <div class="attendance-card">
-
-      <div class="attendance-icon">
-        🟠
-      </div>
-
-      <div
-        id="sakit"
-        class="attendance-number"
-      >
-        -
-      </div>
-
-      <div class="attendance-label">
-        Sakit
-      </div>
-
-    </div>
-
-
-    <div class="attendance-card">
-
-      <div class="attendance-icon">
-        🔴
-      </div>
-
-      <div
-        id="alpa"
-        class="attendance-number"
-      >
-        -
-      </div>
-
-      <div class="attendance-label">
-        Alpa
-      </div>
-
-    </div>
-
-
-  </section>
-
-
-  <!-- =================================================
-       MENU
-  ================================================== -->
-
-  <h3 class="section-title">
-    ⚡ Menu Utama
-  </h3>
-
-
-  <section
-    id="menu"
-    class="menu"
-  >
-
-    <div class="loading">
-      Memuat menu...
-    </div>
-
-  </section>
-
-
-</main>
-
-
-<script src="dashboard.js"></script>
-
+  <script src="auth.js"></script>
+  <script src="dashboard.js"></script>
+  <script src="pwa.js"></script>
 
 </body>
-
 </html>
