@@ -1,299 +1,39 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <title>Login - Presensi Siswa</title>
 
-  <title>
-    Presensi Siswa - SD Negeri Jatiwaringin XIII
-  </title>
+  <meta name="theme-color" content="#1565c0">
+  <link rel="manifest" href="manifest.json">
 
-  <style>
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-      background:
-        linear-gradient(
-          135deg,
-          #f1f5f9,
-          #dbeafe
-        );
-    }
-
-    .login-container {
-
-      width: 100%;
-      max-width: 420px;
-
-      padding: 20px;
-    }
-
-    .login-card {
-
-      background: white;
-
-      border-radius: 18px;
-
-      padding: 35px 30px;
-
-      box-shadow:
-        0 15px 40px
-        rgba(0, 0, 0, 0.12);
-
-      text-align: center;
-    }
-
-    .logo {
-
-      width: 75px;
-      height: 75px;
-
-      margin: 0 auto 15px;
-
-      border-radius: 50%;
-
-      background: #1d4ed8;
-
-      color: white;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      font-size: 32px;
-      font-weight: bold;
-    }
-
-    h1 {
-
-      margin: 0;
-
-      font-size: 25px;
-
-      color: #111827;
-    }
-
-    .school-name {
-
-      margin-top: 8px;
-      margin-bottom: 30px;
-
-      color: #4b5563;
-
-      font-size: 15px;
-    }
-
-    .form-group {
-
-      text-align: left;
-
-      margin-bottom: 18px;
-    }
-
-    .form-group label {
-
-      display: block;
-
-      margin-bottom: 7px;
-
-      font-weight: 600;
-
-      color: #374151;
-    }
-
-    .form-group input {
-
-      width: 100%;
-
-      padding: 13px 14px;
-
-      border: 1px solid #d1d5db;
-
-      border-radius: 10px;
-
-      outline: none;
-
-      font-size: 15px;
-
-      transition: 0.2s;
-    }
-
-    .form-group input:focus {
-
-      border-color: #2563eb;
-
-      box-shadow:
-        0 0 0 3px
-        rgba(37, 99, 235, 0.12);
-    }
-
-    #loginButton {
-
-      width: 100%;
-
-      padding: 13px;
-
-      margin-top: 5px;
-
-      border: none;
-
-      border-radius: 10px;
-
-      background: #2563eb;
-
-      color: white;
-
-      font-size: 16px;
-
-      font-weight: bold;
-
-      cursor: pointer;
-
-      transition: 0.2s;
-    }
-
-    #loginButton:hover {
-
-      background: #1d4ed8;
-
-    }
-
-    #loginButton:disabled {
-
-      opacity: 0.7;
-
-      cursor: not-allowed;
-
-    }
-
-    .login-message {
-
-      display: none;
-
-      margin-top: 18px;
-
-      padding: 11px 12px;
-
-      border-radius: 8px;
-
-      font-size: 14px;
-
-      line-height: 1.4;
-
-    }
-
-    .login-message.error {
-
-      display: block;
-
-      background: #fee2e2;
-
-      color: #991b1b;
-
-    }
-
-    .login-message.success {
-
-      display: block;
-
-      background: #dcfce7;
-
-      color: #166534;
-
-    }
-
-    .login-message.loading {
-
-      display: block;
-
-      background: #dbeafe;
-
-      color: #1e40af;
-
-    }
-
-    .footer {
-
-      margin-top: 25px;
-
-      font-size: 12px;
-
-      color: #9ca3af;
-    }
-
-    @media (max-width: 480px) {
-
-      .login-container {
-        padding: 15px;
-      }
-
-      .login-card {
-        padding: 28px 22px;
-      }
-
-      h1 {
-        font-size: 22px;
-      }
-
-    }
-
-  </style>
-
+  <link rel="stylesheet" href="style.css">
 </head>
 
+<body class="login-page">
 
-<body>
-
-
-  <div class="login-container">
+  <div class="login-wrapper">
 
     <div class="login-card">
 
-
-      <div class="logo">
-        SD
+      <div class="login-logo">
+        <div class="logo-circle">SD</div>
       </div>
 
+      <h1>Presensi Siswa</h1>
 
-      <h1>
-        Presensi Siswa
-      </h1>
-
-
-      <div class="school-name">
+      <p class="login-school">
         SD Negeri Jatiwaringin XIII
-      </div>
+      </p>
 
+      <div class="login-divider"></div>
 
       <form id="loginForm">
 
-
         <div class="form-group">
-
-          <label for="username">
-            Username
-          </label>
+          <label for="username">Username</label>
 
           <input
             type="text"
@@ -303,15 +43,10 @@
             autocomplete="username"
             required
           >
-
         </div>
 
-
         <div class="form-group">
-
-          <label for="password">
-            Password
-          </label>
+          <label for="password">Password</label>
 
           <input
             type="password"
@@ -321,42 +56,37 @@
             autocomplete="current-password"
             required
           >
-
         </div>
-
 
         <button
           type="submit"
-          id="loginButton"
+          id="btnLogin"
+          class="btn btn-primary btn-full"
         >
-          LOGIN
+          Masuk
         </button>
-
 
       </form>
 
-
       <div
         id="loginMessage"
-        class="login-message"
+        class="message"
+        style="display:none;"
       ></div>
 
-
-      <div class="footer">
-
-        Sistem Presensi Siswa<br>
+      <div class="login-footer">
+        Sistem Presensi Siswa
+        <br>
         SD Negeri Jatiwaringin XIII
-
       </div>
-
 
     </div>
 
   </div>
 
-
+  <script src="auth.js"></script>
   <script src="script.js"></script>
+  <script src="pwa.js"></script>
 
 </body>
-
 </html>
