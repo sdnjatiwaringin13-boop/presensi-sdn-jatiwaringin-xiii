@@ -1,67 +1,34 @@
-/*******************************************************
- * AUTHENTICATION & ROLE PROTECTION
- * SD NEGERI JATIWARINGIN XIII
- *******************************************************/
-
 (function () {
 
   "use strict";
 
 
-  /* =====================================================
-     USER LOGIN
-  ===================================================== */
-
   function getCurrentUser() {
 
     try {
 
-      const saved =
+      return JSON.parse(
         localStorage.getItem(
           "presensiUser"
-        );
-
-
-      if (!saved) {
-        return null;
-      }
-
-
-      const user =
-        JSON.parse(saved);
-
-
-      if (
-        !user ||
-        !user.role
-      ) {
-
-        return null;
-
-      }
-
-
-      return user;
-
+        ) || "null"
+      );
 
     } catch (error) {
 
-      console.error(
-        "Gagal membaca user:",
-        error
-      );
-
-
       return null;
-
     }
-
   }
 
 
-  /* =====================================================
-     LOGOUT
-  ===================================================== */
+  function getRole(user) {
+
+    return user
+      ? String(
+          user.role || ""
+        ).toUpperCase()
+      : "";
+  }
+
 
   function logout() {
 
@@ -69,48 +36,17 @@
       "presensiUser"
     );
 
-
-    window.location.href =
+    location.href =
       "index.html";
-
   }
 
-
-  /* =====================================================
-     DASHBOARD
-  ===================================================== */
 
   function goDashboard() {
 
-    window.location.href =
+    location.href =
       "dashboard.html";
-
   }
 
-
-  /* =====================================================
-     NORMALISASI ROLE
-  ===================================================== */
-
-  function getRole(user) {
-
-    if (!user) {
-      return "";
-    }
-
-
-    return String(
-      user.role || ""
-    )
-      .trim()
-      .toUpperCase();
-
-  }
-
-
-  /* =====================================================
-     PROTEKSI LOGIN
-  ===================================================== */
 
   function requireLogin() {
 
@@ -120,28 +56,16 @@
 
     if (!user) {
 
-      window.location.href =
+      location.href =
         "index.html";
 
       return null;
-
     }
 
 
     return user;
-
   }
 
-
-  /* =====================================================
-     PROTEKSI ROLE
-     
-     roles:
-     
-     ["ADMIN"]
-     ["GURU"]
-     ["ADMIN", "GURU"]
-  ===================================================== */
 
   function requireRole(
     allowedRoles
@@ -164,46 +88,39 @@
       Array.isArray(
         allowedRoles
       )
+
         ? allowedRoles.map(
             function (item) {
-
               return String(
                 item
-              )
-                .trim()
-                .toUpperCase();
-
+              ).toUpperCase();
             }
           )
-        : [];
+
+        : [
+            String(
+              allowedRoles
+            ).toUpperCase()
+          ];
 
 
     if (
-      allowed.indexOf(role) === -1
+      !allowed.includes(role)
     ) {
 
       alert(
         "Anda tidak memiliki akses ke halaman ini."
       );
 
-
-      window.location.href =
-        "dashboard.html";
-
+      goDashboard();
 
       return null;
-
     }
 
 
     return user;
-
   }
 
-
-  /* =====================================================
-     TAMPILKAN USER
-  ===================================================== */
 
   function displayUser(
     elementId
@@ -214,37 +131,22 @@
         elementId
       );
 
-
-    if (!element) {
-      return;
-    }
-
-
     const user =
       getCurrentUser();
 
 
-    if (!user) {
+    if (element) {
 
       element.textContent =
-        "";
-
-      return;
-
+        user
+          ? (
+              user.nama ||
+              user.username
+            )
+          : "";
     }
-
-
-    element.textContent =
-      user.nama ||
-      user.username ||
-      "Pengguna";
-
   }
 
-
-  /* =====================================================
-     TAMPILKAN ROLE
-  ===================================================== */
 
   function displayRole(
     elementId
@@ -255,55 +157,19 @@
         elementId
       );
 
-
-    if (!element) {
-      return;
-    }
-
-
     const user =
       getCurrentUser();
 
 
-    if (!user) {
+    if (element) {
 
       element.textContent =
-        "";
-
-      return;
-
+        user
+          ? getRole(user)
+          : "";
     }
-
-
-    const role =
-      getRole(user);
-
-
-    if (role === "ADMIN") {
-
-      element.textContent =
-        "ADMIN";
-
-    } else if (
-      role === "GURU"
-    ) {
-
-      element.textContent =
-        "GURU / WALI KELAS";
-
-    } else {
-
-      element.textContent =
-        role;
-
-    }
-
   }
 
-
-  /* =====================================================
-     EXPORT
-  ===================================================== */
 
   window.Auth = {
 
@@ -330,8 +196,6 @@
 
     displayRole:
       displayRole
-
   };
-
 
 })();
