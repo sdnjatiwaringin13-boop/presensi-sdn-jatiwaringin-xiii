@@ -196,11 +196,93 @@
         }
 
         #rekapTable {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-            min-width: max-content;
-        }
+    width: max-content;
+    min-width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 10px;
+}
+
+#rekapTable th,
+#rekapTable td {
+    border: 1px solid #555;
+    padding: 4px 3px;
+    text-align: center;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+/* No */
+#rekapTable th:nth-child(1),
+#rekapTable td:nth-child(1) {
+    width: 38px;
+    min-width: 38px;
+    max-width: 38px;
+    text-align: center;
+}
+
+/* NISN */
+#rekapTable th:nth-child(2),
+#rekapTable td:nth-child(2) {
+    width: 95px;
+    min-width: 95px;
+    max-width: 95px;
+    text-align: center;
+}
+
+/* Nama */
+#rekapTable th:nth-child(3),
+#rekapTable td:nth-child(3) {
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+    text-align: left;
+}
+
+/* Kolom tanggal */
+#rekapTable .date-header,
+#rekapTable .attendance-cell {
+    width: 27px;
+    min-width: 27px;
+    max-width: 27px;
+    padding: 4px 2px;
+    text-align: center;
+}
+
+/* Akumulasi */
+#rekapTable .summary-header,
+#rekapTable .summary-cell {
+    width: 55px;
+    min-width: 55px;
+    max-width: 55px;
+    padding: 4px 3px;
+    text-align: center;
+}
+
+/* Header tanggal */
+#rekapTable .date-header {
+    font-weight: 800;
+    background: #f2f4f7;
+    white-space: nowrap;
+}
+
+/* Isi tanggal */
+#rekapTable .attendance-cell {
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Akumulasi */
+#rekapTable .summary-cell {
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* Header akumulasi */
+#rekapTable .summary-header {
+    font-weight: 800;
+    white-space: nowrap;
+}
 
         #rekapTable th,
         #rekapTable td {
@@ -720,6 +802,8 @@
             <div class="table-scroll">
 
                 <table id="rekapTable">
+
+                    <colgroup id="rekapColGroup"></colgroup>
 
                     <thead id="rekapTableHead">
 
