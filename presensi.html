@@ -2,8 +2,13 @@
 <html lang="id">
 
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Presensi Manual</title>
 
@@ -12,450 +17,157 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
   >
 
-  <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 
-  <style>
-    /* =====================================================
-       PRESENSI MANUAL
-    ===================================================== */
-
-    .presensi-page {
-      width: 100%;
-    }
-
-    .presensi-message {
-      display: none;
-      margin-bottom: 12px;
-      padding: 10px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .presensi-message.alert-success {
-      display: block;
-      background: #ecfdf5;
-      border: 1px solid #a7f3d0;
-      color: #047857;
-    }
-
-    .presensi-message.alert-error {
-      display: block;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #b91c1c;
-    }
-
-    .presensi-message.alert-info {
-      display: block;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #1d4ed8;
-    }
-
-    .presensi-counter {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-
-      margin: 0 0 14px;
-      padding: 8px 12px;
-
-      background: #f3f4f6;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-
-      font-size: 13px;
-      font-weight: 600;
-      color: #374151;
-    }
-
-    .presensi-toolbar {
-      display: grid;
-      grid-template-columns: minmax(180px, 1fr) minmax(250px, 2fr) auto;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .presensi-toolbar select,
-    .presensi-toolbar input {
-      width: 100%;
-      min-height: 38px;
-      box-sizing: border-box;
-
-      padding: 8px 11px;
-
-      border: 1px solid #d1d5db;
-      border-radius: 5px;
-
-      background: #fff;
-      color: #374151;
-
-      font-size: 13px;
-      outline: none;
-    }
-
-    .presensi-toolbar select:focus,
-    .presensi-toolbar input:focus {
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
-    }
-
-    .presensi-toolbar .btn {
-      min-height: 38px;
-      white-space: nowrap;
-    }
-
-    .presensi-table-wrapper {
-      width: 100%;
-      overflow-x: auto;
-      overflow-y: hidden;
-
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      background: #fff;
-    }
-
-    .presensi-table {
-      width: 100%;
-      min-width: 850px;
-
-      border-collapse: collapse;
-      table-layout: fixed;
-
-      font-size: 13px;
-    }
-
-    .presensi-table th {
-      padding: 10px 8px;
-
-      background: #f3f4f6;
-      border-bottom: 1px solid #d1d5db;
-
-      color: #374151;
-      font-weight: 700;
-
-      text-align: center;
-      vertical-align: middle;
-    }
-
-    .presensi-table td {
-      padding: 9px 8px;
-
-      border-bottom: 1px solid #e5e7eb;
-
-      color: #374151;
-
-      vertical-align: middle;
-    }
-
-    .presensi-table tbody tr:hover {
-      background: #f9fafb;
-    }
-
-    .presensi-table th:nth-child(1),
-    .presensi-table td:nth-child(1) {
-      width: 50px;
-      text-align: center;
-    }
-
-    .presensi-table th:nth-child(2),
-    .presensi-table td:nth-child(2) {
-      width: 115px;
-      text-align: center;
-    }
-
-    .presensi-table th:nth-child(3),
-    .presensi-table td:nth-child(3) {
-      width: auto;
-      text-align: left;
-    }
-
-    .presensi-table th:nth-child(4),
-    .presensi-table td:nth-child(4) {
-      width: 90px;
-      text-align: center;
-    }
-
-    .presensi-table th:nth-child(5),
-    .presensi-table td:nth-child(5) {
-      width: 65px;
-      text-align: center;
-    }
-
-    .presensi-table th:nth-child(6),
-    .presensi-table td:nth-child(6) {
-      width: 150px;
-      text-align: center;
-    }
-
-    .presensi-table th:nth-child(7),
-    .presensi-table td:nth-child(7) {
-      width: 100px;
-      text-align: center;
-    }
-
-    .presensi-table td:nth-child(3) {
-      font-weight: 500;
-    }
-
-    .status-presensi {
-      width: 100%;
-      min-height: 34px;
-
-      padding: 6px 8px;
-
-      border: 1px solid #d1d5db;
-      border-radius: 5px;
-
-      background: #fff;
-
-      font-size: 13px;
-      color: #374151;
-
-      cursor: pointer;
-    }
-
-    .status-presensi:focus {
-      border-color: #3b82f6;
-      outline: none;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.12);
-    }
-
-    .presensi-table .btn {
-      min-width: 75px;
-      min-height: 32px;
-
-      padding: 6px 10px;
-
-      border: 0;
-      border-radius: 5px;
-
-      font-size: 12px;
-      font-weight: 600;
-
-      cursor: pointer;
-    }
-
-    .presensi-table .btn-primary {
-      background: #2563eb;
-      color: #fff;
-    }
-
-    .presensi-table .btn-primary:hover {
-      background: #1d4ed8;
-    }
-
-    .presensi-table .btn-success {
-      background: #16a34a;
-      color: #fff;
-    }
-
-    .presensi-table .btn-success:hover {
-      background: #15803d;
-    }
-
-    .presensi-table .btn:disabled {
-      opacity: 0.65;
-      cursor: not-allowed;
-    }
-
-    .loading,
-    .empty,
-    .error {
-      padding: 25px !important;
-      text-align: center !important;
-      color: #6b7280;
-    }
-
-    .error {
-      color: #b91c1c;
-    }
-
-
-    /* =====================================================
-       RESPONSIVE
-    ===================================================== */
-
-    @media (max-width: 768px) {
-
-      .presensi-toolbar {
-        grid-template-columns: 1fr;
-      }
-
-      .presensi-toolbar .btn {
-        width: 100%;
-      }
-
-      .presensi-counter {
-        width: 100%;
-        box-sizing: border-box;
-      }
-
-    }
-
-  </style>
 </head>
 
 
 <body>
 
-  <div class="presensi-page">
+  <div class="card">
 
-    <div class="card">
+    <div class="card-header">
 
-      <!-- =================================================
-           HEADER
-      ================================================= -->
+      <div class="card-title">
 
-      <div class="card-header">
+        <i class="fa-solid fa-calendar-check"></i>
 
-        <div class="card-title">
-          <i class="fa-solid fa-calendar-check"></i>
-          Presensi Manual
-        </div>
-
-        <button
-          id="refreshButton"
-          class="btn btn-secondary"
-          type="button"
-        >
-          <i class="fa-solid fa-rotate"></i>
-          Refresh
-        </button>
+        Presensi Manual
 
       </div>
 
 
-      <!-- =================================================
-           BODY
-      ================================================= -->
+      <button
+        id="refreshButton"
+        class="btn btn-secondary"
+        type="button"
+      >
 
-      <div class="card-body">
+        <i class="fa-solid fa-rotate"></i>
 
+        Refresh
 
-        <!-- =================================================
-             MESSAGE
-        ================================================= -->
+      </button>
 
-        <div
-          id="presensiMessage"
-          class="presensi-message"
-        ></div>
+    </div>
 
 
-        <!-- =================================================
-             COUNTER
-        ================================================= -->
+    <div class="card-body">
 
-        <div
-          id="presensiCounter"
-          class="presensi-counter"
+
+      <!-- PESAN -->
+
+      <div
+        id="presensiMessage"
+        class="alert"
+        style="display:none"
+      ></div>
+
+
+      <!-- COUNTER -->
+
+      <div
+        id="presensiCounter"
+        class="presensi-counter"
+      >
+
+        Hadir: 0 |
+        Sakit: 0 |
+        Izin: 0 |
+        Alpa: 0
+
+      </div>
+
+
+      <!-- TOOLBAR -->
+
+      <div class="toolbar">
+
+
+        <select
+          id="kelasSelect"
         >
-          <i class="fa-solid fa-chart-simple"></i>
 
-          Hadir: 0 |
-          Sakit: 0 |
-          Izin: 0 |
-          Alpa: 0
+          <option value="">
+            Semua Kelas
+          </option>
 
-        </div>
+        </select>
 
 
-        <!-- =================================================
-             TOOLBAR
-        ================================================= -->
-
-        <div class="presensi-toolbar">
-
-          <!-- FILTER KELAS -->
-
-          <select id="kelasSelect">
-
-            <option value="">
-              Semua Kelas
-            </option>
-
-          </select>
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Cari NISN atau nama siswa..."
+        >
 
 
-          <!-- PENCARIAN -->
+        <button
+          id="simpanButton"
+          class="btn btn-primary"
+          type="button"
+        >
 
-          <input
-            id="searchInput"
-            type="text"
-            placeholder="Cari NISN atau nama siswa..."
-            autocomplete="off"
-          >
+          <i class="fa-solid fa-save"></i>
 
+          Simpan Semua
 
-          <!-- SIMPAN SEMUA -->
-
-          <button
-            id="simpanButton"
-            class="btn btn-primary"
-            type="button"
-          >
-            <i class="fa-solid fa-floppy-disk"></i>
-            Simpan Semua
-          </button>
-
-        </div>
+        </button>
 
 
-        <!-- =================================================
-             TABLE
-        ================================================= -->
-
-        <div class="presensi-table-wrapper">
-
-          <table class="presensi-table">
-
-            <thead>
-
-              <tr>
-
-                <th>No</th>
-
-                <th>NISN</th>
-
-                <th>Nama</th>
-
-                <th>Kelas</th>
-
-                <th>L/P</th>
-
-                <th>Status</th>
-
-                <th>Aksi</th>
-
-              </tr>
-
-            </thead>
+      </div>
 
 
-            <tbody id="siswaTable">
+      <!-- TABLE -->
 
-              <tr>
+      <div class="table-responsive">
 
-                <td
-                  colspan="7"
-                  class="loading"
-                >
+        <table>
 
-                  <i class="fa-solid fa-spinner fa-spin"></i>
+          <thead>
 
-                  Memuat data siswa...
+            <tr>
 
-                </td>
+              <th>No</th>
 
-              </tr>
+              <th>NISN</th>
 
-            </tbody>
+              <th>Nama</th>
 
-          </table>
+              <th>Kelas</th>
 
-        </div>
+              <th>L/P</th>
+
+              <th>Status</th>
+
+              <th>Aksi</th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody id="siswaTable">
+
+            <tr>
+
+              <td
+                colspan="7"
+                class="loading"
+              >
+
+                Memuat data siswa...
+
+              </td>
+
+            </tr>
+
+          </tbody>
+
+        </table>
 
       </div>
 
@@ -464,19 +176,26 @@
   </div>
 
 
-  <!-- =====================================================
-       JAVASCRIPT
-  ===================================================== -->
+  <!-- API -->
 
   <script src="api.js"></script>
 
+  <!-- AUTH -->
+
   <script src="auth.js"></script>
+
+  <!-- LAYOUT -->
 
   <script src="layout.js"></script>
 
+  <!-- PRESENSI -->
+
   <script src="presensi.js"></script>
 
+  <!-- PWA -->
+
   <script src="pwa.js"></script>
+
 
 </body>
 
