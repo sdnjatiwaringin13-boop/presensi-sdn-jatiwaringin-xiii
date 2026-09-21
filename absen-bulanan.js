@@ -678,314 +678,312 @@
 
 
     /* =====================================================
-       RENDER REPORT
-    ===================================================== */
+   RENDER TABEL
+===================================================== */
 
-    function renderReport() {
+function renderTable() {
 
-        if (!reportData) {
+    const thead =
+        $("rekapTableHead");
 
-            return;
-
-        }
-
-
-        const sekolah =
-            reportData.sekolah || {};
+    const tbody =
+        $("rekapTableBody");
 
 
-        const kelas =
-            reportData.kelas || {};
+    if (!thead || !tbody) {
 
-
-        const guru =
-            reportData.guru || {};
-
-
-        const kepala =
-            reportData.kepalaSekolah || {};
-
-
-        /* -------------------------------------------------
-           SEKOLAH
-        ------------------------------------------------- */
-
-        const namaSekolah =
-            sekolah.nama ||
-            "SD NEGERI JATIWARINGIN XIII";
-
-
-        const header =
-            document.querySelector(
-                ".report-header h2"
-            );
-
-
-        if (header) {
-
-            header.textContent =
-                namaSekolah;
-
-        }
-
-
-        /* -------------------------------------------------
-           KELAS
-        ------------------------------------------------- */
-
-        if ($("reportKelas")) {
-
-            $("reportKelas").textContent =
-                kelas.nama ||
-                "-";
-
-        }
-
-
-        /* -------------------------------------------------
-           GURU
-        ------------------------------------------------- */
-
-        if ($("reportGuru")) {
-
-            $("reportGuru").textContent =
-                guru.nama ||
-                "-";
-
-        }
-
-
-        /* -------------------------------------------------
-           BULAN
-        ------------------------------------------------- */
-
-        if ($("reportBulan")) {
-
-            $("reportBulan").textContent =
-                `${
-                    namaBulan[
-                        Number(
-                            reportData.bulan
-                        )
-                    ] || "-"
-                } ${
-                    reportData.tahun || ""
-                }`;
-
-        }
-
-
-        /* -------------------------------------------------
-           KEPALA SEKOLAH
-        ------------------------------------------------- */
-
-        if ($("kepalaSekolah")) {
-
-            $("kepalaSekolah").textContent =
-                kepala.nama ||
-                "-";
-
-        }
-
-
-        if ($("nipKepala")) {
-
-            $("nipKepala").textContent =
-                kepala.nip
-                    ? `NIP. ${kepala.nip}`
-                    : "NIP. -";
-
-        }
-
-
-        /* -------------------------------------------------
-           WALI KELAS
-        ------------------------------------------------- */
-
-        if ($("waliKelas")) {
-
-            $("waliKelas").textContent =
-                guru.nama ||
-                "-";
-
-        }
-
-
-        if ($("nipWali")) {
-
-            $("nipWali").textContent =
-                guru.nip
-                    ? `NIP. ${guru.nip}`
-                    : "NIP. -";
-
-        }
-
-
-        renderTable();
+        return;
 
     }
 
 
-    /* =====================================================
-       RENDER TABEL
-    ===================================================== */
-
-    function renderTable() {
-
-        const thead =
-            $("rekapTableHead");
+    const jumlahHari =
+        Number(
+            reportData.jumlahHari ||
+            0
+        );
 
 
-        const tbody =
-            $("rekapTableBody");
+    const siswa =
+        Array.isArray(
+            reportData.siswa
+        )
+            ? reportData.siswa
+            : [];
 
 
-        if (!thead || !tbody) {
+    /* -------------------------------------------------
+       HEADER
+    ------------------------------------------------- */
 
-            return;
+    let headHTML = `
+        <tr>
 
-        }
+            <th rowspan="2">
+                No
+            </th>
 
+            <th rowspan="2">
+                NISN
+            </th>
 
-        const jumlahHari =
-            Number(
-                reportData.jumlahHari ||
-                0
-            );
+            <th rowspan="2">
+                Nama Siswa
+            </th>
 
+            <th colspan="${jumlahHari}">
+                TANGGAL
+            </th>
 
-        const siswa =
-            Array.isArray(
-                reportData.siswa
-            )
-                ? reportData.siswa
-                : [];
+            <th colspan="4">
+                AKUMULASI KEHADIRAN
+            </th>
 
+        </tr>
 
-        /* -------------------------------------------------
-           HEADER
-        ------------------------------------------------- */
-
-        let headHTML = `
-            <tr>
-                <th>No</th>
-                <th>NISN</th>
-                <th>Nama Siswa</th>
-        `;
+        <tr>
+    `;
 
 
-        for (
-            let hari = 1;
-            hari <= jumlahHari;
-            hari++
-        ) {
+    /* -------------------------------------------------
+       HEADER TANGGAL
+    ------------------------------------------------- */
 
-            headHTML += `
-                <th>${hari}</th>
-            `;
-
-        }
-
+    for (
+        let hari = 1;
+        hari <= jumlahHari;
+        hari++
+    ) {
 
         headHTML += `
+            <th class="date-header">
+                ${hari}
+            </th>
+        `;
+
+    }
+
+
+    /* -------------------------------------------------
+       HEADER AKUMULASI
+    ------------------------------------------------- */
+
+    headHTML += `
+
+        <th class="summary-header">
+            H
+        </th>
+
+        <th class="summary-header">
+            S
+        </th>
+
+        <th class="summary-header">
+            I
+        </th>
+
+        <th class="summary-header">
+            A
+        </th>
+
+    </tr>`;
+
+
+    thead.innerHTML =
+        headHTML;
+
+
+    /* -------------------------------------------------
+       DATA KOSONG
+    ------------------------------------------------- */
+
+    if (
+        siswa.length === 0
+    ) {
+
+        tbody.innerHTML = `
+            <tr>
+
+                <td
+                    colspan="${jumlahHari + 7}"
+                    style="
+                        padding:30px;
+                        text-align:center;
+                    "
+                >
+
+                    Tidak ada data siswa.
+
+                </td>
+
             </tr>
         `;
 
+        return;
 
-        thead.innerHTML =
-            headHTML;
-
-
-        /* -------------------------------------------------
-           DATA KOSONG
-        ------------------------------------------------- */
-
-        if (
-            siswa.length === 0
-        ) {
-
-            tbody.innerHTML = `
-                <tr>
-                    <td
-                        colspan="${jumlahHari + 3}"
-                        style="padding:30px;text-align:center;"
-                    >
-                        Tidak ada data siswa.
-                    </td>
-                </tr>
-            `;
-
-            return;
-
-        }
+    }
 
 
-        /* -------------------------------------------------
-           BARIS SISWA
-        ------------------------------------------------- */
+    /* -------------------------------------------------
+       BARIS SISWA
+    ------------------------------------------------- */
 
-        tbody.innerHTML =
-            siswa.map(
-                function (item, index) {
+    tbody.innerHTML =
+        siswa.map(
+            function (item, index) {
 
-                    let row = `
-                        <tr>
+                /*
+                 * Akumulasi:
+                 *
+                 * H = Hadir
+                 * S = Sakit
+                 * I = Izin
+                 * A = Alpa
+                 */
 
-                            <td>
-                                ${index + 1}
-                            </td>
-
-                            <td>
-                                ${escapeHTML(
-                                    item.nisn ||
-                                    ""
-                                )}
-                            </td>
-
-                            <td class="student-name">
-                                ${escapeHTML(
-                                    item.nama ||
-                                    ""
-                                )}
-                            </td>
-                    `;
+                let jumlahHadir = 0;
+                let jumlahSakit = 0;
+                let jumlahIzin = 0;
+                let jumlahAlpa = 0;
 
 
-                    for (
-                        let hari = 1;
-                        hari <= jumlahHari;
-                        hari++
-                    ) {
+                let row = `
+                    <tr>
 
-                        const status =
+                        <td>
+                            ${index + 1}
+                        </td>
+
+                        <td>
+                            ${escapeHTML(
+                                item.nisn ||
+                                ""
+                            )}
+                        </td>
+
+                        <td class="student-name">
+                            ${escapeHTML(
+                                item.nama ||
+                                ""
+                            )}
+                        </td>
+                `;
+
+
+                /* -----------------------------------------
+                   TANGGAL
+                ----------------------------------------- */
+
+                for (
+                    let hari = 1;
+                    hari <= jumlahHari;
+                    hari++
+                ) {
+
+                    const status =
+                        String(
                             item.hari &&
                             item.hari[hari]
                                 ? item.hari[hari]
-                                : "-";
+                                : "-"
+                        )
+                        .trim()
+                        .toUpperCase();
 
 
-                        row += `
-                            <td class="attendance-cell">
-                                ${escapeHTML(
-                                    status
-                                )}
-                            </td>
-                        `;
+                    /* -------------------------------------
+                       HITUNG AKUMULASI
+                    ------------------------------------- */
+
+                    if (
+                        status === "H" ||
+                        status === "HADIR"
+                    ) {
+
+                        jumlahHadir++;
+
+                    }
+                    else if (
+                        status === "S" ||
+                        status === "SAKIT"
+                    ) {
+
+                        jumlahSakit++;
+
+                    }
+                    else if (
+                        status === "I" ||
+                        status === "IZIN"
+                    ) {
+
+                        jumlahIzin++;
+
+                    }
+                    else if (
+                        status === "A" ||
+                        status === "ALPA"
+                    ) {
+
+                        jumlahAlpa++;
 
                     }
 
 
                     row += `
-                        </tr>
+                        <td class="attendance-cell">
+                            ${escapeHTML(
+                                status
+                            )}
+                        </td>
                     `;
 
-
-                    return row;
-
                 }
-            ).join("");
 
-    }
+
+                /* -----------------------------------------
+                   AKUMULASI
+                ----------------------------------------- */
+
+                row += `
+
+                    <td class="summary-cell summary-hadir">
+                        <strong>
+                            ${jumlahHadir}
+                        </strong>
+                    </td>
+
+                    <td class="summary-cell summary-sakit">
+                        <strong>
+                            ${jumlahSakit}
+                        </strong>
+                    </td>
+
+                    <td class="summary-cell summary-izin">
+                        <strong>
+                            ${jumlahIzin}
+                        </strong>
+                    </td>
+
+                    <td class="summary-cell summary-alpa">
+                        <strong>
+                            ${jumlahAlpa}
+                        </strong>
+                    </td>
+
+                `;
+
+
+                row += `
+                    </tr>
+                `;
+
+
+                return row;
+
+            }
+        ).join("");
+
+}
 
 
     /* =====================================================
