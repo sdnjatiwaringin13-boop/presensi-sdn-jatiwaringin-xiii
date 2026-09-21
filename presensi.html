@@ -1,538 +1,109 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Presensi Siswa - SD Negeri Jatiwaringin XIII</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  <link rel="stylesheet" href="style.css">
+  <title>Presensi Siswa</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+  <meta
+    name="theme-color"
+    content="#1565c0"
+  >
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      color: #333;
-    }
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
 
-    .container {
-      width: 95%;
-      max-width: 1200px;
-      margin: 25px auto;
-    }
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 
-    /* =========================
-       HEADER
-    ========================= */
-
-    .header {
-      background: white;
-      padding: 28px;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      margin-bottom: 20px;
-    }
-
-    .header h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-      color: #222;
-    }
-
-    .header p {
-      margin: 5px 0;
-      color: #555;
-      font-size: 16px;
-    }
-
-    .school-name {
-      font-weight: bold;
-      font-size: 18px;
-    }
-
-    .user-info {
-      margin-top: 18px;
-      padding: 14px 16px;
-      background: #f1f5f9;
-      border-radius: 10px;
-      border-left: 5px solid #2563eb;
-    }
-
-    .user-info strong {
-      font-size: 16px;
-    }
-
-    #guruInfo {
-      display: inline-block;
-      margin-top: 5px;
-      color: #444;
-    }
-
-    /* =========================
-       MESSAGE
-    ========================= */
-
-    .message {
-      display: none;
-      padding: 13px 16px;
-      border-radius: 10px;
-      margin-bottom: 18px;
-      font-weight: bold;
-    }
-
-    .message.success {
-      display: block;
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .message.error {
-      display: block;
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .message.info {
-      display: block;
-      background: #dbeafe;
-      color: #1e40af;
-    }
-
-    /* =========================
-       TOOLBAR
-    ========================= */
-
-    .toolbar {
-      background: white;
-      padding: 22px;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      margin-bottom: 20px;
-    }
-
-    .toolbar-row {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      align-items: end;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 7px;
-    }
-
-    .form-group label {
-      font-weight: bold;
-      color: #333;
-    }
-
-    input,
-    select {
-      padding: 11px 13px;
-      border: 1px solid #cbd5e1;
-      border-radius: 9px;
-      font-size: 14px;
-      background: white;
-      min-height: 43px;
-    }
-
-    input:focus,
-    select:focus {
-      outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-    }
-
-    /* =========================
-       BUTTON
-    ========================= */
-
-    button {
-      border: none;
-      border-radius: 9px;
-      padding: 12px 17px;
-      font-size: 14px;
-      cursor: pointer;
-      font-weight: bold;
-      min-height: 43px;
-      transition: 0.2s;
-    }
-
-    button:hover {
-      opacity: 0.9;
-      transform: translateY(-1px);
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-primary {
-      background: #2563eb;
-      color: white;
-    }
-
-    .btn-success {
-      background: #16a34a;
-      color: white;
-    }
-
-    .btn-warning {
-      background: #f59e0b;
-      color: white;
-    }
-
-    .btn-danger {
-      background: #dc2626;
-      color: white;
-    }
-
-    .btn-secondary {
-      background: #64748b;
-      color: white;
-    }
-
-    .btn-qr {
-      background: #7c3aed;
-      color: white;
-    }
-
-    .btn-print {
-      background: #0f766e;
-      color: white;
-    }
-
-    /* =========================
-       SUMMARY
-    ========================= */
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .summary-card {
-      background: white;
-      padding: 18px;
-      border-radius: 13px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
-    }
-
-    .summary-card .number {
-      font-size: 30px;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    .summary-card .label {
-      color: #666;
-      font-size: 14px;
-    }
-
-    .total .number {
-      color: #2563eb;
-    }
-
-    .hadir .number {
-      color: #16a34a;
-    }
-
-    .izin .number {
-      color: #f59e0b;
-    }
-
-    .sakit .number {
-      color: #8b5cf6;
-    }
-
-    .alpa .number {
-      color: #dc2626;
-    }
-
-    /* =========================
-       ACTIONS
-    ========================= */
-
-    .actions {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      margin-bottom: 20px;
-    }
-
-    .actions-title {
-      font-weight: bold;
-      font-size: 17px;
-      margin-bottom: 14px;
-    }
-
-    .actions-buttons {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-
-    .actions-buttons button {
-      width: 100%;
-    }
-
-    /* =========================
-       TABLE
-    ========================= */
-
-    .table-container {
-      background: white;
-      padding: 20px;
-      border-radius: 16px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 780px;
-    }
-
-    th,
-    td {
-      padding: 12px;
-      border-bottom: 1px solid #e5e7eb;
-      text-align: left;
-    }
-
-    th {
-      background: #f8fafc;
-      font-weight: bold;
-      color: #334155;
-    }
-
-    tr:hover {
-      background: #f8fafc;
-    }
-
-    .status-select {
-      min-width: 120px;
-      width: 100%;
-    }
-
-    /* =========================
-       LOADING
-    ========================= */
-
-    .loading {
-      text-align: center;
-      padding: 35px;
-      color: #666;
-    }
-
-    .loading-spinner {
-      display: inline-block;
-      width: 28px;
-      height: 28px;
-      border: 4px solid #e5e7eb;
-      border-top-color: #2563eb;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin-bottom: 10px;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .empty {
-      text-align: center;
-      padding: 35px;
-      color: #777;
-    }
-
-    /* =========================
-       FOOTER
-    ========================= */
-
-    .footer-actions {
-      margin-top: 20px;
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .footer-right {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    /* =========================
-       RESPONSIVE
-    ========================= */
-
-    @media (max-width: 900px) {
-
-      .summary {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .summary-card:last-child {
-        grid-column: auto;
-      }
-
-      .actions-buttons {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    @media (max-width: 768px) {
-
-      .container {
-        width: 94%;
-        margin: 15px auto;
-      }
-
-      .header {
-        padding: 20px;
-      }
-
-      .header h1 {
-        font-size: 22px;
-      }
-
-      .toolbar-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .form-group,
-      .form-group input,
-      .form-group select,
-      #loadButton {
-        width: 100%;
-      }
-
-      .summary {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .summary-card:last-child {
-        grid-column: span 2;
-      }
-
-      .actions-buttons {
-        grid-template-columns: 1fr;
-      }
-
-      .footer-actions {
-        flex-direction: column;
-      }
-
-      .footer-actions > button,
-      .footer-right,
-      .footer-right button {
-        width: 100%;
-      }
-
-      .footer-right {
-        flex-direction: column;
-      }
-    }
-
-    @media (max-width: 450px) {
-
-      .summary {
-        gap: 8px;
-      }
-
-      .summary-card {
-        padding: 13px 8px;
-      }
-
-      .summary-card .number {
-        font-size: 23px;
-      }
-
-      .summary-card .label {
-        font-size: 13px;
-      }
-    }
-  </style>
 </head>
 
 <body>
 
-<div class="container">
+<header class="topbar">
 
-  <!-- =====================================================
-       HEADER
-  ====================================================== -->
+  <div class="topbar-left">
 
-  <div class="header">
+    <div class="topbar-logo">
+      SD
+    </div>
 
-    <h1>Presensi Sekolah</h1>
+    <div>
 
-    <p class="school-name">
-      SD Negeri Jatiwaringin XIII
-    </p>
+      <div class="topbar-title">
+        Presensi Siswa
+      </div>
 
-    <p>
-      Presensi Siswa
-    </p>
-
-    <div class="user-info">
-
-      <strong>Guru</strong>
-
-      <br>
-
-      <span id="guruInfo">
-        Memuat informasi guru...
-      </span>
+      <div class="topbar-school">
+        SD Negeri Jatiwaringin XIII
+      </div>
 
     </div>
 
   </div>
 
 
-  <!-- =====================================================
-       MESSAGE
-  ====================================================== -->
+  <div class="topbar-right">
 
-  <div id="message" class="message"></div>
+    <button
+      class="btn btn-secondary btn-small"
+      onclick="location.href='dashboard.html'"
+    >
+      Dashboard
+    </button>
+
+    <button
+      class="btn btn-danger btn-small"
+      onclick="Auth.logout()"
+    >
+      Keluar
+    </button>
+
+  </div>
+
+</header>
 
 
-  <!-- =====================================================
-       TOOLBAR
-  ====================================================== -->
+<main class="container">
 
-  <div class="toolbar">
+  <div class="page-header">
 
-    <div class="toolbar-row">
+    <div>
+
+      <h1>Presensi Siswa</h1>
+
+      <p>
+        Input presensi siswa berdasarkan kelas.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <section class="card">
+
+    <div class="form-grid">
 
       <div class="form-group">
 
-        <label for="tanggal">
+        <label for="tanggalPresensi">
           Tanggal
         </label>
 
         <input
           type="date"
-          id="tanggal"
+          id="tanggalPresensi"
         >
 
       </div>
@@ -540,383 +111,115 @@
 
       <div class="form-group">
 
-        <label for="kelas">
+        <label for="kelasPresensi">
           Kelas
         </label>
 
-        <select id="kelas">
+        <select id="kelasPresensi">
 
           <option value="">
-            Memuat kelas...
+            Pilih kelas
           </option>
 
         </select>
 
       </div>
 
+    </div>
+
+
+    <div class="form-actions">
 
       <button
-        type="button"
-        class="btn-primary"
-        id="loadButton"
+        class="btn btn-primary"
+        id="btnTampilkanSiswa"
       >
-        🔄 Tampilkan Siswa
+        Tampilkan Siswa
       </button>
 
     </div>
 
-  </div>
+  </section>
 
 
-  <!-- =====================================================
-       SUMMARY
-  ====================================================== -->
+  <section class="card">
 
-  <div class="summary">
+    <div class="card-header">
 
-    <div class="summary-card total">
+      <h2>Daftar Siswa</h2>
 
-      <div
-        class="number"
-        id="totalCount"
-      >
-        0
-      </div>
-
-      <div class="label">
-        Total
-      </div>
+      <div id="presensiSummary"></div>
 
     </div>
 
 
-    <div class="summary-card hadir">
+    <div class="table-wrapper">
 
-      <div
-        class="number"
-        id="hadirCount"
-      >
-        0
-      </div>
+      <table>
 
-      <div class="label">
-        Hadir
-      </div>
+        <thead>
 
-    </div>
+          <tr>
 
+            <th>No</th>
+            <th>NISN</th>
+            <th>Nama Siswa</th>
+            <th>Kelas</th>
+            <th>JK</th>
+            <th>Status</th>
 
-    <div class="summary-card izin">
+          </tr>
 
-      <div
-        class="number"
-        id="izinCount"
-      >
-        0
-      </div>
-
-      <div class="label">
-        Izin
-      </div>
-
-    </div>
+        </thead>
 
 
-    <div class="summary-card sakit">
+        <tbody id="presensiTableBody">
 
-      <div
-        class="number"
-        id="sakitCount"
-      >
-        0
-      </div>
+          <tr>
 
-      <div class="label">
-        Sakit
-      </div>
+            <td
+              colspan="6"
+              class="text-center"
+            >
+              Silakan pilih kelas.
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
 
     </div>
 
 
-    <div class="summary-card alpa">
-
-      <div
-        class="number"
-        id="alpaCount"
-      >
-        0
-      </div>
-
-      <div class="label">
-        Alpa
-      </div>
-
-    </div>
-
-  </div>
-
-
-  <!-- =====================================================
-       AKSI PRESENSI
-  ====================================================== -->
-
-  <div class="actions">
-
-    <div class="actions-title">
-      Aksi Presensi
-    </div>
-
-    <div class="actions-buttons">
-
-
-      <!-- SCAN QR -->
+    <div class="form-actions">
 
       <button
-        type="button"
-        class="btn-qr"
-        id="scanQRButton"
+        class="btn btn-primary"
+        id="btnSimpanPresensi"
       >
-        📷 Scan QR Siswa
-      </button>
-
-
-      <!-- CETAK ABSEN BULANAN -->
-
-      <button
-        type="button"
-        class="btn-print"
-        id="absenBulananButton"
-      >
-        🖨️ Cetak Absen Bulanan
-      </button>
-
-
-      <!-- HADIR SEMUA -->
-
-      <button
-        type="button"
-        class="btn-success"
-        id="hadirSemuaButton"
-      >
-        ✓ Hadir Semua
-      </button>
-
-
-      <!-- RESET -->
-
-      <button
-        type="button"
-        class="btn-secondary"
-        id="resetButton"
-      >
-        ↻ Reset
+        Simpan Presensi
       </button>
 
     </div>
 
-  </div>
-
-
-  <!-- =====================================================
-       TABLE
-  ====================================================== -->
-
-  <div class="table-container">
 
     <div
-      id="tableLoading"
-      class="loading"
-    >
-
-      Silakan pilih kelas untuk menampilkan siswa.
-
-    </div>
-
-
-    <table
-      id="presensiTable"
+      id="presensiMessage"
+      class="message"
       style="display:none;"
-    >
+    ></div>
 
-      <thead>
+  </section>
 
-        <tr>
-
-          <th>
-            No
-          </th>
-
-          <th>
-            NISN
-          </th>
-
-          <th>
-            Nama Siswa
-          </th>
-
-          <th>
-            Kelas
-          </th>
-
-          <th>
-            JK
-          </th>
-
-          <th>
-            Status Presensi
-          </th>
-
-        </tr>
-
-      </thead>
+</main>
 
 
-      <tbody id="presensiBody">
-
-      </tbody>
-
-    </table>
-
-  </div>
-
-
-  <!-- =====================================================
-       FOOTER
-  ====================================================== -->
-
-  <div class="footer-actions">
-
-
-    <!-- KELUAR -->
-
-    <button
-      type="button"
-      class="btn-danger"
-      id="logoutButton"
-    >
-      🚪 Keluar
-    </button>
-
-
-    <div class="footer-right">
-
-      <button
-        type="button"
-        class="btn-primary"
-        id="simpanButton"
-      >
-        💾 Simpan Presensi
-      </button>
-
-    </div>
-
-  </div>
-
-</div>
-
-
-<!-- =====================================================
-     JAVASCRIPT
-====================================================== -->
-
+<script src="auth.js"></script>
 <script src="presensi.js"></script>
-
-
-<!-- =====================================================
-     NAVIGASI TOMBOL
-====================================================== -->
-
-<script>
-
-  /*
-   * Cek login
-   */
-
-  const userData =
-    JSON.parse(
-      localStorage.getItem("presensiUser") || "null"
-    );
-
-
-  /*
-   * Jika belum login,
-   * kembali ke halaman login.
-   */
-
-  if (!userData) {
-
-    window.location.href = "index.html";
-
-  }
-
-
-  /*
-   * Pastikan hanya GURU
-   * yang masuk halaman ini.
-   */
-
-  if (
-    userData &&
-    String(userData.role || "").toUpperCase() !== "GURU"
-  ) {
-
-    window.location.href = "index.html";
-
-  }
-
-
-  /*
-   * Tombol Scan QR
-   */
-
-  document
-    .getElementById("scanQRButton")
-    .addEventListener("click", function () {
-
-      window.location.href = "scan.html";
-
-    });
-
-
-  /*
-   * Tombol Cetak Absen Bulanan
-   */
-
-  document
-    .getElementById("absenBulananButton")
-    .addEventListener("click", function () {
-
-      window.location.href =
-        "absen-bulanan.html";
-
-    });
-
-
-  /*
-   * Tombol Logout
-   */
-
-  document
-    .getElementById("logoutButton")
-    .addEventListener("click", function () {
-
-      const yakin =
-        confirm(
-          "Apakah Anda yakin ingin keluar?"
-        );
-
-      if (!yakin) {
-        return;
-      }
-
-      localStorage.removeItem("presensiUser");
-
-      window.location.href =
-        "index.html";
-
-    });
-
-</script>
+<script src="pwa.js"></script>
 
 </body>
 </html>
