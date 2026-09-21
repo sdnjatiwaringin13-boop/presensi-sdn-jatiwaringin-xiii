@@ -62,7 +62,6 @@
                 auto;
 
             gap: 15px;
-
             align-items: end;
         }
 
@@ -89,13 +88,13 @@
             font-family: inherit;
             font-size: 14px;
             outline: none;
+            box-sizing: border-box;
         }
 
         .report-field select:focus,
         .report-field input:focus {
             border-color: #1687c9;
-            box-shadow:
-                0 0 0 3px rgba(22, 135, 201, .12);
+            box-shadow: 0 0 0 3px rgba(22, 135, 201, .12);
         }
 
         .report-actions {
@@ -118,12 +117,14 @@
         }
 
         .message-success {
+            display: block;
             background: #ecfdf3;
             color: #027a48;
             border: 1px solid #abefc6;
         }
 
         .message-error {
+            display: block;
             background: #fef3f2;
             color: #b42318;
             border: 1px solid #fecdca;
@@ -191,6 +192,7 @@
             width: 100%;
             overflow-x: auto;
             padding: 0 15px 20px;
+            box-sizing: border-box;
         }
 
         #rekapTable {
@@ -227,6 +229,75 @@
             min-width: 24px;
             font-weight: 700;
         }
+
+        /* =====================================================
+           KOLOM AKUMULASI KEHADIRAN
+        ===================================================== */
+
+        #rekapTable .summary-title {
+            background: #dbeef8;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        #rekapTable .summary-header {
+            min-width: 55px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        #rekapTable .summary-cell {
+            min-width: 55px;
+            font-size: 11px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        #rekapTable .summary-hadir {
+            background: #eefbf3;
+        }
+
+        #rekapTable .summary-sakit {
+            background: #fff8e6;
+        }
+
+        #rekapTable .summary-izin {
+            background: #eef5ff;
+        }
+
+        #rekapTable .summary-alpa {
+            background: #fff0f0;
+        }
+
+        #rekapTable .date-header {
+            min-width: 25px;
+            text-align: center;
+        }
+
+        /* =====================================================
+           KETERANGAN
+        ===================================================== */
+
+        .report-keterangan {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+            margin: 5px 20px 20px;
+            padding: 10px 12px;
+            border: 1px solid #d0d5dd;
+            border-radius: 6px;
+            font-size: 12px;
+            background: #f8f9fa;
+        }
+
+        .report-keterangan strong {
+            margin-right: 5px;
+        }
+
+        /* =====================================================
+           TANDA TANGAN
+        ===================================================== */
 
         .report-signature {
             display: grid;
@@ -291,6 +362,10 @@
                 margin: 30px 10px;
             }
 
+            .report-keterangan {
+                gap: 10px;
+            }
+
         }
 
         /* =====================================================
@@ -350,6 +425,23 @@
                 padding: 3px 4px !important;
             }
 
+            #rekapTable .summary-cell {
+                min-width: 40px !important;
+                font-size: 8px !important;
+            }
+
+            #rekapTable .summary-header {
+                min-width: 40px !important;
+            }
+
+            .report-keterangan {
+                margin-top: 5px !important;
+                margin-bottom: 10px !important;
+                padding: 5px 8px !important;
+                font-size: 9px !important;
+                border: 1px solid #777 !important;
+            }
+
             .report-signature {
                 margin-top: 20px !important;
             }
@@ -357,42 +449,6 @@
         }
 
     </style>
-
-    /* =====================================================
-   KOLOM AKUMULASI KEHADIRAN
-===================================================== */
-
-#rekapTable .summary-header {
-    min-width: 55px;
-    font-weight: 800;
-    background: #e8f4fb;
-}
-
-#rekapTable .summary-cell {
-    min-width: 55px;
-    font-size: 11px;
-    font-weight: 800;
-}
-
-#rekapTable .summary-hadir {
-    background: #eefbf3;
-}
-
-#rekapTable .summary-sakit {
-    background: #fff8e6;
-}
-
-#rekapTable .summary-izin {
-    background: #eef5ff;
-}
-
-#rekapTable .summary-alpa {
-    background: #fff0f0;
-}
-
-#rekapTable .date-header {
-    min-width: 25px;
-}
 
 </head>
 
@@ -405,7 +461,9 @@
 
     <main class="report-page">
 
-        <!-- TOOLBAR -->
+        <!-- =================================================
+             TOOLBAR
+        ================================================== -->
 
         <section class="card report-toolbar no-print">
 
@@ -434,9 +492,7 @@
                     >
 
                         <label for="pilihGuru">
-
                             Guru / Wali Kelas
-
                         </label>
 
                         <select
@@ -445,9 +501,7 @@
                         >
 
                             <option value="">
-
                                 Memuat data guru...
-
                             </option>
 
                         </select>
@@ -460,9 +514,7 @@
                     <div class="report-field">
 
                         <label for="bulan">
-
                             Bulan
-
                         </label>
 
                         <select id="bulan">
@@ -525,9 +577,7 @@
                     <div class="report-field">
 
                         <label for="tahun">
-
                             Tahun
-
                         </label>
 
                         <input
@@ -606,6 +656,8 @@
             id="laporan"
         >
 
+            <!-- HEADER -->
+
             <div class="report-header">
 
                 <h1>
@@ -661,7 +713,9 @@
             </div>
 
 
-            <!-- TABEL -->
+            <!-- =================================================
+                 TABEL
+            ================================================== -->
 
             <div class="table-scroll">
 
@@ -671,16 +725,54 @@
 
                         <tr>
 
-                            <th>
+                            <th rowspan="2">
                                 No
                             </th>
 
-                            <th>
+                            <th rowspan="2">
                                 NISN
                             </th>
 
-                            <th>
+                            <th rowspan="2">
                                 Nama Siswa
+                            </th>
+
+                            <th
+                                colspan="1"
+                                id="tanggalHeader"
+                            >
+                                TANGGAL
+                            </th>
+
+                            <th
+                                colspan="4"
+                                class="summary-title"
+                            >
+                                AKUMULASI KEHADIRAN
+                            </th>
+
+                        </tr>
+
+                        <tr id="rekapSubHeader">
+
+                            <th class="date-header">
+                                -
+                            </th>
+
+                            <th class="summary-header summary-hadir">
+                                Hadir
+                            </th>
+
+                            <th class="summary-header summary-sakit">
+                                Sakit
+                            </th>
+
+                            <th class="summary-header summary-izin">
+                                Izin
+                            </th>
+
+                            <th class="summary-header summary-alpa">
+                                Alpa
                             </th>
 
                         </tr>
@@ -693,12 +785,13 @@
                         <tr>
 
                             <td
-                                colspan="3"
+                                colspan="8"
                                 style="padding:30px;"
                             >
 
                                 Pilih guru, bulan dan tahun,
                                 kemudian klik
+
                                 <strong>
                                     Tampilkan Rekap
                                 </strong>.
@@ -713,44 +806,46 @@
 
             </div>
 
+
             <!-- =================================================
-     KETERANGAN
-================================================== -->
+                 KETERANGAN
+            ================================================== -->
 
-<div
-    class="report-keterangan"
->
+            <div class="report-keterangan">
 
-    <strong>
-        Keterangan:
-    </strong>
+                <strong>
+                    Keterangan:
+                </strong>
 
-    <span>
-        H = Hadir
-    </span>
+                <span>
+                    H = Hadir
+                </span>
 
-    <span>
-        S = Sakit
-    </span>
+                <span>
+                    S = Sakit
+                </span>
 
-    <span>
-        I = Izin
-    </span>
+                <span>
+                    I = Izin
+                </span>
 
-    <span>
-        A = Alpa
-    </span>
+                <span>
+                    A = Alpa
+                </span>
 
-</div>
+            </div>
 
-            
-            <!-- TANDA TANGAN -->
+
+            <!-- =================================================
+                 TANDA TANGAN
+            ================================================== -->
 
             <div class="report-signature">
 
                 <div class="signature-box">
 
-                    Mengetahui,<br>
+                    Mengetahui,
+                    <br>
 
                     Kepala Sekolah
 
@@ -774,8 +869,7 @@
 
                 <div class="signature-box">
 
-                    Bekasi, __________________
-
+                    Bekasi, ______________________
 
                     <br>
 
