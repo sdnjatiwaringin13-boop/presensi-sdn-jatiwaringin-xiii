@@ -1,406 +1,326 @@
+"use strict";
+
 (function () {
 
-  "use strict";
+  let semuaSiswa = [];
 
+  const $ = (id) =>
+    document.getElementById(id);
 
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
+  function init() {
 
+    const user =
+      getCurrentUser();
 
-  Auth.requireRole("ADMIN");
+    if (!user) {
+      location.href =
+        "index.html";
+      return;
+    }
 
-
-  let siswaList = [];
-
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    init
-  );
-
-
-  async function init() {
-
-    document
-      .getElementById(
-        "kartuKelas"
-      )
-      .addEventListener(
-        "change",
-        renderKartu
+    if (
+      String(user.role)
+        .toUpperCase() !==
+      "ADMIN"
+    ) {
+      alert(
+        "Halaman kartu siswa hanya untuk Administrator."
       );
 
+      location.href =
+        "dashboard.html";
 
-    document
-      .getElementById(
-        "kartuSearch"
-      )
-      .addEventListener(
-        "input",
-        renderKartu
-      );
+      return;
+    }
 
+    bindEvents();
 
-    await loadData();
-
+    loadSiswa();
   }
 
+  function bindEvents() {
 
-  async function loadData() {
+    $("searchInput")?.addEventListener(
+      "input",
+      renderSiswa
+    );
+
+    $("kelasFilter")?.addEventListener(
+      "change",
+      renderSiswa
+    );
+
+    $("refreshButton")?.addEventListener(
+      "click",
+      loadSiswa
+    );
+
+    $("printButton")?.addEventListener(
+      "click",
+      () => window.print()
+    );
+  }
+
+  async function loadSiswa() {
 
     try {
 
       const result =
         await callAPI({
-
-          action:
-            "getSiswa",
-
-          aktifOnly:
-            true
-
+          action: "getSiswa",
+          aktifOnly: true
         });
-
 
       if (!result.success) {
         throw new Error(
-          result.message
+          result.message ||
+          "Gagal mengambil data siswa."
         );
       }
 
-
-      siswaList =
-        result.data || [];
-
+      semuaSiswa =
+        Array.isArray(result.data)
+          ? result.data
+          : [];
 
       loadKelasFilter();
 
-
-      renderKartu();
-
+      renderSiswa();
 
     } catch (error) {
 
-      document.getElementById(
-        "kartuContainer"
-      ).innerHTML = `
+      console.error(error);
 
-        <div class="card">
+      const container =
+        $("kartuContainer");
 
-          Gagal memuat data:
-          ${escapeHTML(error.message)}
-
-        </div>
-
-      `;
-
+      if (container) {
+        container.innerHTML = `
+          <div class="alert alert-danger">
+            ${escapeHTML(
+              error.message
+            )}
+          </div>
+        `;
+      }
     }
-
   }
-
 
   function loadKelasFilter() {
 
     const select =
-      document.getElementById(
-        "kartuKelas"
-      );
+      $("kelasFilter");
 
-
-    const kelasSet =
-      new Set();
-
-
-    siswaList.forEach(
-      siswa => {
-
-        if (siswa.KELAS) {
-          kelasSet.add(
-            String(siswa.KELAS)
-          );
-        }
-
-      }
-    );
-
-
-    [...kelasSet]
-      .sort()
-      .forEach(kelas => {
-
-        const option =
-          document.createElement(
-            "option"
-          );
-
-
-        option.value =
-          kelas;
-
-
-        option.textContent =
-          kelas;
-
-
-        select.appendChild(
-          option
-        );
-
-      });
-
-  }
-
-
-  function renderKartu() {
-
-    const container =
-      document.getElementById(
-        "kartuContainer"
-      );
-
+    if (!select) return;
 
     const kelas =
-      document.getElementById(
-        "kartuKelas"
-      ).value;
+      [
+        ...new Set(
+          semuaSiswa
+            .map(
+              siswa =>
+                siswa.KELAS
+            )
+            .filter(Boolean)
+        )
+      ]
+      .sort();
 
+    select.innerHTML = `
+      <option value="">
+        Semua Kelas
+      </option>
+
+      ${kelas.map(
+        item => `
+          <option value="${escapeAttr(item)}">
+            ${escapeHTML(item)}
+          </option>
+        `
+      ).join("")}
+    `;
+  }
+
+  function renderSiswa() {
+
+    const container =
+      $("kartuContainer") ||
+      $("kartuSiswa");
+
+    if (!container) return;
 
     const keyword =
-      document.getElementById(
-        "kartuSearch"
-      ).value
-        .toLowerCase()
-        .trim();
+      String(
+        $("searchInput")?.value ||
+        ""
+      )
+      .toLowerCase()
+      .trim();
 
+    const kelas =
+      String(
+        $("kelasFilter")?.value ||
+        ""
+      );
 
-    const filtered =
-      siswaList.filter(
+    const data =
+      semuaSiswa.filter(
         siswa => {
+
+          const cocokKeyword =
+            !keyword ||
+            String(
+              siswa.NISN || ""
+            )
+            .toLowerCase()
+            .includes(keyword) ||
+            String(
+              siswa.NAMA || ""
+            )
+            .toLowerCase()
+            .includes(keyword);
 
           const cocokKelas =
             !kelas ||
-            String(siswa.KELAS) ===
-            kelas;
-
-
-          const teks = [
-
-            siswa.NAMA,
-
-            siswa.NISN,
-
-            siswa.KELAS
-
-          ]
-            .join(" ")
-            .toLowerCase();
-
-
-          const cocokSearch =
-            !keyword ||
-            teks.includes(keyword);
-
+            String(
+              siswa.KELAS
+            ) === kelas;
 
           return (
-            cocokKelas &&
-            cocokSearch
+            cocokKeyword &&
+            cocokKelas
           );
-
         }
       );
 
-
-    if (!filtered.length) {
+    if (!data.length) {
 
       container.innerHTML = `
-
-        <div class="card">
-
-          Tidak ada siswa yang ditemukan.
-
+        <div class="empty">
+          Data siswa tidak ditemukan.
         </div>
-
       `;
 
       return;
-
     }
 
-
     container.innerHTML =
-      filtered.map(
+      data.map(
         siswa => {
 
-          const safeId =
-            escapeHTML(
+          const cardId =
+            `qr-${String(
               siswa.ID
-            );
-
+            ).replace(
+              /[^a-zA-Z0-9_-]/g,
+              ""
+            )}`;
 
           return `
+            <div class="kartu-siswa">
 
-            <div class="student-card">
-
-              <div class="student-card-header">
-
-                <div>
-
-                  <strong>
-                    SD Negeri Jatiwaringin XIII
-                  </strong>
-
-                  <small>
-                    KARTU PRESENSI SISWA
-                  </small>
-
-                </div>
-
+              <div class="kartu-header">
+                SD NEGERI
+                JATIWARINGIN XIII
               </div>
 
+              <div class="kartu-body">
 
-              <div class="student-card-body">
+                <div class="kartu-identitas">
 
-                <div class="student-card-info">
+                  <h3>
+                    ${escapeHTML(
+                      siswa.NAMA
+                    )}
+                  </h3>
 
-                  <div>
+                  <p>
+                    <strong>NISN:</strong>
+                    ${escapeHTML(
+                      siswa.NISN || "-"
+                    )}
+                  </p>
 
-                    <span>Nama</span>
+                  <p>
+                    <strong>Kelas:</strong>
+                    ${escapeHTML(
+                      siswa.KELAS || "-"
+                    )}
+                  </p>
 
-                    <strong>
-                      ${escapeHTML(
-                        siswa.NAMA
-                      )}
-                    </strong>
-
-                  </div>
-
-
-                  <div>
-
-                    <span>NISN</span>
-
-                    <strong>
-                      ${escapeHTML(
-                        siswa.NISN
-                      )}
-                    </strong>
-
-                  </div>
-
-
-                  <div>
-
-                    <span>Kelas</span>
-
-                    <strong>
-                      ${escapeHTML(
-                        siswa.KELAS
-                      )}
-                    </strong>
-
-                  </div>
+                  <p>
+                    <strong>Jenis Kelamin:</strong>
+                    ${escapeHTML(
+                      siswa.JK || "-"
+                    )}
+                  </p>
 
                 </div>
-
 
                 <div
-                  class="student-qr"
-                  id="qr-${safeId}"
-                ></div>
-
-              </div>
-
-
-              <div class="student-card-footer">
-
-                Tunjukkan QR Code
-                kepada petugas/guru
-                saat presensi.
+                  class="qr-code"
+                  id="${cardId}">
+                </div>
 
               </div>
 
             </div>
-
           `;
-
         }
       ).join("");
 
-
-    filtered.forEach(
+    data.forEach(
       siswa => {
 
-        const element =
+        const cardId =
+          `qr-${String(
+            siswa.ID
+          ).replace(
+            /[^a-zA-Z0-9_-]/g,
+            ""
+          )}`;
+
+        const qrElement =
           document.getElementById(
-            "qr-" +
-            String(siswa.ID)
+            cardId
           );
 
+        if (!qrElement) return;
 
-        if (!element) return;
+        if (
+          typeof QRCode ===
+          "undefined"
+        ) {
 
+          qrElement.innerHTML =
+            "<small>QR Library belum dimuat.</small>";
+
+          return;
+        }
 
         new QRCode(
-          element,
+          qrElement,
           {
-
             text:
               String(siswa.ID),
 
-            width:
-              110,
-
-            height:
-              110,
+            width: 120,
+            height: 120,
 
             correctLevel:
               QRCode.CorrectLevel.H
-
           }
         );
-
       }
     );
-
   }
 
+  window.loadKartuSiswa =
+    loadSiswa;
 
-  async function callAPI(payload) {
-
-    const response =
-      await fetch(
-        API_URL,
-        {
-
-          method:
-            "POST",
-
-          headers: {
-            "Content-Type":
-              "text/plain;charset=utf-8"
-          },
-
-          body:
-            JSON.stringify(payload)
-
-        }
-      );
-
-
-    return await response.json();
-
-  }
-
-
-  function escapeHTML(value) {
-
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-
-  }
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
 
 })();
