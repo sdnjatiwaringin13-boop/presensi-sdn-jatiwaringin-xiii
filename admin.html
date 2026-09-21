@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
 
   <meta charset="UTF-8">
@@ -10,7 +9,17 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>Dashboard Admin - Presensi</title>
+  <title>Administrasi</title>
+
+  <meta
+    name="theme-color"
+    content="#1565c0"
+  >
+
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
 
   <link
     rel="stylesheet"
@@ -19,344 +28,246 @@
 
 </head>
 
+<body>
 
-<body class="dashboard-body">
+<header class="topbar">
 
-  <header class="topbar">
+  <div class="topbar-left">
+
+    <div class="topbar-logo">
+      SD
+    </div>
 
     <div>
 
-      <h1>
-        Presensi Sekolah
-      </h1>
+      <div class="topbar-title">
+        Administrasi
+      </div>
 
-      <span>
+      <div class="topbar-school">
         SD Negeri Jatiwaringin XIII
-      </span>
+      </div>
 
     </div>
 
+  </div>
+
+
+  <div class="topbar-right">
 
     <button
-      id="logoutButton"
-      class="logout-button"
+      class="btn btn-secondary btn-small"
+      onclick="location.href='dashboard.html'"
     >
-      Logout
+      Dashboard
     </button>
 
-  </header>
+    <button
+      class="btn btn-danger btn-small"
+      onclick="Auth.logout()"
+    >
+      Keluar
+    </button>
+
+  </div>
+
+</header>
 
 
-  <main class="dashboard-container">
+<main class="container">
 
+  <div class="page-header">
 
-    <section class="welcome">
+    <div>
 
-      <h2>
-        Dashboard Admin
-      </h2>
+      <h1>Administrasi Sistem</h1>
 
-      <p id="adminName">
-        Memuat data...
+      <p>
+        Pengelolaan data utama sistem presensi.
       </p>
 
-    </section>
+    </div>
+
+  </div>
 
 
-    <!-- ==============================
-         STATISTIK
-    =============================== -->
+  <section class="menu-grid">
 
-    <section class="stats-grid">
+    <a
+      href="siswa.html"
+      class="menu-card"
+    >
 
-
-      <div class="stat-card">
-
-        <div class="stat-title">
-          Total Siswa
-        </div>
-
-        <div
-          id="totalSiswa"
-          class="stat-number"
-        >
-          -
-        </div>
-
+      <div class="menu-icon">
+        👨‍🎓
       </div>
 
-
-      <div class="stat-card">
-
-        <div class="stat-title">
-          Total Guru
-        </div>
-
-        <div
-          id="totalGuru"
-          class="stat-number"
-        >
-          -
-        </div>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <div class="stat-title">
-          Total Kelas
-        </div>
-
-        <div
-          id="totalKelas"
-          class="stat-number"
-        >
-          -
-        </div>
-
-      </div>
-
-
-      <div class="stat-card">
-
-        <div class="stat-title">
-          Presensi Hari Ini
-        </div>
-
-        <div
-          id="totalPresensi"
-          class="stat-number"
-        >
-          -
-        </div>
-
-      </div>
-
-
-    </section>
-
-
-    <!-- ==============================
-         MENU ADMIN
-    =============================== -->
-
-    <section class="menu-grid">
-
-
-      <!-- DATA SISWA -->
-
-      <div
-        class="menu-card"
-        onclick="location.href='siswa.html'"
-      >
+      <div>
 
         <h3>
-          👨‍🎓 Data Siswa
+          Data Siswa
         </h3>
 
         <p>
-          Melihat dan mengelola data siswa.
+          Tambah, edit dan hapus data siswa.
         </p>
 
       </div>
 
+    </a>
 
-      <!-- DATA GURU -->
 
-      <div
-        class="menu-card"
-        onclick="location.href='guru.html'"
-      >
+    <a
+      href="guru.html"
+      class="menu-card"
+    >
+
+      <div class="menu-icon">
+        👨‍🏫
+      </div>
+
+      <div>
 
         <h3>
-          👨‍🏫 Data Guru
+          Data Guru
         </h3>
 
         <p>
-          Menambah, mengedit, dan menghapus data guru.
+          Kelola data guru dan wali kelas.
         </p>
 
       </div>
 
+    </a>
 
-      <!-- DATA KELAS -->
 
-      <div
-        class="menu-card"
-        onclick="location.href='kelas.html'"
-      >
+    <a
+      href="kelas.html"
+      class="menu-card"
+    >
+
+      <div class="menu-icon">
+        🏫
+      </div>
+
+      <div>
 
         <h3>
-          🏫 Data Kelas
+          Data Kelas
         </h3>
 
         <p>
-          Mengelola kelas dan wali kelas.
+          Kelola kelas dan wali kelas.
         </p>
 
       </div>
 
+    </a>
 
-      <!-- REKAP PRESENSI -->
 
-      <div
-        class="menu-card"
-        onclick="location.href='rekap.html'"
-      >
+    <a
+      href="kartu.html"
+      class="menu-card"
+    >
+
+      <div class="menu-icon">
+        📱
+      </div>
+
+      <div>
 
         <h3>
-          📊 Rekap Presensi
+          Kartu QR
         </h3>
 
         <p>
-          Melihat dan mencetak rekap presensi siswa.
+          Buat dan cetak kartu QR siswa.
         </p>
 
       </div>
 
+    </a>
 
-      <!-- ==============================
-           KARTU QR SISWA
-      =============================== -->
 
-      <div
-        class="menu-card"
-        onclick="location.href='kartu.html'"
-      >
+    <a
+      href="scan.html"
+      class="menu-card"
+    >
+
+      <div class="menu-icon">
+        📷
+      </div>
+
+      <div>
 
         <h3>
-          🪪 Kartu QR Siswa
+          Scan Presensi
         </h3>
 
         <p>
-          Membuat dan mencetak kartu QR untuk siswa.
+          Presensi siswa menggunakan QR.
         </p>
 
       </div>
 
+    </a>
 
-      <!-- ==============================
-           SEKOLAH
-      =============================== -->
 
-      <div
-  class="menu-card"
-  onclick="location.href='sekolah.html'"
->
-  <h3>
-    🏫 Pengaturan Sekolah
-  </h3>
+    <a
+      href="absen-bulanan.html"
+      class="menu-card"
+    >
 
-  <p>
-    Mengatur nama sekolah, kepala sekolah,
-    dan NIP kepala sekolah.
-  </p>
-</div>
-      
+      <div class="menu-icon">
+        📊
+      </div>
 
-      <!-- ==============================
-           SCAN QR SISWA
-      =============================== -->
-
-      <div
-        class="menu-card"
-        onclick="location.href='scan.html'"
-      >
+      <div>
 
         <h3>
-          📷 Scan QR Siswa
+          Rekap Bulanan
         </h3>
 
         <p>
-          Memindai QR Code siswa menggunakan kamera.
+          Lihat dan cetak rekap absensi.
         </p>
 
       </div>
 
+    </a>
 
-    </section>
 
+    <a
+      href="pengaturan.html"
+      class="menu-card"
+    >
 
-    <div
-  class="menu-card"
-  onclick="location.href='absen-bulanan.html'"
->
-  <h3>📋 Absensi Bulanan</h3>
+      <div class="menu-icon">
+        ⚙️
+      </div>
 
-  <p>
-    Melihat dan mencetak rekap absensi siswa bulanan.
-  </p>
-</div>
+      <div>
 
-    
-    <!-- ==============================
-         PRESENSI HARI INI
-    =============================== -->
+        <h3>
+          Pengaturan
+        </h3>
 
-    <section class="panel">
-
-      <div class="panel-header">
-
-        <h2>
-          Presensi Hari Ini
-        </h2>
+        <p>
+          Atur identitas sekolah.
+        </p>
 
       </div>
 
+    </a>
 
-      <div class="table-wrapper">
+  </section>
 
-        <table>
-
-          <thead>
-
-            <tr>
-
-              <th>No</th>
-
-              <th>Nama</th>
-
-              <th>Kelas</th>
-
-              <th>Jam</th>
-
-              <th>Status</th>
-
-            </tr>
-
-          </thead>
+</main>
 
 
-          <tbody id="presensiTable">
-
-            <tr>
-
-              <td
-                colspan="5"
-                class="loading"
-              >
-                Memuat data...
-              </td>
-
-            </tr>
-
-          </tbody>
-
-        </table>
-
-      </div>
-
-    </section>
-
-
-  </main>
-
-
-  <!-- JAVASCRIPT ADMIN -->
-
-  <script src="admin.js"></script>
+<script src="auth.js"></script>
+<script src="admin.js"></script>
+<script src="pwa.js"></script>
 
 </body>
-
 </html>
