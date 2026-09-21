@@ -1,90 +1,59 @@
 "use strict";
 
-/* =========================================================
-   API CONFIG
-   ========================================================= */
-
 const API_URL =
   "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
-
-/* =========================================================
-   API REQUEST
-   ========================================================= */
-
-async function callAPI(payload) {
-
+async function callAPI(payload = {}) {
   try {
-
     const response = await fetch(API_URL, {
       method: "POST",
-
       headers: {
         "Content-Type": "text/plain;charset=utf-8"
       },
-
       body: JSON.stringify(payload)
     });
 
+    if (!response.ok) {
+      throw new Error(
+        `Server mengembalikan HTTP ${response.status}`
+      );
+    }
 
     const text = await response.text();
-
 
     let result;
 
     try {
-
       result = JSON.parse(text);
-
     } catch (error) {
-
-      console.error("RESPONS API:", text);
-
-      throw new Error(
-        "Respons dari server bukan JSON."
-      );
-
-    }
-
-
-    if (!result) {
+      console.error("Respons API:", text);
 
       throw new Error(
-        "Server tidak mengembalikan data."
+        "Respons server bukan JSON. Periksa deployment Apps Script."
       );
-
     }
 
+    if (!result || typeof result !== "object") {
+      throw new Error(
+        "Server tidak mengembalikan data yang valid."
+      );
+    }
 
     return result;
 
-
   } catch (error) {
-
-    console.error(
-      "API ERROR:",
-      error
-    );
+    console.error("API ERROR:", error);
 
     throw new Error(
       error.message ||
       "Tidak dapat terhubung ke server."
     );
-
   }
-
 }
 
-
-/* =========================================================
-   HELPER
-   ========================================================= */
-
 function escapeHTML(value) {
-
   return String(value ?? "")
     .replace(/[&<>"']/g, function (char) {
-
       return {
         "&": "&amp;",
         "<": "&lt;",
@@ -92,79 +61,24 @@ function escapeHTML(value) {
         '"': "&quot;",
         "'": "&#039;"
       }[char];
-
     });
-
 }
-
 
 function escapeAttr(value) {
-
   return escapeHTML(value);
-
 }
 
-
-/* =========================================================
-   AUTH
-   ========================================================= */
-
-function getCurrentUser() {
-
-  try {
-
-    return JSON.parse(
-      localStorage.getItem("presensiUser") || "null"
-    );
-
-  } catch (error) {
-
-    return null;
-
-  }
-
+function normalizeText(value) {
+  return String(value ?? "").trim();
 }
 
-
-function requireAdmin() {
-
-  const user = getCurrentUser();
-
-
-  if (!user) {
-
-    location.href = "index.html";
-
-    return null;
-
-  }
-
-
-  if (
-    String(user.role || "")
-      .toUpperCase() !== "ADMIN"
-  ) {
-
-    alert(
-      "Halaman ini hanya dapat diakses oleh Administrator."
-    );
-
-    location.href = "dashboard.html";
-
-    return null;
-
-  }
-
-
-  return user;
-
+function upperText(value) {
+  return normalizeText(value).toUpperCase();
 }
 
-
-function logout() {
-
-  localStorage.removeItem("presensiUser");
-
-  location.href = "index.html";
-
-}
+window.API_URL = API_URL;
+window.callAPI = callAPI;
+window.escapeHTML = escapeHTML;
+window.escapeAttr = escapeAttr;
+window.normalizeText = normalizeText;
+window.upperText = upperText;
