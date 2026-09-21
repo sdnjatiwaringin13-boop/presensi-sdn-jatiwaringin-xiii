@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Pengaturan Sekolah</title>
+
+  <meta
+    name="theme-color"
+    content="#1565c0"
+  >
+
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+</head>
+
+<body>
+
+<header class="topbar">
+
+  <div class="topbar-left">
+
+    <div class="topbar-logo">
+      SD
+    </div>
+
+    <div>
+
+      <div class="topbar-title">
+        Pengaturan Sekolah
+      </div>
+
+      <div class="topbar-school">
+        SD Negeri Jatiwaringin XIII
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="topbar-right">
+
+    <button
+      class="btn btn-secondary btn-small"
+      onclick="location.href='dashboard.html'"
+    >
+      Dashboard
+    </button>
+
+    <button
+      class="btn btn-danger btn-small"
+      onclick="Auth.logout()"
+    >
+      Keluar
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <div class="page-header">
+
+    <div>
+
+      <h1>Pengaturan Sekolah</h1>
+
+      <p>
+        Atur identitas sekolah dan kepala sekolah.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <section class="card">
+
+    <form id="pengaturanForm">
+
+      <div class="form-grid">
+
+        <div class="form-group">
+
+          <label for="namaSekolah">
+            Nama Sekolah
+          </label>
+
+          <input
+            type="text"
+            id="namaSekolah"
+            required
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="namaKepalaSekolah">
+            Nama Kepala Sekolah
+          </label>
+
+          <input
+            type="text"
+            id="namaKepalaSekolah"
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="nipKepalaSekolah">
+            NIP Kepala Sekolah
+          </label>
+
+          <input
+            type="text"
+            id="nipKepalaSekolah"
+          >
+
+        </div>
+
+      </div>
+
+
+      <div class="form-actions">
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          id="btnSimpanPengaturan"
+        >
+          Simpan Pengaturan
+        </button>
+
+      </div>
+
+    </form>
+
+
+    <div
+      id="pengaturanMessage"
+      class="message"
+      style="display:none;"
+    ></div>
+
+  </section>
+
+</main>
+
+
+<script src="auth.js"></script>
+<script src="pengaturan.js"></script>
+<script src="pwa.js"></script>
+
+</body>
+</html>
