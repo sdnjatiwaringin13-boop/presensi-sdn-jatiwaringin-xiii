@@ -1,464 +1,1114 @@
-(function () {
-  "use strict";
+"use strict";
 
-  const API_URL =
+/*
+ * DASHBOARD PRESENSI
+ * SD NEGERI JATIWARINGIN XIII
+ */
+
+const API_URL =
     "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
-  const user = Auth.requireLogin();
 
-  document.addEventListener("DOMContentLoaded", initDashboard);
+/* =========================================================
+   API
+========================================================= */
 
-
-  async function initDashboard() {
-
-    tampilkanUser();
-
-    tampilkanTanggal();
-
-    buatMenu();
-
-    if (user.role === "ADMIN") {
-      await loadAdminData();
-    }
-
-    if (user.role === "GURU") {
-      await loadGuruData();
-    }
-
-    await loadPresensiHariIni();
-  }
-
-
-  function tampilkanUser() {
-
-    const nama =
-      user.nama ||
-      user.username ||
-      "Pengguna";
-
-    const role =
-      user.role ||
-      "-";
-
-    document.getElementById("dashboardUserName")
-      .textContent = nama;
-
-    document.getElementById("dashboardRole")
-      .textContent = role;
-
-    document.getElementById("dashboardGreeting")
-      .textContent =
-      "Selamat datang, " + nama + ".";
-  }
-
-
-  function tampilkanTanggal() {
-
-    const sekarang = new Date();
-
-    const tanggal =
-      sekarang.toLocaleDateString(
-        "id-ID",
-        {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        }
-      );
-
-    document.getElementById("tanggalHariIni")
-      .textContent = tanggal;
-  }
-
-
-  function buatMenu() {
-
-    const menuGrid =
-      document.getElementById("menuGrid");
-
-    let menu = [];
-
-
-    if (user.role === "ADMIN") {
-
-      menu = [
-
-        {
-          icon: "⚙️",
-          title: "Administrasi",
-          description: "Menu administrasi sistem",
-          url: "admin.html"
-        },
-
-        {
-          icon: "👨‍🎓",
-          title: "Data Siswa",
-          description: "Kelola data siswa",
-          url: "siswa.html"
-        },
-
-        {
-          icon: "👨‍🏫",
-          title: "Data Guru",
-          description: "Kelola data guru",
-          url: "guru.html"
-        },
-
-        {
-          icon: "🏫",
-          title: "Data Kelas",
-          description: "Kelola data kelas",
-          url: "kelas.html"
-        },
-
-        {
-          icon: "📱",
-          title: "Kartu QR Siswa",
-          description: "Cetak kartu QR siswa",
-          url: "kartu.html"
-        },
-
-        {
-          icon: "📷",
-          title: "Scan Presensi",
-          description: "Presensi menggunakan QR",
-          url: "scan.html"
-        },
-
-        {
-          icon: "📊",
-          title: "Rekap Bulanan",
-          description: "Lihat rekap absensi",
-          url: "absen-bulanan.html"
-        },
-
-        {
-          icon: "⚙️",
-          title: "Pengaturan",
-          description: "Pengaturan sekolah",
-          url: "pengaturan.html"
-        }
-
-      ];
-
-    } else {
-
-      menu = [
-
-        {
-          icon: "📝",
-          title: "Presensi Siswa",
-          description: "Input presensi siswa",
-          url: "presensi.html"
-        },
-
-        {
-          icon: "📷",
-          title: "Scan QR",
-          description: "Presensi dengan QR siswa",
-          url: "scan.html"
-        },
-
-        {
-          icon: "📊",
-          title: "Rekap Bulanan",
-          description: "Lihat rekap presensi",
-          url: "absen-bulanan.html"
-        }
-
-      ];
-
-    }
-
-
-    menuGrid.innerHTML = menu.map(item => `
-
-      <a
-        href="${item.url}"
-        class="menu-card"
-      >
-
-        <div class="menu-icon">
-          ${item.icon}
-        </div>
-
-        <div>
-          <h3>${escapeHTML(item.title)}</h3>
-
-          <p>
-            ${escapeHTML(item.description)}
-          </p>
-        </div>
-
-      </a>
-
-    `).join("");
-  }
-
-
-  async function loadAdminData() {
-
-    document.getElementById("adminStats")
-      .style.display = "block";
+async function callDashboardAPI(payload) {
 
     try {
 
-      const [
-        siswa,
-        guru,
-        kelas
-      ] = await Promise.all([
+        const response = await fetch(
+            API_URL,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type":
+                        "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify(payload)
+            }
+        );
 
-        callAPI({
-          action: "getSiswa",
-          aktifOnly: false
-        }),
+        const text =
+            await response.text();
 
-        callAPI({
-          action: "getGuru"
-        }),
-
-        callAPI({
-          action: "getKelas"
-        })
-
-      ]);
-
-
-      if (siswa.success) {
-
-        document.getElementById("totalSiswa")
-          .textContent =
-          siswa.data.length;
-
-      }
-
-
-      if (guru.success) {
-
-        document.getElementById("totalGuru")
-          .textContent =
-          guru.data.length;
-
-      }
-
-
-      if (kelas.success) {
-
-        document.getElementById("totalKelas")
-          .textContent =
-          kelas.data.length;
-
-      }
-
-    } catch (error) {
-
-      console.error(error);
-
-    }
-
-  }
-
-
-  async function loadGuruData() {
-
-    document.getElementById("guruInfoCard")
-      .style.display = "block";
-
-
-    try {
-
-      const result =
-        await callAPI({
-
-          action: "getKelasGuru",
-
-          idGuru: user.idGuru
-
-        });
-
-
-      if (
-        !result.success ||
-        !result.data ||
-        !result.data.length
-      ) {
-
-        document.getElementById("guruName")
-          .textContent =
-          user.nama || "-";
-
-        document.getElementById("guruClass")
-          .textContent =
-          "Belum ada kelas";
-
-        return;
-      }
-
-
-      const kelas = result.data[0];
-
-
-      document.getElementById("guruName")
-        .textContent =
-        user.nama || "-";
-
-
-      document.getElementById("guruClass")
-        .textContent =
-        kelas.NAMA_KELAS || "-";
-
-    } catch (error) {
-
-      console.error(error);
-
-    }
-
-  }
-
-
-  async function loadPresensiHariIni() {
-
-    try {
-
-      const tanggal =
-        getToday();
-
-
-      const payload = {
-        action: "getRekap",
-        tanggal: tanggal
-      };
-
-
-      if (user.role === "GURU") {
+        let result;
 
         try {
 
-          const kelasResult =
-            await callAPI({
-
-              action: "getKelasGuru",
-
-              idGuru: user.idGuru
-
-            });
-
-
-          if (
-            kelasResult.success &&
-            kelasResult.data &&
-            kelasResult.data.length
-          ) {
-
-            payload.kelas =
-              kelasResult.data[0].NAMA_KELAS;
-
-          }
+            result =
+                JSON.parse(text);
 
         } catch (error) {
 
-          console.error(error);
+            console.error(
+                "Response bukan JSON:",
+                text
+            );
 
+            throw new Error(
+                "Server mengembalikan response yang tidak valid."
+            );
         }
 
-      }
-
-
-      const result =
-        await callAPI(payload);
-
-
-      if (!result.success) {
-        return;
-      }
-
-
-      const counts =
-        result.counts || {};
-
-
-      document.getElementById("attendanceHadir")
-        .textContent =
-        counts.HADIR || 0;
-
-
-      document.getElementById("attendanceIzin")
-        .textContent =
-        counts.IZIN || 0;
-
-
-      document.getElementById("attendanceSakit")
-        .textContent =
-        counts.SAKIT || 0;
-
-
-      document.getElementById("attendanceAlpa")
-        .textContent =
-        counts.ALPA || 0;
+        return result;
 
     } catch (error) {
 
-      console.error(error);
+        console.error(
+            "API Error:",
+            error
+        );
+
+        throw error;
+    }
+}
+
+
+/* =========================================================
+   TANGGAL HARI INI
+========================================================= */
+
+function getToday() {
+
+    const now =
+        new Date();
+
+    const year =
+        now.getFullYear();
+
+    const month =
+        String(
+            now.getMonth() + 1
+        ).padStart(2, "0");
+
+    const day =
+        String(
+            now.getDate()
+        ).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
+
+/* =========================================================
+   INIT
+========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async function () {
+
+        try {
+
+            const user =
+                Auth.requireLogin();
+
+            if (!user) {
+                return;
+            }
+
+            setupUser(user);
+
+            setupMenuByRole(user);
+
+            await loadDashboard();
+
+        } catch (error) {
+
+            console.error(
+                "Dashboard Error:",
+                error
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   USER
+========================================================= */
+
+function setupUser(user) {
+
+    const nama =
+        user.nama ||
+        user.username ||
+        "Pengguna";
+
+    const role =
+        String(
+            user.role || ""
+        ).toUpperCase();
+
+
+    const sidebarName =
+        document.getElementById(
+            "sidebarUserName"
+        );
+
+    const sidebarRole =
+        document.getElementById(
+            "sidebarUserRole"
+        );
+
+    const topUser =
+        document.getElementById(
+            "topUserName"
+        );
+
+
+    if (sidebarName) {
+
+        sidebarName.textContent =
+            nama;
+    }
+
+
+    if (sidebarRole) {
+
+        sidebarRole.textContent =
+            role === "ADMIN"
+                ? "Administrator"
+                : "Guru / Wali Kelas";
+    }
+
+
+    if (topUser) {
+
+        topUser.textContent =
+            nama;
+    }
+}
+
+
+/* =========================================================
+   MENU BERDASARKAN ROLE
+========================================================= */
+
+function setupMenuByRole(user) {
+
+    const role =
+        String(
+            user.role || ""
+        ).toUpperCase();
+
+
+    const menuPresensi =
+        document.getElementById(
+            "menuPresensi"
+        );
+
+    const menuKartu =
+        document.getElementById(
+            "menuKartu"
+        );
+
+    const menuPengaturan =
+        document.getElementById(
+            "menuPengaturan"
+        );
+
+
+    /*
+     * GURU
+     */
+
+    if (role === "GURU") {
+
+        if (menuKartu) {
+
+            menuKartu.style.display =
+                "none";
+        }
+
+        if (menuPengaturan) {
+
+            menuPengaturan.style.display =
+                "none";
+        }
 
     }
 
-  }
 
+    /*
+     * ADMIN
+     */
 
-  async function callAPI(payload) {
+    if (role === "ADMIN") {
 
-    const response =
-      await fetch(
-        API_URL,
-        {
-          method: "POST",
+        if (menuPresensi) {
 
-          headers: {
-            "Content-Type":
-              "text/plain;charset=utf-8"
-          },
-
-          body: JSON.stringify(payload)
+            menuPresensi.style.display =
+                "none";
         }
-      );
+    }
+}
 
 
-    return await response.json();
+/* =========================================================
+   LOAD DASHBOARD
+========================================================= */
 
-  }
+async function loadDashboard() {
 
-
-  function getToday() {
-
-    const now = new Date();
-
-    const year =
-      now.getFullYear();
-
-    const month =
-      String(now.getMonth() + 1)
-        .padStart(2, "0");
-
-    const day =
-      String(now.getDate())
-        .padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-
-  }
+    setLoadingStats();
 
 
-  function escapeHTML(value) {
+    const user =
+        Auth.getCurrentUser();
 
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
 
-  }
+    const role =
+        String(
+            user?.role || ""
+        ).toUpperCase();
 
-})();
+
+    try {
+
+        /*
+         * LOAD SISWA
+         */
+
+        const siswaResult =
+            await callDashboardAPI({
+                action: "getSiswa"
+            });
+
+
+        const siswa =
+            extractArray(
+                siswaResult
+            );
+
+
+        /*
+         * LOAD GURU
+         */
+
+        const guruResult =
+            await callDashboardAPI({
+                action: "getGuru"
+            });
+
+
+        const guru =
+            extractArray(
+                guruResult
+            );
+
+
+        /*
+         * LOAD KELAS
+         */
+
+        const kelasResult =
+            await callDashboardAPI({
+                action: "getKelas"
+            });
+
+
+        const kelas =
+            extractArray(
+                kelasResult
+            );
+
+
+        /*
+         * TANGGAL
+         */
+
+        const tanggal =
+            getToday();
+
+
+        /*
+         * LOAD REKAP
+         */
+
+        const rekapResult =
+            await callDashboardAPI({
+                action: "getRekap",
+                tanggal: tanggal
+            });
+
+
+        const rekapRows =
+            extractArray(
+                rekapResult
+            );
+
+
+        /*
+         * STATISTIK MASTER
+         */
+
+        document.getElementById(
+            "totalSiswa"
+        ).textContent =
+            siswa.length;
+
+
+        document.getElementById(
+            "totalGuru"
+        ).textContent =
+            guru.length;
+
+
+        document.getElementById(
+            "totalKelas"
+        ).textContent =
+            kelas.length;
+
+
+        /*
+         * FILTER REKAP GURU
+         *
+         * Jika login sebagai guru,
+         * dashboard hanya menampilkan
+         * presensi kelas guru tersebut.
+         */
+
+        let rows =
+            rekapRows;
+
+
+        if (
+            role === "GURU" &&
+            user.idGuru
+        ) {
+
+            rows =
+                rekapRows.filter(
+                    row =>
+                        String(
+                            row.ID_GURU ||
+                            row.idGuru ||
+                            ""
+                        ) ===
+                        String(
+                            user.idGuru
+                        )
+                );
+        }
+
+
+        /*
+         * HITUNG STATUS
+         */
+
+        const counts =
+            countStatuses(rows);
+
+
+        document.getElementById(
+            "totalHadir"
+        ).textContent =
+            counts.HADIR;
+
+
+        document.getElementById(
+            "totalIzin"
+        ).textContent =
+            counts.IZIN;
+
+
+        document.getElementById(
+            "totalSakit"
+        ).textContent =
+            counts.SAKIT;
+
+
+        document.getElementById(
+            "totalAlpa"
+        ).textContent =
+            counts.ALPA;
+
+
+        /*
+         * BELUM ABSEN
+         */
+
+        let activeStudents =
+            siswa;
+
+
+        /*
+         * Jika GURU,
+         * hanya siswa kelas yang terkait.
+         */
+
+        if (
+            role === "GURU" &&
+            user.idGuru
+        ) {
+
+            try {
+
+                const kelasGuruResult =
+                    await callDashboardAPI({
+                        action: "getKelasGuru",
+                        idGuru: user.idGuru
+                    });
+
+
+                const kelasGuru =
+                    extractArray(
+                        kelasGuruResult
+                    );
+
+
+                if (kelasGuru.length) {
+
+                    const namaKelas =
+                        kelasGuru.map(
+                            item =>
+                                String(
+                                    item.NAMA_KELAS ||
+                                    item.namaKelas ||
+                                    ""
+                                ).trim()
+                        );
+
+
+                    activeStudents =
+                        siswa.filter(
+                            item =>
+                                namaKelas.includes(
+                                    String(
+                                        item.KELAS ||
+                                        ""
+                                    ).trim()
+                                )
+                        );
+                }
+
+            } catch (error) {
+
+                console.warn(
+                    "Tidak dapat memfilter kelas guru:",
+                    error
+                );
+            }
+        }
+
+
+        const absentIds =
+            new Set(
+                rows.map(
+                    row =>
+                        String(
+                            row.ID ||
+                            row.id ||
+                            row.ID_SISWA ||
+                            ""
+                        )
+                )
+            );
+
+
+        const belumAbsen =
+            activeStudents.filter(
+                student => {
+
+                    const id =
+                        String(
+                            student.ID ||
+                            student.id ||
+                            ""
+                        );
+
+                    return !absentIds.has(id);
+                }
+            );
+
+
+        document.getElementById(
+            "totalBelumAbsen"
+        ).textContent =
+            belumAbsen.length;
+
+
+        /*
+         * RENDER TABLE
+         */
+
+        renderBelumAbsen(
+            belumAbsen
+        );
+
+
+        renderSudahAbsen(
+            rows
+        );
+
+
+        renderRekap(
+            counts,
+            activeStudents.length
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+        showDashboardError(
+            error.message
+        );
+    }
+}
+
+
+/* =========================================================
+   EXTRACT ARRAY
+========================================================= */
+
+function extractArray(result) {
+
+    if (!result) {
+        return [];
+    }
+
+
+    if (
+        Array.isArray(result)
+    ) {
+
+        return result;
+    }
+
+
+    if (
+        Array.isArray(result.data)
+    ) {
+
+        return result.data;
+    }
+
+
+    if (
+        result.data &&
+        Array.isArray(result.data.rows)
+    ) {
+
+        return result.data.rows;
+    }
+
+
+    if (
+        result.data &&
+        Array.isArray(result.data.data)
+    ) {
+
+        return result.data.data;
+    }
+
+
+    if (
+        Array.isArray(result.rows)
+    ) {
+
+        return result.rows;
+    }
+
+
+    return [];
+}
+
+
+/* =========================================================
+   COUNT STATUS
+========================================================= */
+
+function countStatuses(rows) {
+
+    const counts = {
+
+        HADIR: 0,
+        IZIN: 0,
+        SAKIT: 0,
+        ALPA: 0
+    };
+
+
+    rows.forEach(
+        row => {
+
+            const status =
+                String(
+                    row.STATUS ||
+                    row.status ||
+                    ""
+                ).toUpperCase();
+
+
+            if (
+                Object.prototype.hasOwnProperty.call(
+                    counts,
+                    status
+                )
+            ) {
+
+                counts[status]++;
+            }
+        }
+    );
+
+
+    return counts;
+}
+
+
+/* =========================================================
+   RENDER BELUM ABSEN
+========================================================= */
+
+function renderBelumAbsen(
+    students
+) {
+
+    const tbody =
+        document.getElementById(
+            "tableBelumBody"
+        );
+
+
+    if (!tbody) return;
+
+
+    if (!students.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="4" class="empty">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Semua siswa sudah melakukan presensi.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    tbody.innerHTML =
+        students
+            .map(
+                (student, index) => {
+
+                    const nisn =
+                        student.NISN ||
+                        student.nisn ||
+                        "-";
+
+                    const nama =
+                        student.NAMA ||
+                        student.nama ||
+                        "-";
+
+                    const kelas =
+                        student.KELAS ||
+                        student.kelas ||
+                        "-";
+
+
+                    return `
+                        <tr>
+
+                            <td>
+                                ${index + 1}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(
+                                    String(nisn)
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(
+                                    String(nama)
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(
+                                    String(kelas)
+                                )}
+                            </td>
+
+                        </tr>
+                    `;
+                }
+            )
+            .join("");
+}
+
+
+/* =========================================================
+   RENDER SUDAH ABSEN
+========================================================= */
+
+function renderSudahAbsen(
+    rows
+) {
+
+    const tbody =
+        document.getElementById(
+            "tableSudahBody"
+        );
+
+
+    if (!tbody) return;
+
+
+    if (!rows.length) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty">
+                    Belum ada data presensi hari ini.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    tbody.innerHTML =
+        rows
+            .map(
+                (row, index) => {
+
+                    const nisn =
+                        row.NISN ||
+                        row.nisn ||
+                        "-";
+
+                    const nama =
+                        row.NAMA ||
+                        row.nama ||
+                        "-";
+
+                    const status =
+                        String(
+                            row.STATUS ||
+                            row.status ||
+                            "-"
+                        ).toUpperCase();
+
+                    const jam =
+                        row.JAM ||
+                        row.jam ||
+                        "-";
+
+
+                    return `
+                        <tr>
+
+                            <td>
+                                ${index + 1}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(
+                                    String(nisn)
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(
+                                    String(nama)
+                                )}
+                            </td>
+
+                            <td>
+                                ${getStatusBadge(
+                                    status
+                                )}
+                            </td>
+
+                            <td>
+                                ${escapeHTML(
+                                    String(jam)
+                                )}
+                            </td>
+
+                        </tr>
+                    `;
+                }
+            )
+            .join("");
+}
+
+
+/* =========================================================
+   STATUS BADGE
+========================================================= */
+
+function getStatusBadge(
+    status
+) {
+
+    let className =
+        "badge-hadir";
+
+
+    if (status === "IZIN") {
+
+        className =
+            "badge-izin";
+
+    } else if (
+        status === "SAKIT"
+    ) {
+
+        className =
+            "badge-sakit";
+
+    } else if (
+        status === "ALPA"
+    ) {
+
+        className =
+            "badge-alpa";
+    }
+
+
+    return `
+        <span class="badge ${className}">
+            ${escapeHTML(status)}
+        </span>
+    `;
+}
+
+
+/* =========================================================
+   REKAP
+========================================================= */
+
+function renderRekap(
+    counts,
+    totalSiswa
+) {
+
+    document.getElementById(
+        "rekapHadir"
+    ).textContent =
+        counts.HADIR;
+
+
+    document.getElementById(
+        "rekapIzin"
+    ).textContent =
+        counts.IZIN;
+
+
+    document.getElementById(
+        "rekapSakit"
+    ).textContent =
+        counts.SAKIT;
+
+
+    document.getElementById(
+        "rekapAlpa"
+    ).textContent =
+        counts.ALPA;
+
+
+    setPercentage(
+        "persenHadir",
+        counts.HADIR,
+        totalSiswa
+    );
+
+
+    setPercentage(
+        "persenIzin",
+        counts.IZIN,
+        totalSiswa
+    );
+
+
+    setPercentage(
+        "persenSakit",
+        counts.SAKIT,
+        totalSiswa
+    );
+
+
+    setPercentage(
+        "persenAlpa",
+        counts.ALPA,
+        totalSiswa
+    );
+}
+
+
+/* =========================================================
+   PERCENTAGE
+========================================================= */
+
+function setPercentage(
+    elementId,
+    value,
+    total
+) {
+
+    const element =
+        document.getElementById(
+            elementId
+        );
+
+
+    if (!element) return;
+
+
+    if (!total) {
+
+        element.textContent =
+            "0%";
+
+        return;
+    }
+
+
+    const percentage =
+        (
+            Number(value) /
+            Number(total) *
+            100
+        ).toFixed(1);
+
+
+    element.textContent =
+        `${percentage}%`;
+}
+
+
+/* =========================================================
+   LOADING
+========================================================= */
+
+function setLoadingStats() {
+
+    const ids = [
+        "totalSiswa",
+        "totalGuru",
+        "totalKelas",
+        "totalHadir",
+        "totalIzin",
+        "totalSakit",
+        "totalAlpa",
+        "totalBelumAbsen"
+    ];
+
+
+    ids.forEach(
+        id => {
+
+            const element =
+                document.getElementById(
+                    id
+                );
+
+
+            if (element) {
+
+                element.innerHTML =
+                    `<i class="fa-solid fa-spinner fa-spin"
+                    style="font-size:18px"></i>`;
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   ERROR
+========================================================= */
+
+function showDashboardError(
+    message
+) {
+
+    console.error(
+        "Dashboard:",
+        message
+    );
+
+
+    const tbody1 =
+        document.getElementById(
+            "tableBelumBody"
+        );
+
+
+    const tbody2 =
+        document.getElementById(
+            "tableSudahBody"
+        );
+
+
+    if (tbody1) {
+
+        tbody1.innerHTML = `
+            <tr>
+                <td colspan="4" class="empty">
+                    Gagal memuat data.
+                </td>
+            </tr>
+        `;
+    }
+
+
+    if (tbody2) {
+
+        tbody2.innerHTML = `
+            <tr>
+                <td colspan="5" class="empty">
+                    Gagal memuat data.
+                </td>
+            </tr>
+        `;
+    }
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHTML(
+    value
+) {
+
+    return String(value)
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+        .replace(
+            /</g,
+            "&lt;"
+        )
+        .replace(
+            />/g,
+            "&gt;"
+        )
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+}
