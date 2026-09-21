@@ -1,283 +1,112 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <title>Data Kelas</title>
+    <title>
+        Data Kelas - Presensi SDN Jatiwaringin XIII
+    </title>
 
-  <meta
-    name="theme-color"
-    content="#1565c0"
-  >
 
-  <link
-    rel="manifest"
-    href="manifest.json"
-  >
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
 </head>
 
+
 <body>
 
-<header class="topbar">
+    <div class="card">
 
-  <div class="topbar-left">
+        <div class="card-header">
 
-    <div class="topbar-logo">
-      SD
-    </div>
+            <div class="card-title">
 
-    <div>
+                <i class="fa-solid fa-school"></i>
 
-      <div class="topbar-title">
-        Data Kelas
-      </div>
+                Data Kelas
 
-      <div class="topbar-school">
-        SD Negeri Jatiwaringin XIII
-      </div>
+            </div>
 
-    </div>
-
-  </div>
-
-
-  <div class="topbar-right">
-
-    <button
-      class="btn btn-secondary btn-small"
-      onclick="location.href='dashboard.html'"
-    >
-      Dashboard
-    </button>
-
-    <button
-      class="btn btn-danger btn-small"
-      onclick="Auth.logout()"
-    >
-      Keluar
-    </button>
-
-  </div>
-
-</header>
-
-
-<main class="container">
-
-  <div class="page-header">
-
-    <div>
-
-      <h1>Data Kelas</h1>
-
-      <p>
-        Kelola kelas dan wali kelas.
-      </p>
-
-    </div>
-
-  </div>
-
-
-  <section class="card">
-
-    <div class="card-header">
-
-      <h2 id="formTitle">
-        Tambah Kelas
-      </h2>
-
-    </div>
-
-
-    <form id="kelasForm">
-
-      <input
-        type="hidden"
-        id="kelasId"
-      >
-
-
-      <div class="form-grid">
-
-        <div class="form-group">
-
-          <label for="kelasNama">
-            Nama Kelas
-          </label>
-
-          <input
-            type="text"
-            id="kelasNama"
-            placeholder="Contoh: 1A"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="kelasGuru">
-            Wali Kelas
-          </label>
-
-          <select
-            id="kelasGuru"
-            required
-          >
-
-            <option value="">
-              Pilih wali kelas
-            </option>
-
-          </select>
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="kelasTahun">
-            Tahun Ajaran
-          </label>
-
-          <input
-            type="text"
-            id="kelasTahun"
-            placeholder="2026/2027"
-            required
-          >
-
-        </div>
-
-
-        <div class="form-group">
-
-          <label for="kelasStatus">
-            Status
-          </label>
-
-          <select id="kelasStatus">
-
-            <option value="AKTIF">
-              AKTIF
-            </option>
-
-            <option value="NONAKTIF">
-              NONAKTIF
-            </option>
-
-          </select>
-
-        </div>
-
-      </div>
-
-
-      <div class="form-actions">
-
-        <button
-          type="submit"
-          class="btn btn-primary"
-          id="btnSimpanKelas"
-        >
-          Simpan
-        </button>
-
-        <button
-          type="button"
-          class="btn btn-secondary"
-          id="btnBatalKelas"
-          style="display:none;"
-        >
-          Batal
-        </button>
-
-      </div>
-
-    </form>
-
-
-    <div
-      id="kelasMessage"
-      class="message"
-      style="display:none;"
-    ></div>
-
-  </section>
-
-
-  <section class="card">
-
-    <div class="card-header">
-
-      <h2>Daftar Kelas</h2>
-
-    </div>
-
-
-    <div class="table-wrapper">
-
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>No</th>
-            <th>ID Kelas</th>
-            <th>Kelas</th>
-            <th>Wali Kelas</th>
-            <th>Tahun Ajaran</th>
-            <th>Status</th>
-            <th>Aksi</th>
-
-          </tr>
-
-        </thead>
-
-
-        <tbody id="kelasTableBody">
-
-          <tr>
-
-            <td
-              colspan="7"
-              class="text-center"
+            <button
+                id="btnTambah"
+                class="btn btn-primary"
             >
-              Memuat data...
 
-            </td>
+                <i class="fa-solid fa-plus"></i>
 
-          </tr>
+                Tambah Kelas
 
-        </tbody>
+            </button>
 
-      </table>
+        </div>
+
+
+        <div class="card-body">
+
+            <div
+                id="kelasMessage"
+            ></div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>No</th>
+                            <th>ID Kelas</th>
+                            <th>Nama Kelas</th>
+                            <th>Wali Kelas</th>
+                            <th>Tahun Ajaran</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="kelasTableBody"
+                    ></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
 
     </div>
 
-  </section>
 
-</main>
-
-
-<script src="auth.js"></script>
-<script src="kelas.js"></script>
-<script src="pwa.js"></script>
+    <script src="auth.js"></script>
+    <script src="layout.js"></script>
+    <script src="kelas.js"></script>
+    <script src="pwa.js"></script>
 
 </body>
+
 </html>
