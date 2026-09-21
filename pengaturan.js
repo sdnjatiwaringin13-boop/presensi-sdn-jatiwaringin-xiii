@@ -1,29 +1,69 @@
+"use strict";
+
 (function () {
 
-  "use strict";
+  const $ = (id) =>
+    document.getElementById(id);
 
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
+  let user = null;
 
-  Auth.requireRole("ADMIN");
+  function init() {
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    init
-  );
+    user =
+      getCurrentUser();
 
-  async function init() {
+    if (!user) {
+      location.href =
+        "index.html";
+      return;
+    }
 
-    document
-      .getElementById(
-        "pengaturanForm"
-      )
-      .addEventListener(
-        "submit",
-        simpan
+    if (
+      String(user.role)
+        .toUpperCase() !==
+      "ADMIN"
+    ) {
+
+      alert(
+        "Halaman pengaturan hanya untuk Administrator."
       );
 
-    await loadPengaturan();
+      location.href =
+        "dashboard.html";
+
+      return;
+    }
+
+    bindEvents();
+
+    loadPengaturan();
+  }
+
+  function bindEvents() {
+
+    $("pengaturanForm")
+      ?.addEventListener(
+        "submit",
+        savePengaturan
+      );
+
+    $("formPengaturan")
+      ?.addEventListener(
+        "submit",
+        savePengaturan
+      );
+
+    $("saveButton")
+      ?.addEventListener(
+        "click",
+        savePengaturan
+      );
+
+    $("refreshButton")
+      ?.addEventListener(
+        "click",
+        loadPengaturan
+      );
   }
 
   async function loadPengaturan() {
@@ -38,66 +78,67 @@
 
       if (!result.success) {
         throw new Error(
-          result.message
+          result.message ||
+          "Gagal mengambil pengaturan."
         );
       }
 
       const data =
         result.data || {};
 
-      document.getElementById(
-        "namaSekolah"
-      ).value =
-        data.namaSekolah || "";
+      setValue(
+        "namaSekolah",
+        data.namaSekolah || ""
+      );
 
-      document.getElementById(
-        "namaKepalaSekolah"
-      ).value =
-        data.namaKepalaSekolah || "";
+      setValue(
+        "namaKepalaSekolah",
+        data.namaKepalaSekolah || ""
+      );
 
-      document.getElementById(
-        "nipKepalaSekolah"
-      ).value =
-        data.nipKepalaSekolah || "";
+      setValue(
+        "nipKepalaSekolah",
+        data.nipKepalaSekolah || ""
+      );
 
     } catch (error) {
 
-      tampilkanPesan(
+      console.error(error);
+
+      showMessage(
         error.message,
         "error"
       );
     }
   }
 
-  async function simpan(event) {
+  async function savePengaturan(e) {
 
-    event.preventDefault();
+    if (e) {
+      e.preventDefault();
+    }
 
     const data = {
 
-      action:
-        "simpanPengaturan",
-
       namaSekolah:
-        document.getElementById(
+        getValue(
           "namaSekolah"
-        ).value.trim(),
+        ),
 
       namaKepalaSekolah:
-        document.getElementById(
+        getValue(
           "namaKepalaSekolah"
-        ).value.trim(),
+        ),
 
       nipKepalaSekolah:
-        document.getElementById(
+        getValue(
           "nipKepalaSekolah"
-        ).value.trim()
-
+        )
     };
 
     if (!data.namaSekolah) {
 
-      tampilkanPesan(
+      showMessage(
         "Nama sekolah wajib diisi.",
         "error"
       );
@@ -105,98 +146,125 @@
       return;
     }
 
-    const button =
-      document.getElementById(
-        "btnSimpanPengaturan"
-      );
-
-    button.disabled = true;
-    button.textContent =
-      "Menyimpan...";
-
     try {
 
+      setSaving(true);
+
       const result =
-        await callAPI(data);
+        await callAPI({
+
+          action:
+            "simpanPengaturan",
+
+          ...data
+
+        });
 
       if (!result.success) {
         throw new Error(
-          result.message
+          result.message ||
+          "Gagal menyimpan pengaturan."
         );
       }
 
-      tampilkanPesan(
-        result.message ||
+      showMessage(
         "Pengaturan berhasil disimpan.",
         "success"
       );
 
     } catch (error) {
 
-      tampilkanPesan(
+      console.error(error);
+
+      showMessage(
         error.message,
         "error"
       );
 
     } finally {
 
-      button.disabled = false;
-      button.textContent =
-        "Simpan Pengaturan";
+      setSaving(false);
+
     }
   }
 
-  async function callAPI(payload) {
+  function setSaving(state) {
 
-    const response =
-      await fetch(
-        API_URL,
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "text/plain;charset=utf-8"
-          },
-
-          body:
-            JSON.stringify(payload)
-        }
+    const buttons =
+      document.querySelectorAll(
+        "#pengaturanForm button, " +
+        "#formPengaturan button, " +
+        "#saveButton"
       );
 
-    return await response.json();
+    buttons.forEach(
+      button => {
+        button.disabled =
+          state;
+      }
+    );
   }
 
-  function tampilkanPesan(
+  function showMessage(
     message,
     type
   ) {
 
     const element =
-      document.getElementById(
-        "pengaturanMessage"
-      );
+      $("message") ||
+      $("pengaturanMessage");
+
+    if (!element) {
+
+      alert(message);
+
+      return;
+    }
 
     element.textContent =
       message;
 
     element.className =
-      "message " +
-      (
+      `alert ${
         type === "success"
-          ? "message-success"
-          : "message-error"
-      );
+          ? "alert-success"
+          : "alert-danger"
+      }`;
 
     element.style.display =
       "block";
-
-    setTimeout(() => {
-
-      element.style.display =
-        "none";
-
-    }, 4000);
   }
+
+  function setValue(
+    id,
+    value
+  ) {
+
+    const element =
+      $(id);
+
+    if (element) {
+      element.value =
+        value ?? "";
+    }
+  }
+
+  function getValue(id) {
+
+    return String(
+      $(id)?.value || ""
+    ).trim();
+  }
+
+  window.loadPengaturan =
+    loadPengaturan;
+
+  window.savePengaturan =
+    savePengaturan;
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
 
 })();
