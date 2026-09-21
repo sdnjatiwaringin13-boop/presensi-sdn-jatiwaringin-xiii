@@ -1,301 +1,409 @@
+"use strict";
+
 (function () {
-  "use strict";
 
-  Auth.requireRole("ADMIN");
+  let dataGuru = [];
+  let modeEdit = false;
 
-  let guruList = [];
+  const $ = (id) => document.getElementById(id);
 
-  document.addEventListener("DOMContentLoaded", init);
+  function init() {
+    const user = getCurrentUser();
 
-  async function init() {
-    document
-      .getElementById("guruForm")
-      .addEventListener("submit", simpanGuru);
+    if (!user) {
+      location.href = "index.html";
+      return;
+    }
 
-    document
-      .getElementById("btnBatalGuru")
-      .addEventListener("click", resetForm);
+    if (String(user.role).toUpperCase() !== "ADMIN") {
+      alert("Halaman ini hanya dapat diakses Administrator.");
+      location.href = "dashboard.html";
+      return;
+    }
 
-    await loadGuru();
+    bindEvents();
+    loadGuru();
+  }
+
+  function bindEvents() {
+
+    $("tambahButton")?.addEventListener("click", function () {
+      openForm();
+    });
+
+    $("cancelButton")?.addEventListener("click", function () {
+      closeForm();
+    });
+
+    $("refreshButton")?.addEventListener("click", function () {
+      loadGuru();
+    });
+
+    $("searchInput")?.addEventListener("input", renderGuru);
+
+    $("statusFilter")?.addEventListener("change", renderGuru);
+
+    $("formGuru")?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      await saveGuru();
+    });
+
+    $("guruForm")?.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      await saveGuru();
+    });
   }
 
   async function loadGuru() {
+
+    const table = $("guruTable");
+
+    if (table) {
+      table.innerHTML = `
+        <tr>
+          <td colspan="7" class="loading">
+            Memuat data guru...
+          </td>
+        </tr>
+      `;
+    }
+
     try {
+
       const result = await callAPI({
         action: "getGuru"
       });
 
       if (!result.success) {
-        throw new Error(result.message);
+        throw new Error(result.message || "Gagal mengambil data guru.");
       }
 
-      guruList = result.data || [];
+      dataGuru = Array.isArray(result.data)
+        ? result.data
+        : [];
 
-      renderTable();
+      renderGuru();
+
+      const jumlah = $("jumlahGuru");
+
+      if (jumlah) {
+        jumlah.textContent = dataGuru.length;
+      }
 
     } catch (error) {
-      tampilkanPesan(error.message, "error");
+
+      console.error(error);
+
+      if (table) {
+        table.innerHTML = `
+          <tr>
+            <td colspan="7" class="error">
+              ${escapeHTML(error.message)}
+            </td>
+          </tr>
+        `;
+      }
     }
   }
 
-  function renderTable() {
-    const tbody =
-      document.getElementById("guruTableBody");
+  function renderGuru() {
 
-    if (!guruList.length) {
-      tbody.innerHTML = `
+    const table = $("guruTable");
+
+    if (!table) return;
+
+    const keyword = String(
+      $("searchInput")?.value || ""
+    ).toLowerCase().trim();
+
+    const status = String(
+      $("statusFilter")?.value || ""
+    ).toUpperCase();
+
+    const filtered = dataGuru.filter(guru => {
+
+      const cocokKeyword =
+        !keyword ||
+        String(guru.ID_GURU || "").toLowerCase().includes(keyword) ||
+        String(guru.NIP || "").toLowerCase().includes(keyword) ||
+        String(guru.NAMA || "").toLowerCase().includes(keyword) ||
+        String(guru.EMAIL || "").toLowerCase().includes(keyword);
+
+      const cocokStatus =
+        !status ||
+        String(guru.STATUS || "").toUpperCase() === status;
+
+      return cocokKeyword && cocokStatus;
+    });
+
+    if (!filtered.length) {
+
+      table.innerHTML = `
         <tr>
-          <td colspan="7" class="text-center">
-            Belum ada data guru.
+          <td colspan="7" class="empty">
+            Data guru tidak ditemukan.
           </td>
         </tr>
       `;
+
       return;
     }
 
-    tbody.innerHTML = guruList.map((guru, index) => `
-      <tr>
+    table.innerHTML = filtered.map((guru, index) => {
 
-        <td>${index + 1}</td>
+      const statusText = String(
+        guru.STATUS || "AKTIF"
+      ).toUpperCase();
 
-        <td>
-          ${escapeHTML(guru.ID_GURU)}
-        </td>
+      const statusClass =
+        statusText === "AKTIF"
+          ? "status-hadir"
+          : "status-alpa";
 
-        <td>
-          ${escapeHTML(guru.NIP)}
-        </td>
-
-        <td>
-          ${escapeHTML(guru.NAMA)}
-        </td>
-
-        <td>
-          ${escapeHTML(guru.EMAIL)}
-        </td>
-
-        <td>
-          <span class="status-badge ${
-            String(guru.STATUS).toUpperCase() === "AKTIF"
-              ? "status-aktif"
-              : "status-nonaktif"
-          }">
-            ${escapeHTML(guru.STATUS)}
-          </span>
-        </td>
-
-        <td>
-
-          <div class="table-actions">
-
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${escapeHTML(guru.ID_GURU || "")}</td>
+          <td>${escapeHTML(guru.NIP || "")}</td>
+          <td>${escapeHTML(guru.NAMA || "")}</td>
+          <td>${escapeHTML(guru.EMAIL || "")}</td>
+          <td>
+            <span class="${statusClass}">
+              ${escapeHTML(statusText)}
+            </span>
+          </td>
+          <td>
             <button
-              class="btn btn-warning btn-small"
-              onclick="editGuru('${escapeJS(guru.ID_GURU)}')"
-            >
+              type="button"
+              class="btn btn-warning btn-sm"
+              data-edit-guru="${escapeAttr(guru.ID_GURU)}">
               Edit
             </button>
 
             <button
-              class="btn btn-danger btn-small"
-              onclick="hapusGuru('${escapeJS(guru.ID_GURU)}')"
-            >
+              type="button"
+              class="btn btn-danger btn-sm"
+              data-delete-guru="${escapeAttr(guru.ID_GURU)}">
               Hapus
             </button>
+          </td>
+        </tr>
+      `;
+    }).join("");
 
-          </div>
+    table.querySelectorAll("[data-edit-guru]")
+      .forEach(button => {
 
-        </td>
+        button.addEventListener("click", function () {
+          editGuru(this.dataset.editGuru);
+        });
 
-      </tr>
-    `).join("");
+      });
+
+    table.querySelectorAll("[data-delete-guru]")
+      .forEach(button => {
+
+        button.addEventListener("click", function () {
+          deleteGuru(this.dataset.deleteGuru);
+        });
+
+      });
   }
 
-  async function simpanGuru(event) {
-    event.preventDefault();
+  function openForm(guru = null) {
 
-    const id =
-      document.getElementById("guruId").value.trim();
+    modeEdit = !!guru;
 
-    const data = {
-      action: id ? "updateGuru" : "tambahGuru",
+    const formContainer =
+      $("formGuru") ||
+      $("guruFormContainer");
 
-      idGuru: id,
-
-      nip:
-        document.getElementById("guruNip").value.trim(),
-
-      nama:
-        document.getElementById("guruNama").value.trim(),
-
-      email:
-        document.getElementById("guruEmail").value.trim(),
-
-      status:
-        document.getElementById("guruStatus").value
-    };
-
-    if (!data.nama) {
-      tampilkanPesan(
-        "Nama guru wajib diisi.",
-        "error"
-      );
-      return;
+    if (formContainer) {
+      formContainer.style.display = "block";
     }
 
-    const button =
-      document.getElementById("btnSimpanGuru");
+    const title = $("formTitle");
 
-    button.disabled = true;
-    button.textContent = "Menyimpan...";
-
-    try {
-      const result = await callAPI(data);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-
-      tampilkanPesan(
-        result.message || "Data guru berhasil disimpan.",
-        "success"
-      );
-
-      resetForm();
-
-      await loadGuru();
-
-    } catch (error) {
-      tampilkanPesan(error.message, "error");
-
-    } finally {
-      button.disabled = false;
-      button.textContent = "Simpan";
+    if (title) {
+      title.textContent = modeEdit
+        ? "Edit Data Guru"
+        : "Tambah Data Guru";
     }
-  }
 
-  window.editGuru = function (id) {
-    const guru =
-      guruList.find(
-        item =>
-          String(item.ID_GURU) === String(id)
-      );
+    setValue("inputIDGuru", guru?.ID_GURU || "");
+    setValue("inputNIP", guru?.NIP || "");
+    setValue("inputNama", guru?.NAMA || "");
+    setValue("inputEmail", guru?.EMAIL || "");
+    setValue("inputStatus", guru?.STATUS || "AKTIF");
 
-    if (!guru) return;
+    const idInput = $("inputIDGuru");
 
-    document.getElementById("guruId").value =
-      guru.ID_GURU || "";
-
-    document.getElementById("guruNip").value =
-      guru.NIP || "";
-
-    document.getElementById("guruNama").value =
-      guru.NAMA || "";
-
-    document.getElementById("guruEmail").value =
-      guru.EMAIL || "";
-
-    document.getElementById("guruStatus").value =
-      guru.STATUS || "AKTIF";
-
-    document.getElementById("formTitle").textContent =
-      "Edit Guru";
-
-    document.getElementById("btnBatalGuru").style.display =
-      "inline-flex";
+    if (idInput) {
+      idInput.readOnly = modeEdit;
+    }
 
     window.scrollTo({
       top: 0,
       behavior: "smooth"
     });
-  };
+  }
 
-  window.hapusGuru = async function (id) {
-    const guru =
-      guruList.find(
-        item =>
-          String(item.ID_GURU) === String(id)
+  function closeForm() {
+
+    const formContainer =
+      $("formGuru") ||
+      $("guruFormContainer");
+
+    if (formContainer) {
+      formContainer.style.display = "none";
+    }
+
+    $("guruForm")?.reset();
+
+    modeEdit = false;
+
+    setValue("inputStatus", "AKTIF");
+  }
+
+  function editGuru(id) {
+
+    const guru = dataGuru.find(
+      item => String(item.ID_GURU) === String(id)
+    );
+
+    if (!guru) {
+      alert("Data guru tidak ditemukan.");
+      return;
+    }
+
+    openForm(guru);
+  }
+
+  async function saveGuru() {
+
+    const idGuru = getValue("inputIDGuru");
+    const nip = getValue("inputNIP");
+    const nama = getValue("inputNama");
+    const email = getValue("inputEmail");
+    const status = getValue("inputStatus") || "AKTIF";
+
+    if (!idGuru || !nama) {
+      alert("ID Guru dan Nama wajib diisi.");
+      return;
+    }
+
+    const payload = {
+      action: modeEdit
+        ? "updateGuru"
+        : "tambahGuru",
+
+      ID_GURU: idGuru,
+      NIP: nip,
+      NAMA: nama,
+      EMAIL: email,
+      STATUS: status
+    };
+
+    try {
+
+      setSaving(true);
+
+      const result = await callAPI(payload);
+
+      if (!result.success) {
+        throw new Error(
+          result.message || "Gagal menyimpan data guru."
+        );
+      }
+
+      alert(
+        modeEdit
+          ? "Data guru berhasil diperbarui."
+          : "Data guru berhasil ditambahkan."
       );
+
+      closeForm();
+      await loadGuru();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(error.message);
+
+    } finally {
+
+      setSaving(false);
+
+    }
+  }
+
+  async function deleteGuru(id) {
+
+    const guru = dataGuru.find(
+      item => String(item.ID_GURU) === String(id)
+    );
 
     if (!guru) return;
 
     const yakin = confirm(
-      "Hapus guru " + guru.NAMA + "?"
+      `Hapus guru "${guru.NAMA}"?`
     );
 
     if (!yakin) return;
 
     try {
+
       const result = await callAPI({
         action: "hapusGuru",
-        idGuru: id
+        ID_GURU: id
       });
 
       if (!result.success) {
-        throw new Error(result.message);
+        throw new Error(
+          result.message || "Gagal menghapus guru."
+        );
       }
 
-      tampilkanPesan(
-        result.message || "Guru berhasil dihapus.",
-        "success"
-      );
+      alert("Data guru berhasil dihapus.");
 
       await loadGuru();
 
     } catch (error) {
-      tampilkanPesan(error.message, "error");
+
+      console.error(error);
+
+      alert(error.message);
+
     }
-  };
-
-  function resetForm() {
-    document.getElementById("guruForm").reset();
-
-    document.getElementById("guruId").value = "";
-
-    document.getElementById("guruStatus").value =
-      "AKTIF";
-
-    document.getElementById("formTitle").textContent =
-      "Tambah Guru";
-
-    document.getElementById("btnBatalGuru").style.display =
-      "none";
   }
 
-
-  function tampilkanPesan(message, type) {
-    const element =
-      document.getElementById("guruMessage");
-
-    element.textContent = message;
-
-    element.className =
-      "message " +
-      (
-        type === "success"
-          ? "message-success"
-          : "message-error"
-      );
-
-    element.style.display = "block";
-
-    setTimeout(() => {
-      element.style.display = "none";
-    }, 4000);
+  function setValue(id, value) {
+    const element = $(id);
+    if (element) element.value = value ?? "";
   }
 
-  function escapeHTML(value) {
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+  function getValue(id) {
+    return String($(id)?.value || "").trim();
   }
 
-  function escapeJS(value) {
-    return String(value ?? "")
-      .replace(/\\/g, "\\\\")
-      .replace(/'/g, "\\'");
+  function setSaving(state) {
+
+    const buttons = document.querySelectorAll(
+      "#guruForm button, #formGuru button"
+    );
+
+    buttons.forEach(button => {
+      button.disabled = state;
+    });
   }
+
+  window.loadGuru = loadGuru;
+  window.editGuru = editGuru;
+  window.deleteGuru = deleteGuru;
+  window.openGuruForm = openForm;
+  window.closeGuruForm = closeForm;
+
+  document.addEventListener("DOMContentLoaded", init);
 
 })();
