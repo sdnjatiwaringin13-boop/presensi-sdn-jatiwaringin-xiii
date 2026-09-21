@@ -1,305 +1,406 @@
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
+(function () {
 
+  "use strict";
 
-let semuaSiswa = [];
 
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
-async function callAPI(payload) {
 
-  const response = await fetch(API_URL, {
+  Auth.requireRole("ADMIN");
 
-    method: "POST",
 
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
+  let siswaList = [];
 
-    body: JSON.stringify(payload)
 
-  });
-
-
-  const text =
-    await response.text();
-
-
-  let result;
-
-  try {
-
-    result = JSON.parse(text);
-
-  } catch (error) {
-
-    throw new Error(
-      "Response server bukan JSON."
-    );
-
-  }
-
-
-  if (!result.success) {
-
-    throw new Error(
-      result.message ||
-      "Terjadi kesalahan."
-    );
-
-  }
-
-
-  return result;
-
-}
-
-
-// ==========================================
-// LOAD SISWA
-// ==========================================
-
-async function loadSiswa() {
-
-  const status =
-    document.getElementById("status");
-
-  status.innerHTML =
-    "⏳ Memuat data siswa...";
-
-
-  try {
-
-    const result =
-      await callAPI({
-        action: "getSiswa"
-      });
-
-
-    semuaSiswa =
-      result.data || [];
-
-
-    isiFilterKelas();
-
-    renderCards();
-
-
-    status.innerHTML =
-      `✓ ${semuaSiswa.length} siswa berhasil dimuat.`;
-
-  } catch (error) {
-
-    console.error(error);
-
-    status.innerHTML =
-      "❌ Gagal memuat siswa: " +
-      error.message;
-
-  }
-
-}
-
-
-// ==========================================
-// FILTER KELAS
-// ==========================================
-
-function isiFilterKelas() {
-
-  const select =
-    document.getElementById("kelasFilter");
-
-
-  const kelasSet =
-    new Set();
-
-
-  semuaSiswa.forEach(siswa => {
-
-    if (siswa.KELAS) {
-
-      kelasSet.add(
-        String(siswa.KELAS).trim()
-      );
-
-    }
-
-  });
-
-
-  const kelas =
-    Array.from(kelasSet).sort();
-
-
-  select.innerHTML =
-    '<option value="">Semua Kelas</option>';
-
-
-  kelas.forEach(namaKelas => {
-
-    const option =
-      document.createElement("option");
-
-    option.value =
-      namaKelas;
-
-    option.textContent =
-      namaKelas;
-
-    select.appendChild(option);
-
-  });
-
-}
-
-
-// ==========================================
-// RENDER KARTU
-// ==========================================
-
-function renderCards() {
-
-  const container =
-    document.getElementById("cards");
-
-
-  container.innerHTML = "";
-
-
-  const filter =
-    document.getElementById(
-      "kelasFilter"
-    ).value;
-
-
-  const siswa =
-    semuaSiswa.filter(s => {
-
-      if (!filter) {
-        return true;
-      }
-
-      return String(s.KELAS).trim() ===
-        filter;
-
-    });
-
-
-  if (siswa.length === 0) {
-
-    container.innerHTML =
-      "<p>Tidak ada siswa.</p>";
-
-    return;
-
-  }
-
-
-  siswa.forEach(s => {
-
-    const card =
-      document.createElement("div");
-
-    card.className =
-      "student-card";
-
-
-    const qrId =
-      "qr-" + s.ID;
-
-
-    card.innerHTML = `
-
-      <div class="school-name">
-        SD NEGERI JATIWARINGIN XIII
-      </div>
-
-      <div class="school-subtitle">
-        KARTU IDENTITAS SISWA
-      </div>
-
-      <div
-        class="qr"
-        id="${qrId}">
-      </div>
-
-      <div class="student-name">
-        ${escapeHTML(s.NAMA)}
-      </div>
-
-      <div class="student-info">
-        Kelas: ${escapeHTML(s.KELAS)}
-      </div>
-
-      <div class="student-info">
-        NISN: ${escapeHTML(s.NISN)}
-      </div>
-
-      <div class="student-id">
-        ${escapeHTML(s.ID)}
-      </div>
-
-    `;
-
-
-    container.appendChild(card);
-
-
-    // QR hanya berisi ID siswa
-    new QRCode(
-      document.getElementById(qrId),
-      {
-        text: String(s.ID),
-        width: 150,
-        height: 150,
-        correctLevel:
-          QRCode.CorrectLevel.H
-      }
-    );
-
-  });
-
-}
-
-
-// ==========================================
-// ESCAPE HTML
-// ==========================================
-
-function escapeHTML(value) {
-
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-
-}
-
-
-// ==========================================
-// KEMBALI
-// ==========================================
-
-function kembali() {
-
-  window.location.href =
-    "admin.html";
-
-}
-
-
-// ==========================================
-// EVENT
-// ==========================================
-
-document
-  .getElementById("kelasFilter")
-  .addEventListener(
-    "change",
-    renderCards
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
   );
 
 
-loadSiswa();
+  async function init() {
+
+    document
+      .getElementById(
+        "kartuKelas"
+      )
+      .addEventListener(
+        "change",
+        renderKartu
+      );
+
+
+    document
+      .getElementById(
+        "kartuSearch"
+      )
+      .addEventListener(
+        "input",
+        renderKartu
+      );
+
+
+    await loadData();
+
+  }
+
+
+  async function loadData() {
+
+    try {
+
+      const result =
+        await callAPI({
+
+          action:
+            "getSiswa",
+
+          aktifOnly:
+            true
+
+        });
+
+
+      if (!result.success) {
+        throw new Error(
+          result.message
+        );
+      }
+
+
+      siswaList =
+        result.data || [];
+
+
+      loadKelasFilter();
+
+
+      renderKartu();
+
+
+    } catch (error) {
+
+      document.getElementById(
+        "kartuContainer"
+      ).innerHTML = `
+
+        <div class="card">
+
+          Gagal memuat data:
+          ${escapeHTML(error.message)}
+
+        </div>
+
+      `;
+
+    }
+
+  }
+
+
+  function loadKelasFilter() {
+
+    const select =
+      document.getElementById(
+        "kartuKelas"
+      );
+
+
+    const kelasSet =
+      new Set();
+
+
+    siswaList.forEach(
+      siswa => {
+
+        if (siswa.KELAS) {
+          kelasSet.add(
+            String(siswa.KELAS)
+          );
+        }
+
+      }
+    );
+
+
+    [...kelasSet]
+      .sort()
+      .forEach(kelas => {
+
+        const option =
+          document.createElement(
+            "option"
+          );
+
+
+        option.value =
+          kelas;
+
+
+        option.textContent =
+          kelas;
+
+
+        select.appendChild(
+          option
+        );
+
+      });
+
+  }
+
+
+  function renderKartu() {
+
+    const container =
+      document.getElementById(
+        "kartuContainer"
+      );
+
+
+    const kelas =
+      document.getElementById(
+        "kartuKelas"
+      ).value;
+
+
+    const keyword =
+      document.getElementById(
+        "kartuSearch"
+      ).value
+        .toLowerCase()
+        .trim();
+
+
+    const filtered =
+      siswaList.filter(
+        siswa => {
+
+          const cocokKelas =
+            !kelas ||
+            String(siswa.KELAS) ===
+            kelas;
+
+
+          const teks = [
+
+            siswa.NAMA,
+
+            siswa.NISN,
+
+            siswa.KELAS
+
+          ]
+            .join(" ")
+            .toLowerCase();
+
+
+          const cocokSearch =
+            !keyword ||
+            teks.includes(keyword);
+
+
+          return (
+            cocokKelas &&
+            cocokSearch
+          );
+
+        }
+      );
+
+
+    if (!filtered.length) {
+
+      container.innerHTML = `
+
+        <div class="card">
+
+          Tidak ada siswa yang ditemukan.
+
+        </div>
+
+      `;
+
+      return;
+
+    }
+
+
+    container.innerHTML =
+      filtered.map(
+        siswa => {
+
+          const safeId =
+            escapeHTML(
+              siswa.ID
+            );
+
+
+          return `
+
+            <div class="student-card">
+
+              <div class="student-card-header">
+
+                <div>
+
+                  <strong>
+                    SD Negeri Jatiwaringin XIII
+                  </strong>
+
+                  <small>
+                    KARTU PRESENSI SISWA
+                  </small>
+
+                </div>
+
+              </div>
+
+
+              <div class="student-card-body">
+
+                <div class="student-card-info">
+
+                  <div>
+
+                    <span>Nama</span>
+
+                    <strong>
+                      ${escapeHTML(
+                        siswa.NAMA
+                      )}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>NISN</span>
+
+                    <strong>
+                      ${escapeHTML(
+                        siswa.NISN
+                      )}
+                    </strong>
+
+                  </div>
+
+
+                  <div>
+
+                    <span>Kelas</span>
+
+                    <strong>
+                      ${escapeHTML(
+                        siswa.KELAS
+                      )}
+                    </strong>
+
+                  </div>
+
+                </div>
+
+
+                <div
+                  class="student-qr"
+                  id="qr-${safeId}"
+                ></div>
+
+              </div>
+
+
+              <div class="student-card-footer">
+
+                Tunjukkan QR Code
+                kepada petugas/guru
+                saat presensi.
+
+              </div>
+
+            </div>
+
+          `;
+
+        }
+      ).join("");
+
+
+    filtered.forEach(
+      siswa => {
+
+        const element =
+          document.getElementById(
+            "qr-" +
+            String(siswa.ID)
+          );
+
+
+        if (!element) return;
+
+
+        new QRCode(
+          element,
+          {
+
+            text:
+              String(siswa.ID),
+
+            width:
+              110,
+
+            height:
+              110,
+
+            correctLevel:
+              QRCode.CorrectLevel.H
+
+          }
+        );
+
+      }
+    );
+
+  }
+
+
+  async function callAPI(payload) {
+
+    const response =
+      await fetch(
+        API_URL,
+        {
+
+          method:
+            "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body:
+            JSON.stringify(payload)
+
+        }
+      );
+
+
+    return await response.json();
+
+  }
+
+
+  function escapeHTML(value) {
+
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  }
+
+})();
