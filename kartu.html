@@ -1,147 +1,166 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
   <title>Kartu QR Siswa</title>
 
-  <link rel="stylesheet" href="./style.css">
+  <meta
+    name="theme-color"
+    content="#1565c0"
+  >
 
-  <style>
-    .container {
-      max-width: 1200px;
-      margin: 30px auto;
-      padding: 20px;
-    }
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
 
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 
-    .toolbar select,
-    .toolbar button {
-      padding: 10px 15px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      cursor: pointer;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 20px;
-    }
-
-    .student-card {
-      border: 2px solid #222;
-      border-radius: 15px;
-      padding: 20px;
-      text-align: center;
-      background: white;
-      page-break-inside: avoid;
-    }
-
-    .school-name {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    .school-subtitle {
-      font-size: 13px;
-      margin-bottom: 15px;
-    }
-
-    .qr {
-      display: flex;
-      justify-content: center;
-      margin: 15px 0;
-    }
-
-    .student-name {
-      font-size: 20px;
-      font-weight: bold;
-      margin-top: 10px;
-    }
-
-    .student-info {
-      font-size: 14px;
-      margin-top: 5px;
-    }
-
-    .student-id {
-      font-size: 18px;
-      font-weight: bold;
-      letter-spacing: 2px;
-      margin-top: 10px;
-    }
-
-    @media print {
-      .toolbar {
-        display: none;
-      }
-
-      body {
-        background: white;
-      }
-
-      .container {
-        margin: 0;
-        padding: 0;
-      }
-
-      .cards {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-      }
-
-      .student-card {
-        border: 1px solid #000;
-      }
-    }
-  </style>
 </head>
 
 <body>
 
-  <div class="container">
+<header class="topbar no-print">
 
-    <h1>Kartu QR Siswa</h1>
+  <div class="topbar-left">
 
-    <div class="toolbar">
+    <div class="topbar-logo">
+      SD
+    </div>
 
-      <select id="kelasFilter">
-        <option value="">Semua Kelas</option>
-      </select>
+    <div>
 
-      <button onclick="loadSiswa()">
-        🔄 Refresh
-      </button>
+      <div class="topbar-title">
+        Kartu QR Siswa
+      </div>
 
-      <button onclick="window.print()">
-        🖨️ Cetak Kartu
-      </button>
-
-      <button onclick="kembali()">
-        ← Kembali
-      </button>
+      <div class="topbar-school">
+        SD Negeri Jatiwaringin XIII
+      </div>
 
     </div>
 
-    <div id="status"></div>
+  </div>
 
-    <div id="cards" class="cards"></div>
+
+  <div class="topbar-right">
+
+    <button
+      class="btn btn-secondary btn-small"
+      onclick="location.href='dashboard.html'"
+    >
+      Dashboard
+    </button>
+
+    <button
+      class="btn btn-primary btn-small"
+      onclick="window.print()"
+    >
+      Cetak
+    </button>
+
+    <button
+      class="btn btn-danger btn-small"
+      onclick="Auth.logout()"
+    >
+      Keluar
+    </button>
 
   </div>
 
-  <!-- Library QR Code -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</header>
 
-  <script src="./kartu.js"></script>
+
+<main class="container">
+
+  <div class="page-header no-print">
+
+    <div>
+
+      <h1>Kartu QR Siswa</h1>
+
+      <p>
+        QR Code digunakan untuk presensi siswa.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <section class="card no-print">
+
+    <div class="toolbar">
+
+      <div class="form-group">
+
+        <label for="kartuKelas">
+          Kelas
+        </label>
+
+        <select id="kartuKelas">
+
+          <option value="">
+            Semua Kelas
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <div class="form-group">
+
+        <label for="kartuSearch">
+          Cari Siswa
+        </label>
+
+        <input
+          type="search"
+          id="kartuSearch"
+          placeholder="Nama / NISN"
+        >
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <section>
+
+    <div
+      id="kartuContainer"
+      class="kartu-grid"
+    >
+
+      <div class="card">
+        Memuat kartu...
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script src="auth.js"></script>
+<script src="kartu.js"></script>
+<script src="pwa.js"></script>
 
 </body>
 </html>
