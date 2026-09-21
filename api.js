@@ -3,57 +3,284 @@
 const API_URL =
   "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
-async function callAPI(payload = {}) {
-  try {
-    const response = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8"
-      },
-      body: JSON.stringify(payload)
-    });
+const API_TIMEOUT = 15000;
+const CACHE_TTL = 30000;
 
-    if (!response.ok) {
-      throw new Error(
-        `Server mengembalikan HTTP ${response.status}`
-      );
-    }
+const requestCache = new Map();
+const pendingRequests = new Map();
 
-    const text = await response.text();
+const CACHEABLE_ACTIONS = new Set([
+  "getRekap",
+  "getSiswa",
+  "getGuru",
+  "getKelas",
+  "getKelasGuru",
+  "getPengaturan"
+]);
 
-    let result;
+const WRITE_ACTIONS = new Set([
+  "tambahSiswa",
+  "updateSiswa",
+  "hapusSiswa",
 
-    try {
-      result = JSON.parse(text);
-    } catch (error) {
-      console.error("Respons API:", text);
+  "tambahGuru",
+  "updateGuru",
+  "hapusGuru",
 
-      throw new Error(
-        "Respons server bukan JSON. Periksa deployment Apps Script."
-      );
-    }
+  "tambahKelas",
+  "updateKelas",
+  "hapusKelas",
 
-    if (!result || typeof result !== "object") {
-      throw new Error(
-        "Server tidak mengembalikan data yang valid."
-      );
-    }
+  "simpanPresensi",
+  "simpanPengaturan"
+]);
 
-    return result;
-
-  } catch (error) {
-    console.error("API ERROR:", error);
-
-    throw new Error(
-      error.message ||
-      "Tidak dapat terhubung ke server."
-    );
-  }
+function cacheKey(payload) {
+  return JSON.stringify(payload || {});
 }
 
+function clearAPICache() {
+
+  requestCache.clear();
+  pendingRequests.clear();
+
+  try {
+
+    Object.keys(sessionStorage)
+      .filter(key =>
+        key.startsWith("presensi_cache_")
+      )
+      .forEach(key =>
+        sessionStorage.removeItem(key)
+      );
+
+  } catch (error) {}
+
+}
+
+async function callAPI(payload = {}) {
+
+  const action =
+    String(
+      payload.action || ""
+    ).trim();
+
+  const key =
+    cacheKey(payload);
+
+  const now =
+    Date.now();
+
+
+  /* =========================================
+     CACHE
+  ========================================== */
+
+  if (
+    CACHEABLE_ACTIONS.has(action) &&
+    !payload.forceRefresh
+  ) {
+
+    const cached =
+      requestCache.get(key);
+
+    if (
+      cached &&
+      now - cached.time < CACHE_TTL
+    ) {
+
+      return cached.data;
+
+    }
+
+
+    if (
+      pendingRequests.has(key)
+    ) {
+
+      return pendingRequests.get(key);
+
+    }
+
+  }
+
+
+  /* =========================================
+     REQUEST
+  ========================================== */
+
+  const promise =
+    (async function () {
+
+      const controller =
+        new AbortController();
+
+      const timer =
+        setTimeout(
+          function () {
+            controller.abort();
+          },
+          API_TIMEOUT
+        );
+
+
+      try {
+
+        const response =
+          await fetch(
+            API_URL,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "text/plain;charset=utf-8"
+              },
+
+              body:
+                JSON.stringify(
+                  payload
+                ),
+
+              cache:
+                "no-store",
+
+              signal:
+                controller.signal
+            }
+          );
+
+
+        const text =
+          await response.text();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `Server mengembalikan HTTP ${response.status}.`
+          );
+
+        }
+
+
+        let result;
+
+
+        try {
+
+          result =
+            JSON.parse(text);
+
+        } catch (error) {
+
+          throw new Error(
+            "Respons server bukan JSON. Periksa deployment Apps Script."
+          );
+
+        }
+
+
+        if (
+          !result ||
+          typeof result !== "object"
+        ) {
+
+          throw new Error(
+            "Server tidak mengembalikan data yang valid."
+          );
+
+        }
+
+
+        if (
+          CACHEABLE_ACTIONS.has(action) &&
+          result.success !== false &&
+          !payload.forceRefresh
+        ) {
+
+          requestCache.set(
+            key,
+            {
+              time: Date.now(),
+              data: result
+            }
+          );
+
+        }
+
+
+        if (
+          WRITE_ACTIONS.has(action)
+        ) {
+
+          clearAPICache();
+
+        }
+
+
+        return result;
+
+      } catch (error) {
+
+        if (
+          error.name === "AbortError"
+        ) {
+
+          throw new Error(
+            "Server terlalu lama merespons. Coba lagi."
+          );
+
+        }
+
+
+        throw new Error(
+          error.message ||
+          "Tidak dapat terhubung ke server."
+        );
+
+      } finally {
+
+        clearTimeout(timer);
+
+        pendingRequests.delete(
+          key
+        );
+
+      }
+
+    })();
+
+
+  if (
+    CACHEABLE_ACTIONS.has(action) &&
+    !payload.forceRefresh
+  ) {
+
+    pendingRequests.set(
+      key,
+      promise
+    );
+
+  }
+
+
+  return promise;
+}
+
+
+/* =========================================
+   UTILITIES
+========================================== */
+
 function escapeHTML(value) {
-  return String(value ?? "")
-    .replace(/[&<>"']/g, function (char) {
+
+  return String(
+    value ?? ""
+  ).replace(
+    /[&<>"']/g,
+    function (char) {
+
       return {
         "&": "&amp;",
         "<": "&lt;",
@@ -61,7 +288,10 @@ function escapeHTML(value) {
         '"': "&quot;",
         "'": "&#039;"
       }[char];
-    });
+
+    }
+  );
+
 }
 
 function escapeAttr(value) {
@@ -69,16 +299,35 @@ function escapeAttr(value) {
 }
 
 function normalizeText(value) {
-  return String(value ?? "").trim();
+  return String(
+    value ?? ""
+  ).trim();
 }
 
 function upperText(value) {
-  return normalizeText(value).toUpperCase();
+  return normalizeText(
+    value
+  ).toUpperCase();
 }
 
-window.API_URL = API_URL;
-window.callAPI = callAPI;
-window.escapeHTML = escapeHTML;
-window.escapeAttr = escapeAttr;
-window.normalizeText = normalizeText;
-window.upperText = upperText;
+
+window.API_URL =
+  API_URL;
+
+window.callAPI =
+  callAPI;
+
+window.clearAPICache =
+  clearAPICache;
+
+window.escapeHTML =
+  escapeHTML;
+
+window.escapeAttr =
+  escapeAttr;
+
+window.normalizeText =
+  normalizeText;
+
+window.upperText =
+  upperText;
