@@ -1,3 +1,8 @@
+/*******************************************************
+ * DASHBOARD
+ * SD NEGERI JATIWARINGIN XIII
+ *******************************************************/
+
 const API_URL =
   "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
@@ -13,53 +18,123 @@ document.addEventListener(
   "DOMContentLoaded",
   function () {
 
-    const saved =
-      localStorage.getItem(
-        "presensiUser"
-      );
-
-
-    if (!saved) {
-
-      location.href =
-        "index.html";
-
-      return;
-
-    }
-
-
-    try {
-
-      currentUser =
-        JSON.parse(saved);
-
-    } catch (error) {
-
-      localStorage.removeItem(
-        "presensiUser"
-      );
-
-      location.href =
-        "index.html";
-
-      return;
-
-    }
-
-
-    tampilkanUser();
-
-    buatMenu();
-
-    loadDashboard();
+    initDashboard();
 
   }
 );
 
 
 /* =====================================================
-   USER
+   INIT DASHBOARD
+===================================================== */
+
+function initDashboard() {
+
+  const saved =
+    localStorage.getItem(
+      "presensiUser"
+    );
+
+
+  /* ===================================================
+     BELUM LOGIN
+  =================================================== */
+
+  if (!saved) {
+
+    window.location.href =
+      "index.html";
+
+    return;
+
+  }
+
+
+  /* ===================================================
+     BACA USER
+  =================================================== */
+
+  try {
+
+    currentUser =
+      JSON.parse(saved);
+
+  } catch (error) {
+
+    console.error(
+      "USER ERROR:",
+      error
+    );
+
+
+    localStorage.removeItem(
+      "presensiUser"
+    );
+
+
+    window.location.href =
+      "index.html";
+
+    return;
+
+  }
+
+
+  /* ===================================================
+     VALIDASI USER
+  =================================================== */
+
+  const role =
+    String(
+      currentUser.role || ""
+    )
+      .trim()
+      .toUpperCase();
+
+
+  if (
+    role !== "ADMIN" &&
+    role !== "GURU"
+  ) {
+
+    localStorage.removeItem(
+      "presensiUser"
+    );
+
+
+    window.location.href =
+      "index.html";
+
+    return;
+
+  }
+
+
+  /* ===================================================
+     TAMPILKAN USER
+  =================================================== */
+
+  tampilkanUser();
+
+
+  /* ===================================================
+     BUAT MENU
+  =================================================== */
+
+  buatMenu();
+
+
+  /* ===================================================
+     LOAD DATA
+  =================================================== */
+
+  loadDashboard();
+
+}
+
+
+/* =====================================================
+   TAMPILKAN USER
 ===================================================== */
 
 function tampilkanUser() {
@@ -80,21 +155,26 @@ function tampilkanUser() {
   const role =
     String(
       currentUser.role || ""
-    ).toUpperCase();
+    )
+      .toUpperCase();
 
 
-  if (role === "ADMIN") {
-
+  const roleElement =
     document.getElementById(
       "welcomeRole"
-    ).textContent =
+    );
+
+
+  if (
+    role === "ADMIN"
+  ) {
+
+    roleElement.textContent =
       "Administrator Sistem";
 
   } else {
 
-    document.getElementById(
-      "welcomeRole"
-    ).textContent =
+    roleElement.textContent =
       "Guru / Wali Kelas";
 
   }
@@ -117,27 +197,42 @@ function buatMenu() {
   const role =
     String(
       currentUser.role || ""
-    ).toUpperCase();
+    )
+      .trim()
+      .toUpperCase();
 
 
   let html = "";
 
 
-  if (role === "ADMIN") {
+  /* ===================================================
+     ADMIN
+  =================================================== */
 
-    html += `
+  if (
+    role === "ADMIN"
+  ) {
+
+    html = `
 
       <div
         class="menu-card"
-        onclick="location.href='admin.html'"
+        onclick="
+          location.href='admin.html'
+        "
       >
 
+        <div class="menu-icon">
+          👨‍💼
+        </div>
+
         <h3>
-          👨‍💼 Administrasi
+          Administrasi
         </h3>
 
         <p>
-          Kelola data siswa, guru dan kelas.
+          Kelola data siswa, guru,
+          kelas dan sistem presensi.
         </p>
 
       </div>
@@ -145,15 +240,22 @@ function buatMenu() {
 
       <div
         class="menu-card"
-        onclick="location.href='kartu.html'"
+        onclick="
+          location.href='kartu.html'
+        "
       >
 
+        <div class="menu-icon">
+          🪪
+        </div>
+
         <h3>
-          🪪 Kartu QR Siswa
+          Kartu QR Siswa
         </h3>
 
         <p>
-          Buat dan cetak kartu QR siswa.
+          Membuat dan mencetak
+          kartu QR siswa.
         </p>
 
       </div>
@@ -161,15 +263,22 @@ function buatMenu() {
 
       <div
         class="menu-card"
-        onclick="location.href='scan.html'"
+        onclick="
+          location.href='scan.html'
+        "
       >
 
+        <div class="menu-icon">
+          📷
+        </div>
+
         <h3>
-          📷 Scan QR
+          Scan QR
         </h3>
 
         <p>
-          Scan QR Code siswa.
+          Memindai QR Code
+          siswa menggunakan kamera.
         </p>
 
       </div>
@@ -177,15 +286,22 @@ function buatMenu() {
 
       <div
         class="menu-card"
-        onclick="location.href='absen-bulanan.html'"
+        onclick="
+          location.href='absen-bulanan.html'
+        "
       >
 
+        <div class="menu-icon">
+          📊
+        </div>
+
         <h3>
-          📊 Laporan Bulanan
+          Laporan Bulanan
         </h3>
 
         <p>
-          Lihat dan cetak laporan absensi.
+          Melihat, mencetak dan
+          mengunduh laporan absensi.
         </p>
 
       </div>
@@ -193,15 +309,22 @@ function buatMenu() {
 
       <div
         class="menu-card"
-        onclick="location.href='pengaturan.html'"
+        onclick="
+          location.href='pengaturan.html'
+        "
       >
 
+        <div class="menu-icon">
+          ⚙️
+        </div>
+
         <h3>
-          ⚙️ Pengaturan Sekolah
+          Pengaturan Sekolah
         </h3>
 
         <p>
-          Atur kepala sekolah dan informasi sekolah.
+          Mengatur nama sekolah,
+          kepala sekolah dan NIP.
         </p>
 
       </div>
@@ -211,21 +334,34 @@ function buatMenu() {
   }
 
 
-  if (role === "GURU") {
+  /* ===================================================
+     GURU
+  =================================================== */
 
-    html += `
+  if (
+    role === "GURU"
+  ) {
+
+    html = `
 
       <div
         class="menu-card"
-        onclick="location.href='presensi.html'"
+        onclick="
+          location.href='presensi.html'
+        "
       >
 
+        <div class="menu-icon">
+          📝
+        </div>
+
         <h3>
-          📝 Presensi Siswa
+          Presensi Siswa
         </h3>
 
         <p>
-          Melakukan presensi siswa.
+          Melakukan presensi siswa
+          berdasarkan kelas.
         </p>
 
       </div>
@@ -233,15 +369,22 @@ function buatMenu() {
 
       <div
         class="menu-card"
-        onclick="location.href='scan.html'"
+        onclick="
+          location.href='scan.html'
+        "
       >
 
+        <div class="menu-icon">
+          📷
+        </div>
+
         <h3>
-          📷 Scan QR
+          Scan QR
         </h3>
 
         <p>
-          Presensi menggunakan QR Code.
+          Melakukan presensi siswa
+          menggunakan QR Code.
         </p>
 
       </div>
@@ -249,15 +392,22 @@ function buatMenu() {
 
       <div
         class="menu-card"
-        onclick="location.href='absen-bulanan.html'"
+        onclick="
+          location.href='absen-bulanan.html'
+        "
       >
 
+        <div class="menu-icon">
+          📊
+        </div>
+
         <h3>
-          📊 Laporan Bulanan
+          Laporan Bulanan
         </h3>
 
         <p>
-          Lihat dan cetak absensi bulanan.
+          Melihat, mencetak dan
+          mengunduh absensi bulanan.
         </p>
 
       </div>
@@ -281,96 +431,49 @@ async function loadDashboard() {
 
   try {
 
-    /*
-     * DATA SISWA
-     */
+    const role =
+      String(
+        currentUser.role || ""
+      )
+        .trim()
+        .toUpperCase();
 
-    const siswa =
-      await callAPI({
-        action: "getSiswa"
-      });
 
+    /* =================================================
+       ADMIN
+    ================================================= */
 
     if (
-      siswa &&
-      siswa.success
+      role === "ADMIN"
     ) {
 
       document.getElementById(
-        "totalSiswa"
-      ).textContent =
-        Array.isArray(
-          siswa.data
-        )
-          ? siswa.data.filter(
-              s =>
-                String(
-                  s.STATUS || ""
-                ).toUpperCase()
-                !== "NONAKTIF"
-            ).length
-          : 0;
+        "adminSection"
+      ).style.display =
+        "block";
+
+
+      await loadStatistikAdmin();
 
     }
 
 
-    /*
-     * DATA GURU
-     */
-
-    const guru =
-      await callAPI({
-        action: "getGuru"
-      });
-
+    /* =================================================
+       GURU
+    ================================================= */
 
     if (
-      guru &&
-      guru.success
+      role === "GURU"
     ) {
 
-      document.getElementById(
-        "totalGuru"
-      ).textContent =
-        Array.isArray(
-          guru.data
-        )
-          ? guru.data.length
-          : 0;
+      await loadInfoGuru();
 
     }
 
 
-    /*
-     * DATA KELAS
-     */
-
-    const kelas =
-      await callAPI({
-        action: "getKelas"
-      });
-
-
-    if (
-      kelas &&
-      kelas.success
-    ) {
-
-      document.getElementById(
-        "totalKelas"
-      ).textContent =
-        Array.isArray(
-          kelas.data
-        )
-          ? kelas.data.length
-          : 0;
-
-    }
-
-
-    /*
-     * REKAP HARI INI
-     */
+    /* =================================================
+       PRESENSI
+    ================================================= */
 
     await loadPresensiHariIni();
 
@@ -378,9 +481,314 @@ async function loadDashboard() {
   } catch (error) {
 
     console.error(
-      "Dashboard error:",
+      "DASHBOARD ERROR:",
       error
     );
+
+
+    showError(
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   STATISTIK ADMIN
+===================================================== */
+
+async function loadStatistikAdmin() {
+
+  try {
+
+    /* =================================================
+       SISWA
+    ================================================= */
+
+    const siswaResult =
+      await callAPI({
+
+        action:
+          "getSiswa"
+
+      });
+
+
+    if (
+      siswaResult &&
+      siswaResult.success
+    ) {
+
+      const siswa =
+        Array.isArray(
+          siswaResult.data
+        )
+          ? siswaResult.data
+          : [];
+
+
+      const aktif =
+        siswa.filter(
+          function (item) {
+
+            const status =
+              String(
+                item.STATUS || ""
+              )
+                .trim()
+                .toUpperCase();
+
+
+            return (
+              status !==
+              "NONAKTIF"
+            );
+
+          }
+        );
+
+
+      document.getElementById(
+        "totalSiswa"
+      ).textContent =
+        aktif.length;
+
+    }
+
+
+    /* =================================================
+       GURU
+    ================================================= */
+
+    const guruResult =
+      await callAPI({
+
+        action:
+          "getGuru"
+
+      });
+
+
+    if (
+      guruResult &&
+      guruResult.success
+    ) {
+
+      const guru =
+        Array.isArray(
+          guruResult.data
+        )
+          ? guruResult.data
+          : [];
+
+
+      const aktif =
+        guru.filter(
+          function (item) {
+
+            const status =
+              String(
+                item.STATUS || ""
+              )
+                .trim()
+                .toUpperCase();
+
+
+            return (
+              status !==
+              "NONAKTIF"
+            );
+
+          }
+        );
+
+
+      document.getElementById(
+        "totalGuru"
+      ).textContent =
+        aktif.length;
+
+    }
+
+
+    /* =================================================
+       KELAS
+    ================================================= */
+
+    const kelasResult =
+      await callAPI({
+
+        action:
+          "getKelas"
+
+      });
+
+
+    if (
+      kelasResult &&
+      kelasResult.success
+    ) {
+
+      const kelas =
+        Array.isArray(
+          kelasResult.data
+        )
+          ? kelasResult.data
+          : [];
+
+
+      const aktif =
+        kelas.filter(
+          function (item) {
+
+            const status =
+              String(
+                item.STATUS || ""
+              )
+                .trim()
+                .toUpperCase();
+
+
+            return (
+              status !==
+              "NONAKTIF"
+            );
+
+          }
+        );
+
+
+      document.getElementById(
+        "totalKelas"
+      ).textContent =
+        aktif.length;
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "STATISTIK ERROR:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =====================================================
+   INFO GURU
+===================================================== */
+
+async function loadInfoGuru() {
+
+  const guruInfo =
+    document.getElementById(
+      "guruInfo"
+    );
+
+
+  guruInfo.style.display =
+    "block";
+
+
+  document.getElementById(
+    "guruNama"
+  ).textContent =
+    currentUser.nama ||
+    currentUser.username ||
+    "-";
+
+
+  document.getElementById(
+    "guruId"
+  ).textContent =
+    currentUser.idGuru ||
+    "-";
+
+
+  try {
+
+    const result =
+      await callAPI({
+
+        action:
+          "getKelasGuru",
+
+        idGuru:
+          currentUser.idGuru
+
+      });
+
+
+    if (
+      result &&
+      result.success
+    ) {
+
+      const kelas =
+        Array.isArray(
+          result.data
+        )
+          ? result.data
+          : [];
+
+
+      const namaKelas =
+        kelas
+          .map(
+            function (item) {
+
+              return (
+                item.NAMA_KELAS ||
+                item.namaKelas ||
+                "-"
+              );
+
+            }
+          )
+          .filter(
+            function (item) {
+
+              return item !== "-";
+
+            }
+          );
+
+
+      document.getElementById(
+        "guruKelas"
+      ).textContent =
+        namaKelas.length
+          ? namaKelas.join(", ")
+          : "Belum ada kelas";
+
+    } else {
+
+      document.getElementById(
+        "guruKelas"
+      ).textContent =
+        "Belum ada kelas";
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "KELAS GURU ERROR:",
+      error
+    );
+
+
+    document.getElementById(
+      "guruKelas"
+    ).textContent =
+      "Tidak dapat memuat";
 
   }
 
@@ -402,11 +810,17 @@ async function loadPresensiHariIni() {
     "-" +
     String(
       sekarang.getMonth() + 1
-    ).padStart(2, "0") +
+    ).padStart(
+      2,
+      "0"
+    ) +
     "-" +
     String(
       sekarang.getDate()
-    ).padStart(2, "0");
+    ).padStart(
+      2,
+      "0"
+    );
 
 
   try {
@@ -425,8 +839,10 @@ async function loadPresensiHariIni() {
 
     if (
       !result ||
-      !result.success
+      result.success !== true
     ) {
+
+      setPresensiNol();
 
       return;
 
@@ -442,8 +858,11 @@ async function loadPresensiHariIni() {
 
 
     let hadir = 0;
+
     let izin = 0;
+
     let sakit = 0;
+
     let alpa = 0;
 
 
@@ -453,7 +872,9 @@ async function loadPresensiHariIni() {
         const status =
           String(
             item.STATUS || ""
-          ).toUpperCase();
+          )
+            .trim()
+            .toUpperCase();
 
 
         if (
@@ -462,19 +883,28 @@ async function loadPresensiHariIni() {
 
           hadir++;
 
-        } else if (
+        }
+
+
+        else if (
           status === "IZIN"
         ) {
 
           izin++;
 
-        } else if (
+        }
+
+
+        else if (
           status === "SAKIT"
         ) {
 
           sakit++;
 
-        } else if (
+        }
+
+
+        else if (
           status === "ALPA"
         ) {
 
@@ -513,11 +943,46 @@ async function loadPresensiHariIni() {
   } catch (error) {
 
     console.error(
-      "Rekap error:",
+      "REKAP ERROR:",
       error
     );
 
+
+    setPresensiNol();
+
   }
+
+}
+
+
+/* =====================================================
+   PRESENSI NOL
+===================================================== */
+
+function setPresensiNol() {
+
+  document.getElementById(
+    "hadir"
+  ).textContent =
+    "0";
+
+
+  document.getElementById(
+    "izin"
+  ).textContent =
+    "0";
+
+
+  document.getElementById(
+    "sakit"
+  ).textContent =
+    "0";
+
+
+  document.getElementById(
+    "alpa"
+  ).textContent =
+    "0";
 
 }
 
@@ -534,7 +999,8 @@ async function callAPI(
     await fetch(
       API_URL,
       {
-        method: "POST",
+        method:
+          "POST",
 
         headers: {
           "Content-Type":
@@ -542,9 +1008,22 @@ async function callAPI(
         },
 
         body:
-          JSON.stringify(payload)
+          JSON.stringify(
+            payload
+          )
+
       }
     );
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      "HTTP Error " +
+      response.status
+    );
+
+  }
 
 
   const text =
@@ -560,9 +1039,62 @@ async function callAPI(
   }
 
 
-  return JSON.parse(
-    text
-  );
+  let result;
+
+
+  try {
+
+    result =
+      JSON.parse(
+        text
+      );
+
+  } catch (error) {
+
+    console.error(
+      "RESPONSE SERVER:",
+      text
+    );
+
+
+    throw new Error(
+      "Response server bukan JSON."
+    );
+
+  }
+
+
+  return result;
+
+}
+
+
+/* =====================================================
+   ERROR
+===================================================== */
+
+function showError(
+  message
+) {
+
+  const element =
+    document.getElementById(
+      "errorBox"
+    );
+
+
+  if (!element) {
+    return;
+  }
+
+
+  element.textContent =
+    message ||
+    "Terjadi kesalahan.";
+
+
+  element.style.display =
+    "block";
 
 }
 
@@ -578,7 +1110,7 @@ function logout() {
   );
 
 
-  location.href =
+  window.location.href =
     "index.html";
 
 }
