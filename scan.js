@@ -1,583 +1,444 @@
+"use strict";
+
 (function () {
 
-  "use strict";
-
-
-  const API_URL =
-    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
-
-
-  const currentUser =
-    Auth.requireRole([
-      "ADMIN",
-      "GURU"
-    ]);
-
-
+  let semuaSiswa = [];
   let scanner = null;
+  let sedangMemproses = false;
+  let kameraAktif = false;
 
-  let scannerRunning = false;
+  let userLogin = null;
+  let idGuruLogin = "";
 
-  let siswaList = [];
+  const $ = (id) =>
+    document.getElementById(id);
 
-  let kelasList = [];
+  function init() {
 
-  let processing = false;
+    userLogin =
+      getCurrentUser();
 
+    if (!userLogin) {
+      location.href =
+        "index.html";
+      return;
+    }
 
-  document.addEventListener(
-    "DOMContentLoaded",
-    init
-  );
+    const role =
+      String(
+        userLogin.role || ""
+      ).toUpperCase();
 
+    if (
+      role !== "GURU" &&
+      role !== "ADMIN"
+    ) {
+      location.href =
+        "dashboard.html";
+      return;
+    }
 
-  async function init() {
+    idGuruLogin =
+      userLogin.idGuru || "";
 
-    await loadData();
+    tampilkanGuru();
 
+    loadSiswa();
 
-    document
-      .getElementById(
-        "btnStartScan"
-      )
-      .addEventListener(
-        "click",
-        startScanner
+    if (
+      typeof Html5Qrcode !==
+      "undefined"
+    ) {
+      mulaiScanner();
+    } else {
+      tampilkanError(
+        "Library QR Scanner belum dimuat."
       );
-
-
-    document
-      .getElementById(
-        "btnStopScan"
-      )
-      .addEventListener(
-        "click",
-        stopScanner
-      );
-
+    }
   }
 
+  function tampilkanGuru() {
 
-  async function loadData() {
+    const element =
+      $("guruInfo");
+
+    if (!element) return;
+
+    element.innerHTML = `
+      <strong>
+        ${escapeHTML(
+          userLogin.nama ||
+          userLogin.username ||
+          "-"
+        )}
+      </strong>
+
+      <br>
+
+      <small>
+        ${escapeHTML(
+          userLogin.role || ""
+        )}
+      </small>
+    `;
+  }
+
+  async function loadSiswa() {
 
     try {
 
-      let kelasResult;
-
-
-      if (currentUser.role === "GURU") {
-
-        kelasResult =
-          await callAPI({
-
-            action:
-              "getKelasGuru",
-
-            idGuru:
-              currentUser.idGuru
-
-          });
-
-      } else {
-
-        kelasResult =
-          await callAPI({
-            action:
-              "getKelas"
-          });
-
-      }
-
-
-      if (!kelasResult.success) {
-        throw new Error(
-          kelasResult.message
-        );
-      }
-
-
-      kelasList =
-        kelasResult.data || [];
-
-
-      const select =
-        document.getElementById(
-          "scanKelas"
-        );
-
-
-      select.innerHTML = `
-        <option value="">
-          Pilih kelas
-        </option>
-      `;
-
-
-      kelasList.forEach(
-        kelas => {
-
-          const option =
-            document.createElement(
-              "option"
-            );
-
-
-          option.value =
-            kelas.NAMA_KELAS;
-
-
-          option.textContent =
-            kelas.NAMA_KELAS;
-
-
-          select.appendChild(
-            option
-          );
-
-        }
-      );
-
-
-      if (
-        currentUser.role === "GURU" &&
-        kelasList.length === 1
-      ) {
-
-        select.value =
-          kelasList[0].NAMA_KELAS;
-
-      }
-
-
-      const siswaResult =
+      const result =
         await callAPI({
-
-          action:
-            "getSiswa",
-
-          aktifOnly:
-            true
-
+          action: "getSiswa",
+          aktifOnly: true
         });
 
-
-      if (!siswaResult.success) {
+      if (!result.success) {
         throw new Error(
-          siswaResult.message
+          result.message ||
+          "Gagal mengambil data siswa."
         );
       }
 
-
-      siswaList =
-        siswaResult.data || [];
-
-
-    } catch (error) {
-
-      tampilkanPesan(
-        error.message,
-        "error"
-      );
-
-    }
-
-  }
-
-
-  async function startScanner() {
-
-    const kelas =
-      document.getElementById(
-        "scanKelas"
-      ).value;
-
-
-    if (!kelas) {
-
-      tampilkanPesan(
-        "Pilih kelas terlebih dahulu.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    if (scannerRunning) {
-      return;
-    }
-
-
-    scanner =
-      new Html5Qrcode(
-        "reader"
-      );
-
-
-    try {
-
-      await scanner.start(
-
-        {
-          facingMode: "environment"
-        },
-
-        {
-          fps: 10,
-
-          qrbox: {
-            width: 250,
-            height: 250
-          }
-
-        },
-
-        onScanSuccess,
-
-        onScanError
-
-      );
-
-
-      scannerRunning = true;
-
-
-      document.getElementById(
-        "scanResult"
-      ).textContent =
-        "Kamera aktif. Arahkan QR siswa ke kamera.";
-
+      semuaSiswa =
+        Array.isArray(result.data)
+          ? result.data
+          : [];
 
     } catch (error) {
 
       console.error(error);
 
-
-      tampilkanPesan(
-        "Kamera tidak dapat digunakan. Pastikan browser memiliki izin kamera dan halaman menggunakan HTTPS.",
-        "error"
+      tampilkanError(
+        error.message
       );
-
     }
-
   }
 
+  function mulaiScanner() {
+
+    if (kameraAktif) return;
+
+    const reader =
+      $("reader");
+
+    if (!reader) return;
+
+    scanner =
+      new Html5Qrcode("reader");
+
+    const config = {
+      fps: 10,
+      qrbox: {
+        width: 250,
+        height: 250
+      }
+    };
+
+    scanner.start(
+      {
+        facingMode: "environment"
+      },
+      config,
+      onScanSuccess,
+      function () {}
+    )
+    .then(() => {
+
+      kameraAktif = true;
+
+      tampilkanStatus(
+        "Kamera aktif. Arahkan QR siswa ke kamera."
+      );
+
+    })
+    .catch(error => {
+
+      console.error(error);
+
+      kameraAktif = false;
+
+      tampilkanError(
+        "Kamera tidak dapat digunakan. " +
+        "Pastikan izin kamera diberikan."
+      );
+    });
+  }
 
   async function stopScanner() {
 
-    if (!scanner || !scannerRunning) {
+    if (!scanner || !kameraAktif) {
       return;
     }
-
 
     try {
 
       await scanner.stop();
 
-      await scanner.clear();
+      kameraAktif = false;
 
     } catch (error) {
 
       console.error(error);
 
     }
-
-
-    scannerRunning = false;
-
-
-    document.getElementById(
-      "scanResult"
-    ).textContent =
-      "Kamera dihentikan.";
-
   }
-
 
   async function onScanSuccess(decodedText) {
 
-    if (processing) {
-      return;
-    }
+    if (sedangMemproses) return;
 
+    sedangMemproses = true;
 
-    processing = true;
-
+    const idSiswa =
+      String(decodedText || "")
+        .trim();
 
     try {
 
-      await prosesQR(
-        decodedText
-      );
+      await stopScanner();
+
+      await prosesQR(idSiswa);
 
     } finally {
 
       setTimeout(() => {
-
-        processing = false;
-
-      }, 1500);
-
+        sedangMemproses = false;
+      }, 2000);
     }
-
   }
 
-
-  function onScanError(errorMessage) {
-    // Error scanning normal diabaikan.
-  }
-
-
-  async function prosesQR(qrValue) {
-
-    const studentId =
-      String(qrValue || "")
-        .trim();
-
-
-    const kelas =
-      document.getElementById(
-        "scanKelas"
-      ).value;
-
+  async function prosesQR(idSiswa) {
 
     const siswa =
-      siswaList.find(
+      semuaSiswa.find(
         item =>
           String(item.ID) ===
-          studentId
+          String(idSiswa)
       );
-
 
     if (!siswa) {
 
-      tampilkanPesan(
-        "QR tidak dikenali sebagai ID siswa.",
-        "error"
+      prosesGagal(
+        "QR tidak terdaftar sebagai siswa."
       );
 
       return;
-
     }
 
+    try {
 
-    if (
-      String(siswa.KELAS) !==
-      String(kelas)
-    ) {
+      const result =
+        await callAPI({
 
-      tampilkanPesan(
+          action:
+            "simpanPresensi",
 
-        `Siswa ${siswa.NAMA} terdaftar di kelas ${siswa.KELAS}, bukan kelas ${kelas}.`,
+          id:
+            siswa.ID,
 
-        "error"
+          nisn:
+            siswa.NISN,
 
+          nama:
+            siswa.NAMA,
+
+          kelas:
+            siswa.KELAS,
+
+          status:
+            "HADIR",
+
+          sumber:
+            "QR",
+
+          idGuru:
+            idGuruLogin
+
+        });
+
+      if (!result.success) {
+        throw new Error(
+          result.message ||
+          "Gagal menyimpan presensi."
+        );
+      }
+
+      tampilkanBerhasil(
+        siswa
       );
 
-      return;
+    } catch (error) {
 
+      console.error(error);
+
+      prosesGagal(
+        error.message
+      );
     }
-
-
-    document.getElementById(
-      "scanResult"
-    ).textContent =
-      "Menyimpan presensi " +
-      siswa.NAMA +
-      "...";
-
-
-    const result =
-      await callAPI({
-
-        action:
-          "simpanPresensi",
-
-        id:
-          siswa.ID,
-
-        nisn:
-          siswa.NISN,
-
-        nama:
-          siswa.NAMA,
-
-        kelas:
-          siswa.KELAS,
-
-        status:
-          "HADIR",
-
-        idGuru:
-          currentUser.idGuru || "",
-
-        sumber:
-          "QR",
-
-        tanggal:
-          getToday()
-
-      });
-
-
-    if (!result.success) {
-
-      tampilkanPesan(
-        result.message ||
-        "Presensi gagal disimpan.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    document.getElementById(
-      "scanResult"
-    ).textContent =
-      "Presensi berhasil.";
-
-
-    document.getElementById(
-      "lastStudent"
-    ).innerHTML = `
-
-      <div class="last-student-name">
-        ${escapeHTML(siswa.NAMA)}
-      </div>
-
-      <div>
-        NISN:
-        ${escapeHTML(siswa.NISN)}
-      </div>
-
-      <div>
-        Kelas:
-        ${escapeHTML(siswa.KELAS)}
-      </div>
-
-      <div>
-        Status:
-        <strong>HADIR</strong>
-      </div>
-
-      <div>
-        Waktu:
-        ${new Date().toLocaleTimeString("id-ID")}
-      </div>
-
-    `;
-
-
-    tampilkanPesan(
-      "Presensi " +
-      siswa.NAMA +
-      " berhasil dicatat.",
-      "success"
-    );
-
   }
 
-
-  async function callAPI(payload) {
-
-    const response =
-      await fetch(
-        API_URL,
-        {
-
-          method:
-            "POST",
-
-          headers: {
-            "Content-Type":
-              "text/plain;charset=utf-8"
-          },
-
-          body:
-            JSON.stringify(payload)
-
-        }
-      );
-
-
-    return await response.json();
-
-  }
-
-
-  function getToday() {
-
-    const now =
-      new Date();
-
-
-    return [
-
-      now.getFullYear(),
-
-      String(
-        now.getMonth() + 1
-      ).padStart(2, "0"),
-
-      String(
-        now.getDate()
-      ).padStart(2, "0")
-
-    ].join("-");
-
-  }
-
-
-  function tampilkanPesan(
-    message,
-    type
+  function tampilkanBerhasil(
+    siswa
   ) {
 
-    const element =
-      document.getElementById(
-        "scanMessage"
-      );
+    const result =
+      $("result");
 
+    if (!result) return;
 
-    element.textContent =
-      message;
+    result.innerHTML = `
+      <div class="alert alert-success">
 
+        <h3>
+          Presensi Berhasil
+        </h3>
 
-    element.className =
-      "message " +
-      (
-        type === "success"
-          ? "message-success"
-          : "message-error"
-      );
+        <strong>
+          ${escapeHTML(
+            siswa.NAMA
+          )}
+        </strong>
 
+        <br>
 
-    element.style.display =
-      "block";
+        NISN:
+        ${escapeHTML(
+          siswa.NISN || "-"
+        )}
 
+        <br>
+
+        Kelas:
+        ${escapeHTML(
+          siswa.KELAS || "-"
+        )}
+
+        <br>
+
+        Status:
+        <strong>HADIR</strong>
+
+      </div>
+    `;
+
+    tampilkanStatus(
+      "Presensi berhasil dicatat."
+    );
 
     setTimeout(() => {
 
-      element.style.display =
-        "none";
+      if (!kameraAktif) {
+        mulaiScanner();
+      }
 
-    }, 4000);
-
+    }, 1500);
   }
 
+  function prosesGagal(
+    message
+  ) {
 
-  function escapeHTML(value) {
+    const result =
+      $("result");
 
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+    if (result) {
 
+      result.innerHTML = `
+        <div class="alert alert-danger">
+          ${escapeHTML(
+            message
+          )}
+        </div>
+      `;
+    }
+
+    tampilkanStatus(
+      "Presensi gagal."
+    );
+
+    setTimeout(() => {
+
+      if (!kameraAktif) {
+        mulaiScanner();
+      }
+
+    }, 2000);
   }
+
+  function tampilkanStatus(
+    message
+  ) {
+
+    const element =
+      $("scanStatus");
+
+    if (element) {
+      element.textContent =
+        message;
+    }
+  }
+
+  function tampilkanError(
+    message
+  ) {
+
+    const result =
+      $("result");
+
+    if (result) {
+
+      result.innerHTML = `
+        <div class="alert alert-danger">
+          ${escapeHTML(
+            message
+          )}
+        </div>
+      `;
+    }
+  }
+
+  function kembali() {
+
+    location.href =
+      "dashboard.html";
+  }
+
+  async function logoutScan() {
+
+    await stopScanner();
+
+    if (
+      typeof Auth !==
+      "undefined" &&
+      Auth.logout
+    ) {
+      Auth.logout();
+    } else {
+      localStorage.removeItem(
+        "presensiUser"
+      );
+
+      location.href =
+        "index.html";
+    }
+  }
+
+  window.mulaiScanner =
+    mulaiScanner;
+
+  window.stopScanner =
+    stopScanner;
+
+  window.kembali =
+    kembali;
+
+  window.logoutScan =
+    logoutScan;
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
 
 })();
