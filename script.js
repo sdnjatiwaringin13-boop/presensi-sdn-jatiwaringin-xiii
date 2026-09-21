@@ -16,19 +16,20 @@ async function callAPI(payload) {
   try {
 
     const response =
-      await fetch(API_URL, {
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
 
-        method: "POST",
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
 
-        headers: {
-          "Content-Type":
-            "text/plain;charset=utf-8"
-        },
-
-        body:
-          JSON.stringify(payload)
-
-      });
+          body:
+            JSON.stringify(payload)
+        }
+      );
 
 
     if (!response.ok) {
@@ -92,7 +93,6 @@ async function callAPI(payload) {
       error
     );
 
-
     throw error;
 
   }
@@ -120,6 +120,43 @@ document.addEventListener(
 
 function initLogin() {
 
+  /*
+   * Kalau sudah login,
+   * langsung masuk dashboard.
+   */
+
+  const currentUser =
+    getCurrentUser();
+
+
+  if (
+    currentUser &&
+    currentUser.role
+  ) {
+
+    const role =
+      String(
+        currentUser.role
+      )
+        .trim()
+        .toUpperCase();
+
+
+    if (
+      role === "ADMIN" ||
+      role === "GURU"
+    ) {
+
+      window.location.href =
+        "dashboard.html";
+
+      return;
+
+    }
+
+  }
+
+
   const loginForm =
     document.getElementById(
       "loginForm"
@@ -130,6 +167,11 @@ function initLogin() {
     return;
   }
 
+
+  /*
+   * Hindari event listener
+   * terpasang dua kali.
+   */
 
   loginForm.addEventListener(
     "submit",
@@ -179,12 +221,6 @@ async function handleLogin(event) {
     );
 
 
-  const message =
-    document.getElementById(
-      "loginMessage"
-    );
-
-
   const username =
     usernameInput
       ? usernameInput.value.trim()
@@ -197,7 +233,9 @@ async function handleLogin(event) {
       : "";
 
 
-  /* ================= VALIDASI ================= */
+  /* =================================================
+     VALIDASI
+  ================================================= */
 
   if (!username) {
 
@@ -206,7 +244,11 @@ async function handleLogin(event) {
       "error"
     );
 
-    usernameInput.focus();
+
+    if (usernameInput) {
+      usernameInput.focus();
+    }
+
 
     return;
 
@@ -220,14 +262,20 @@ async function handleLogin(event) {
       "error"
     );
 
-    passwordInput.focus();
+
+    if (passwordInput) {
+      passwordInput.focus();
+    }
+
 
     return;
 
   }
 
 
-  /* ================= LOADING ================= */
+  /* =================================================
+     LOADING
+  ================================================= */
 
   if (loginButton) {
 
@@ -248,16 +296,21 @@ async function handleLogin(event) {
 
   try {
 
-    /* ================= PANGGIL API ================= */
+    /* =================================================
+       LOGIN API
+    ================================================= */
 
     const result =
       await callAPI({
 
-        action: "login",
+        action:
+          "login",
 
-        username: username,
+        username:
+          username,
 
-        password: password
+        password:
+          password
 
       });
 
@@ -268,7 +321,9 @@ async function handleLogin(event) {
     );
 
 
-    /* ================= RESPONSE TIDAK ADA ================= */
+    /* =================================================
+       RESPONSE KOSONG
+    ================================================= */
 
     if (!result) {
 
@@ -279,9 +334,13 @@ async function handleLogin(event) {
     }
 
 
-    /* ================= LOGIN GAGAL ================= */
+    /* =================================================
+       LOGIN GAGAL
+    ================================================= */
 
-    if (result.success !== true) {
+    if (
+      result.success !== true
+    ) {
 
       throw new Error(
         result.message ||
@@ -292,12 +351,11 @@ async function handleLogin(event) {
 
 
     /* =================================================
-       AMBIL DATA USER
+       AMBIL USER
        
-       Kita dukung dua format:
+       Mendukung:
        
        result.user
-       atau
        result.data.user
     ================================================= */
 
@@ -308,8 +366,6 @@ async function handleLogin(event) {
         result.data.user
       );
 
-
-    /* ================= USER TIDAK ADA ================= */
 
     if (!user) {
 
@@ -326,26 +382,30 @@ async function handleLogin(event) {
     }
 
 
-    /* ================= NORMALISASI ================= */
+    /* =================================================
+       NORMALISASI USER
+    ================================================= */
 
     const role =
       String(
         user.role || ""
       )
-      .trim()
-      .toUpperCase();
+        .trim()
+        .toUpperCase();
 
 
     const idUser =
       String(
         user.idUser || ""
-      ).trim();
+      )
+        .trim();
 
 
     const idGuru =
       String(
         user.idGuru || ""
-      ).trim();
+      )
+        .trim();
 
 
     const nama =
@@ -354,17 +414,21 @@ async function handleLogin(event) {
         user.namaGuru ||
         user.username ||
         ""
-      ).trim();
+      )
+        .trim();
 
 
     const usernameServer =
       String(
         user.username ||
         username
-      ).trim();
+      )
+        .trim();
 
 
-    /* ================= VALIDASI ROLE ================= */
+    /* =================================================
+       VALIDASI ROLE
+    ================================================= */
 
     if (
       role !== "ADMIN" &&
@@ -379,7 +443,9 @@ async function handleLogin(event) {
     }
 
 
-    /* ================= GURU WAJIB ID GURU ================= */
+    /* =================================================
+       GURU WAJIB MEMILIKI ID GURU
+    ================================================= */
 
     if (
       role === "GURU" &&
@@ -393,7 +459,9 @@ async function handleLogin(event) {
     }
 
 
-    /* ================= DATA USER ================= */
+    /* =================================================
+       BENTUK USER LOGIN
+    ================================================= */
 
     const currentUser = {
 
@@ -415,7 +483,9 @@ async function handleLogin(event) {
     };
 
 
-    /* ================= SIMPAN LOGIN ================= */
+    /* =================================================
+       SIMPAN KE LOCAL STORAGE
+    ================================================= */
 
     localStorage.setItem(
       "presensiUser",
@@ -431,30 +501,25 @@ async function handleLogin(event) {
     );
 
 
-    /* ================= BERHASIL ================= */
+    /* =================================================
+       BERHASIL
+    ================================================= */
 
     showLoginMessage(
-      "Login berhasil. Membuka halaman...",
+      "Login berhasil. Membuka dashboard...",
       "success"
     );
 
 
-    /* ================= REDIRECT ================= */
+    /* =================================================
+       REDIRECT DASHBOARD
+    ================================================= */
 
     setTimeout(
       function () {
 
-        if (role === "ADMIN") {
-
-          window.location.href =
-            "admin.html";
-
-        } else if (role === "GURU") {
-
-          window.location.href =
-            "presensi.html";
-
-        }
+        window.location.href =
+          "dashboard.html";
 
       },
       500
@@ -519,7 +584,9 @@ function showLoginMessage(
 
   element.className =
     "login-message " +
-    (type || "");
+    (
+      type || ""
+    );
 
 
   element.style.display =
@@ -560,11 +627,27 @@ function getCurrentUser() {
 
 
     if (!data) {
+
       return null;
+
     }
 
 
-    return JSON.parse(data);
+    const user =
+      JSON.parse(data);
+
+
+    if (
+      !user ||
+      !user.role
+    ) {
+
+      return null;
+
+    }
+
+
+    return user;
 
 
   } catch (error) {
@@ -583,6 +666,24 @@ function getCurrentUser() {
 
 
 /* =====================================================
+   CEK LOGIN
+===================================================== */
+
+function isLoggedIn() {
+
+  const user =
+    getCurrentUser();
+
+
+  return !!(
+    user &&
+    user.role
+  );
+
+}
+
+
+/* =====================================================
    ESCAPE HTML
 ===================================================== */
 
@@ -591,25 +692,30 @@ function escapeHTML(value) {
   return String(
     value ?? ""
   )
-  .replace(
-    /&/g,
-    "&amp;"
-  )
-  .replace(
-    /</g,
-    "&lt;"
-  )
-  .replace(
-    />/g,
-    "&gt;"
-  )
-  .replace(
-    /"/g,
-    "&quot;"
-  )
-  .replace(
-    /'/g,
-    "&#039;"
-  );
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
