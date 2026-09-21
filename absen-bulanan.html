@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
 
   <meta charset="UTF-8">
@@ -10,408 +9,362 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>Absensi Bulanan</title>
+  <title>Rekap Absensi Bulanan</title>
 
-  <style>
+  <meta
+    name="theme-color"
+    content="#1565c0"
+  >
 
-    * {
-      box-sizing: border-box;
-    }
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
-    }
-
-    .container {
-      max-width: 1400px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    .panel {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-    }
-
-    .form-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: end;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    select,
-    input,
-    button {
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-
-    button {
-      cursor: pointer;
-      background: #2563eb;
-      color: white;
-      border: none;
-    }
-
-    .btn-print {
-      background: #059669;
-    }
-
-    .btn-back {
-      background: #6b7280;
-    }
-
-    #loading {
-      display: none;
-      padding: 20px;
-      text-align: center;
-    }
-
-    #report {
-      background: white;
-      padding: 25px;
-      overflow-x: auto;
-    }
-
-    .kop {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .kop h1 {
-      font-size: 22px;
-      margin: 0;
-    }
-
-    .kop h2 {
-      font-size: 18px;
-      margin: 5px 0 20px;
-    }
-
-    .info {
-      margin-bottom: 20px;
-      line-height: 1.8;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      font-size: 11px;
-    }
-
-    th,
-    td {
-      border: 1px solid #000;
-      padding: 4px;
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    th.nama,
-    td.nama {
-      min-width: 180px;
-      text-align: left;
-    }
-
-    th.no,
-    td.no {
-      width: 35px;
-    }
-
-    .keterangan {
-      margin-top: 15px;
-      font-size: 12px;
-    }
-
-    .ttd {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 60px;
-      text-align: center;
-    }
-
-    .ttd-box {
-      width: 250px;
-    }
-
-    .ttd-space {
-      height: 70px;
-    }
-
-    .message {
-      margin-top: 15px;
-      padding: 10px;
-      border-radius: 6px;
-      display: none;
-    }
-
-    .message.error {
-      display: block;
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .message.success {
-      display: block;
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    @media print {
-
-      body {
-        background: white;
-      }
-
-      .no-print {
-        display: none !important;
-      }
-
-      .container {
-        max-width: none;
-        padding: 0;
-      }
-
-      .panel {
-        display: none;
-      }
-
-      #report {
-        padding: 0;
-      }
-
-      @page {
-        size: landscape;
-        margin: 8mm;
-      }
-
-    }
-
-  </style>
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 
 </head>
 
 <body>
 
-<div class="container">
+<header class="topbar no-print">
 
-  <div class="panel no-print">
+  <div class="topbar-left">
 
-    <h2>📋 Absensi Bulanan</h2>
+    <div class="topbar-logo">
+      SD
+    </div>
 
-    <div class="form-row">
+    <div>
 
-  <div class="form-group">
-    <label>Bulan</label>
+      <div class="topbar-title">
+        Rekap Absensi Bulanan
+      </div>
 
-    <select id="bulan">
-      <option value="1">Januari</option>
-      <option value="2">Februari</option>
-      <option value="3">Maret</option>
-      <option value="4">April</option>
-      <option value="5">Mei</option>
-      <option value="6">Juni</option>
-      <option value="7">Juli</option>
-      <option value="8">Agustus</option>
-      <option value="9">September</option>
-      <option value="10">Oktober</option>
-      <option value="11">November</option>
-      <option value="12">Desember</option>
-    </select>
+      <div class="topbar-school">
+        SD Negeri Jatiwaringin XIII
+      </div>
+
+    </div>
+
   </div>
 
 
-  <div class="form-group">
-    <label>Tahun</label>
+  <div class="topbar-right">
 
-    <input
-      type="number"
-      id="tahun"
-      value="2026"
-      min="2020"
-      max="2100"
+    <button
+      class="btn btn-secondary btn-small"
+      onclick="location.href='dashboard.html'"
     >
+      Dashboard
+    </button>
+
+    <button
+      class="btn btn-primary btn-small"
+      id="btnCetak"
+    >
+      Cetak
+    </button>
+
+    <button
+      class="btn btn-success btn-small"
+      id="btnExcel"
+    >
+      Excel
+    </button>
+
+    <button
+      class="btn btn-danger btn-small"
+      onclick="Auth.logout()"
+    >
+      Keluar
+    </button>
+
   </div>
 
-
-  <button
-    type="button"
-    onclick="buatLaporan()"
-  >
-    🔍 Tampilkan
-  </button>
+</header>
 
 
-  <button
-    type="button"
-    class="btn-print"
-    onclick="window.print()"
-  >
-    🖨️ Cetak
-  </button>
+<main class="container">
+
+  <section class="card no-print">
+
+    <div class="form-grid">
+
+      <div
+        class="form-group"
+        id="guruWrapper"
+      >
+
+        <label for="pilihGuru">
+          Guru / Wali Kelas
+        </label>
+
+        <select id="pilihGuru">
+
+          <option value="">
+            Pilih guru
+          </option>
+
+        </select>
+
+      </div>
 
 
-  <button
-    type="button"
-    class="btn-excel"
-    onclick="downloadExcel()"
-  >
-    📊 Download Excel
-  </button>
+      <div class="form-group">
+
+        <label for="bulan">
+          Bulan
+        </label>
+
+        <select id="bulan">
+
+          <option value="1">
+            Januari
+          </option>
+
+          <option value="2">
+            Februari
+          </option>
+
+          <option value="3">
+            Maret
+          </option>
+
+          <option value="4">
+            April
+          </option>
+
+          <option value="5">
+            Mei
+          </option>
+
+          <option value="6">
+            Juni
+          </option>
+
+          <option value="7">
+            Juli
+          </option>
+
+          <option value="8">
+            Agustus
+          </option>
+
+          <option value="9">
+            September
+          </option>
+
+          <option value="10">
+            Oktober
+          </option>
+
+          <option value="11">
+            November
+          </option>
+
+          <option value="12">
+            Desember
+          </option>
+
+        </select>
+
+      </div>
 
 
-  <button
-    type="button"
-    class="btn-back"
-    onclick="history.back()"
-  >
-    ← Kembali
-  </button>
+      <div class="form-group">
 
-</div>
+        <label for="tahun">
+          Tahun
+        </label>
+
+        <input
+          type="number"
+          id="tahun"
+          min="2020"
+          max="2100"
+        >
+
+      </div>
+
+    </div>
+
+
+    <div class="form-actions">
+
+      <button
+        class="btn btn-primary"
+        id="btnTampilkan"
+      >
+        Tampilkan Rekap
+      </button>
+
+    </div>
+
 
     <div
-      id="message"
+      id="rekapMessage"
       class="message"
+      style="display:none;"
     ></div>
 
-  </div>
+  </section>
 
 
-  <div id="loading">
-    ⏳ Membuat laporan...
-  </div>
+  <section
+    id="reportArea"
+    class="report-area"
+  >
 
-
-  <div id="report">
-
-    <div class="kop">
+    <div class="report-header">
 
       <h1>
         DAFTAR ABSENSI SISWA
       </h1>
 
-      <h2 id="namaSekolah">
+      <h2>
         SD NEGERI JATIWARINGIN XIII
       </h2>
 
     </div>
 
 
-    <div class="info">
+    <div class="report-info">
 
       <div>
-        <strong>Kelas</strong>
-        &nbsp;&nbsp;&nbsp;:
-        <span id="kelas">-</span>
+        <strong>Kelas:</strong>
+        <span id="reportKelas">-</span>
       </div>
 
       <div>
-        <strong>Wali Kelas</strong>
-        :
-        <span id="waliKelas">-</span>
+        <strong>Wali Kelas:</strong>
+        <span id="reportGuru">-</span>
       </div>
 
       <div>
-        <strong>Bulan</strong>
-        &nbsp;&nbsp;&nbsp;:
-        <span id="periode">-</span>
+        <strong>Bulan:</strong>
+        <span id="reportBulan">-</span>
       </div>
 
     </div>
 
 
-    <table>
+    <div class="table-wrapper report-table-wrapper">
 
-      <thead id="tableHead"></thead>
+      <table
+        id="rekapTable"
+        class="report-table"
+      >
 
-      <tbody id="tableBody"></tbody>
+        <thead id="rekapTableHead">
 
-    </table>
+          <tr>
+
+            <th>No</th>
+
+            <th>Nama Siswa</th>
+
+          </tr>
+
+        </thead>
 
 
-    <div class="keterangan">
+        <tbody id="rekapTableBody">
+
+          <tr>
+
+            <td
+              colspan="2"
+              class="text-center"
+            >
+              Belum ada data.
+
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <div class="report-legend">
 
       <strong>Keterangan:</strong>
 
       H = Hadir &nbsp;&nbsp;
-
       I = Izin &nbsp;&nbsp;
-
       S = Sakit &nbsp;&nbsp;
-
-      A = Alpa
+      A = Alpa &nbsp;&nbsp;
+      - = Belum ada data
 
     </div>
 
 
-    <div class="ttd">
+    <div class="signature-area">
 
-      <div class="ttd-box">
+      <div class="signature-box">
 
-        Kepala Sekolah
+        <p>
+          Mengetahui,
+        </p>
 
-        <div class="ttd-space"></div>
+        <strong>
+          Kepala Sekolah
+        </strong>
 
-        <strong id="namaKepala">
+        <div class="signature-space"></div>
+
+        <strong id="kepalaSekolah">
           -
         </strong>
 
-        <br>
-
-        NIP.
-        <span id="nipKepala">
-          -
-        </span>
+        <div id="nipKepala">
+          NIP. -
+        </div>
 
       </div>
 
 
-      <div class="ttd-box">
+      <div class="signature-box">
 
-        Wali Kelas
+        <p>
+          Wali Kelas
+        </p>
 
-        <div class="ttd-space"></div>
+        <strong>
+          Wali Kelas
+        </strong>
 
-        <strong id="namaWali">
+        <div class="signature-space"></div>
+
+        <strong id="waliKelas">
           -
         </strong>
 
-        <br>
-
-        NIP.
-        <span id="nipWali">
-          -
-        </span>
+        <div id="nipWali">
+          NIP. -
+        </div>
 
       </div>
 
     </div>
 
-  </div>
+  </section>
 
-</div>
+</main>
 
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
+<script src="auth.js"></script>
 <script src="absen-bulanan.js"></script>
-
-  
-<script src="absen-bulanan.js"></script>
+<script src="pwa.js"></script>
 
 </body>
-
 </html>
