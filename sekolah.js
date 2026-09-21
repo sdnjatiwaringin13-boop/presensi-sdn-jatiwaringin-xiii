@@ -1,62 +1,33 @@
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
-
-
-const user =
-  JSON.parse(
-    localStorage.getItem(
-      "presensiUser"
-    ) || "null"
-  );
-
-
-if (
-  !user ||
-  String(
-    user.role || ""
-  ).toUpperCase()
-  !== "ADMIN"
-) {
-
-  window.location.href =
-    "index.html";
-
-}
-
-
-async function callAPI(data) {
-
-  const response =
-    await fetch(
-      API_URL,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "text/plain;charset=utf-8"
-        },
-
-        body:
-          JSON.stringify(data)
-      }
-    );
-
-
-  const text =
-    await response.text();
-
-
-  return JSON.parse(text);
-
-}
-
+"use strict";
 
 document.addEventListener(
   "DOMContentLoaded",
-  loadSekolah
-);
+  async function () {
 
+    const user =
+      Auth.requireRole(
+        "ADMIN"
+      );
+
+    if (!user) return;
+
+    await loadSekolah();
+
+    document
+      .getElementById(
+        "sekolahForm"
+      )
+      ?.addEventListener(
+        "submit",
+        function (event) {
+
+          event.preventDefault();
+
+          simpanSekolah();
+        }
+      );
+  }
+);
 
 async function loadSekolah() {
 
@@ -64,40 +35,34 @@ async function loadSekolah() {
 
     const result =
       await callAPI({
-        action: "getSekolah"
+        action:
+          "getPengaturan"
       });
 
-
     if (!result.success) {
-
       throw new Error(
-        result.message
+        result.message ||
+        "Gagal mengambil data sekolah."
       );
-
     }
-
 
     const data =
       result.data || {};
 
+    setValue(
+      "namaSekolah",
+      data.namaSekolah || ""
+    );
 
-    document.getElementById(
-      "namaSekolah"
-    ).value =
-      data.namaSekolah || "";
+    setValue(
+      "namaKepala",
+      data.namaKepalaSekolah || ""
+    );
 
-
-    document.getElementById(
-      "namaKepala"
-    ).value =
-      data.namaKepala || "";
-
-
-    document.getElementById(
-      "nipKepala"
-    ).value =
-      data.nipKepala || "";
-
+    setValue(
+      "nipKepala",
+      data.nipKepalaSekolah || ""
+    );
 
   } catch (error) {
 
@@ -105,56 +70,35 @@ async function loadSekolah() {
       error.message,
       false
     );
-
   }
-
 }
-
 
 async function simpanSekolah() {
 
   const namaSekolah =
-    document
-      .getElementById(
-        "namaSekolah"
-      )
-      .value
-      .trim();
-
+    getValue(
+      "namaSekolah"
+    );
 
   const namaKepala =
-    document
-      .getElementById(
-        "namaKepala"
-      )
-      .value
-      .trim();
-
+    getValue(
+      "namaKepala"
+    );
 
   const nipKepala =
-    document
-      .getElementById(
-        "nipKepala"
-      )
-      .value
-      .trim();
+    getValue(
+      "nipKepala"
+    );
 
-
-  if (
-    !namaSekolah ||
-    !namaKepala ||
-    !nipKepala
-  ) {
+  if (!namaSekolah) {
 
     tampilkanPesan(
-      "Semua data wajib diisi.",
+      "Nama sekolah wajib diisi.",
       false
     );
 
     return;
-
   }
-
 
   try {
 
@@ -162,34 +106,28 @@ async function simpanSekolah() {
       await callAPI({
 
         action:
-          "simpanSekolah",
+          "simpanPengaturan",
 
-        namaSekolah:
-          namaSekolah,
+        namaSekolah,
 
-        namaKepala:
+        namaKepalaSekolah:
           namaKepala,
 
-        nipKepala:
+        nipKepalaSekolah:
           nipKepala
-
       });
 
-
     if (!result.success) {
-
       throw new Error(
-        result.message
+        result.message ||
+        "Gagal menyimpan data sekolah."
       );
-
     }
 
-
     tampilkanPesan(
-      "✓ Data sekolah berhasil disimpan.",
+      "Data sekolah berhasil disimpan.",
       true
     );
-
 
   } catch (error) {
 
@@ -197,33 +135,49 @@ async function simpanSekolah() {
       error.message,
       false
     );
-
   }
-
 }
 
+function setValue(
+  id,
+  value
+) {
+
+  const element =
+    document.getElementById(id);
+
+  if (element) {
+    element.value =
+      value ?? "";
+  }
+}
+
+function getValue(id) {
+
+  return String(
+    document
+      .getElementById(id)
+      ?.value || ""
+  ).trim();
+}
 
 function tampilkanPesan(
   message,
   success
 ) {
 
-  const el =
+  const element =
     document.getElementById(
       "message"
     );
 
+  if (!element) return;
 
-  el.textContent =
+  element.textContent =
     message;
 
-
-  el.className =
-    "message " +
-    (
-      success
-        ? "success"
-        : "error"
-    );
-
+  element.className =
+    success
+      ? "message success"
+      : "message error";
 }
