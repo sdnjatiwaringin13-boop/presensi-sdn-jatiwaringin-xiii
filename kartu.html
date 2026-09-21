@@ -1,660 +1,498 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <title>Kartu Pelajar - SD Negeri Jatiwaringin XIII</title>
 
-  <title>Kartu Siswa</title>
-
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-  >
-
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+  <link rel="stylesheet" href="style.css">
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
 
-    .kartu-toolbar {
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #eeeeee;
+      color: #111;
+    }
 
-      display: flex;
+    .page {
+      padding: 20px;
+    }
 
-      flex-direction: column;
-
-      gap: 10px;
-
+    .toolbar {
+      background: white;
+      padding: 15px;
       margin-bottom: 20px;
-
-    }
-
-
-    .kartu-toolbar input,
-    .kartu-toolbar select {
-
-      width: 100%;
-
-      height: 40px;
-
-      padding:
-        0 12px;
-
-      border:
-        1px solid #d1d5db;
-
-      border-radius:
-        6px;
-
-      box-sizing:
-        border-box;
-
-      background:
-        #fff;
-
-    }
-
-
-    .kartu-actions {
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
 
       display: flex;
-
-      gap: 8px;
-
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
     }
 
+    .toolbar input,
+    .toolbar select,
+    .toolbar button {
+      height: 40px;
+      padding: 0 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .toolbar input {
+      width: 250px;
+    }
+
+    .toolbar select {
+      min-width: 150px;
+    }
+
+    .toolbar button {
+      cursor: pointer;
+      background: #c91f26;
+      color: white;
+      border: none;
+      font-weight: bold;
+    }
+
+    .toolbar button:hover {
+      background: #a9151b;
+    }
 
     #kartuContainer {
-
       display: grid;
-
-      grid-template-columns:
-        repeat(
-          auto-fill,
-          minmax(
-            280px,
-            1fr
-          )
-        );
-
-      gap: 20px;
-
-      align-items: start;
-
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 25px;
+      justify-items: center;
     }
 
-
-    /* =====================================================
+    /* =========================
+       KARTU PELAJAR
        UKURAN KTP PORTRAIT
-    ===================================================== */
+       ========================= */
 
     .student-card {
+      width: 53.98mm;
+      height: 85.60mm;
 
-      width:
-        53.98mm;
+      background: #f8f8f8;
 
-      height:
-        85.60mm;
+      position: relative;
+      overflow: hidden;
 
-      min-width:
-        53.98mm;
-
-      min-height:
-        85.60mm;
-
-      max-width:
-        53.98mm;
-
-      max-height:
-        85.60mm;
-
-      margin:
-        0 auto;
-
-      box-sizing:
-        border-box;
-
-      overflow:
-        hidden;
-
-      background:
-        #ffffff;
-
-      border:
-        0.35mm solid #1684b8;
-
-      border-radius:
-        3mm;
+      border-radius: 3mm;
 
       box-shadow:
-        0 5px 15px
-        rgba(
-          0,
-          0,
-          0,
-          .12
-        );
+        0 4px 12px rgba(0,0,0,.25);
 
-      display:
-        flex;
-
-      flex-direction:
-        column;
-
-      font-family:
-        Arial,
-        sans-serif;
-
+      page-break-inside: avoid;
+      break-inside: avoid;
     }
 
+    /* =========================
+       DEKORASI ATAS
+       ========================= */
 
-    /* HEADER */
+    .top-red {
+      position: absolute;
+      top: 0;
+      left: 0;
 
-    .student-card-head {
+      width: 100%;
+      height: 24mm;
 
-      height:
-        16mm;
+      background: linear-gradient(
+        135deg,
+        #ff2c32,
+        #c9141b
+      );
 
-      min-height:
-        16mm;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      padding:
-        3mm;
-
-      box-sizing:
-        border-box;
-
-      background:
-        linear-gradient(
-          135deg,
-          #1684b8,
-          #2999cb
-        );
-
-      color:
-        #ffffff;
-
+      border-radius: 0 0 4mm 0;
     }
 
+    .top-gray {
+      position: absolute;
+      top: 6mm;
+      left: 0;
 
-    .school-mark {
+      width: 58%;
+      height: 7mm;
 
-      width:
-        10mm;
+      background: #d8d8d8;
 
-      height:
-        10mm;
-
-      min-width:
-        10mm;
-
-      border-radius:
-        2mm;
-
-      background:
-        #ffffff;
-
-      color:
-        #1684b8;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
-      font-weight:
-        900;
-
-      font-size:
-        12px;
-
-      margin-right:
-        2.5mm;
-
+      border-radius: 0 4mm 4mm 0;
     }
 
+    .top-yellow {
+      position: absolute;
+      top: 12mm;
+      left: 0;
 
-    .student-card-head strong {
+      width: 22%;
+      height: 5mm;
 
-      display:
-        block;
+      background: #ffc31d;
 
-      font-size:
-        7px;
-
-      line-height:
-        1.2;
-
-      white-space:
-        nowrap;
-
+      border-radius: 0 3mm 3mm 0;
     }
 
+    .yellow-dots {
+      position: absolute;
+      top: 2mm;
+      right: 2mm;
 
-    .student-card-head small {
+      width: 18mm;
+      height: 12mm;
 
-      display:
-        block;
+      background-image: radial-gradient(
+        #ffc21c 1px,
+        transparent 1px
+      );
 
-      margin-top:
-        1mm;
-
-      font-size:
-        5px;
-
+      background-size: 3mm 3mm;
     }
 
+    .circle-decoration {
+      position: absolute;
+      top: 1mm;
+      left: 3mm;
 
-    /* BODY */
-
-    .student-card-body {
-
-      flex:
-        1;
-
-      display:
-        flex;
-
-      flex-direction:
-        column;
-
-      padding:
-        3mm;
-
-      box-sizing:
-        border-box;
-
+      display: flex;
+      gap: 2mm;
     }
 
+    .circle-decoration span {
+      width: 3mm;
+      height: 3mm;
 
-    .student-info h3 {
+      background: #ffc21c;
 
-      margin:
-        0 0 3mm;
-
-      font-size:
-        9px;
-
-      line-height:
-        1.2;
-
-      font-weight:
-        800;
-
+      border-radius: 50%;
     }
 
+    /* =========================
+       HEADER
+       ========================= */
 
-    .student-info p {
+    .school-header {
+      position: absolute;
+      top: 9mm;
+      left: 3mm;
+      right: 3mm;
 
-      display:
-        grid;
+      height: 12mm;
 
-      grid-template-columns:
-        12mm 1fr;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-      margin:
-        0 0 1.5mm;
-
-      font-size:
-        6.5px;
-
+      z-index: 5;
     }
 
+    .school-title {
+      color: white;
 
-    .student-info p b {
+      font-size: 4.1mm;
+      line-height: 1.15;
 
-      color:
-        #4b5563;
+      font-weight: 800;
 
+      text-align: center;
+
+      text-shadow:
+        0 1px 1px rgba(0,0,0,.3);
     }
 
+    /* =========================
+       JUDUL
+       ========================= */
 
-    /* QR */
+    .card-title {
+      position: absolute;
 
-    .qr-wrap {
+      top: 25mm;
+      left: 0;
+      right: 0;
 
-      margin-top:
-        auto;
+      text-align: center;
 
-      display:
-        flex;
+      font-size: 4.7mm;
+      font-weight: 900;
 
-      flex-direction:
-        column;
+      line-height: 1.1;
 
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
-      padding-top:
-        2mm;
-
+      z-index: 5;
     }
 
+    /* =========================
+       QR CODE
+       ========================= */
+
+    .qr-wrapper {
+      position: absolute;
+
+      top: 32mm;
+      left: 50%;
+
+      transform: translateX(-50%);
+
+      width: 27mm;
+      height: 27mm;
+
+      background: white;
+
+      border: 0.7mm solid #d71920;
+
+      border-radius: 1.5mm;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      z-index: 5;
+    }
 
     .qr-code {
-
-      width:
-        30mm;
-
-      height:
-        30mm;
-
-      display:
-        flex;
-
-      align-items:
-        center;
-
-      justify-content:
-        center;
-
-      background:
-        #ffffff;
-
+      width: 24mm;
+      height: 24mm;
     }
-
 
     .qr-code img,
     .qr-code canvas {
-
-      width:
-        30mm !important;
-
-      height:
-        30mm !important;
-
-      display:
-        block;
-
+      width: 24mm !important;
+      height: 24mm !important;
+      display: block;
     }
 
+    /* =========================
+       DATA SISWA
+       ========================= */
 
-    .qr-wrap small {
+    .student-info {
+      position: absolute;
 
-      margin-top:
-        1mm;
+      left: 5mm;
+      right: 4mm;
 
-      font-size:
-        5px;
+      top: 61mm;
 
-      color:
-        #6b7280;
-
+      z-index: 5;
     }
 
+    .student-row {
+      display: grid;
 
-    /* EMPTY */
+      grid-template-columns: 15mm 3mm 1fr;
 
-    .empty {
+      min-height: 6mm;
 
-      padding:
-        30px;
+      align-items: center;
 
-      text-align:
-        center;
+      font-size: 2.8mm;
 
-      color:
-        #6b7280;
-
+      line-height: 1.1;
     }
 
+    .student-label {
+      font-weight: 700;
+    }
 
-    /* =====================================================
+    .student-separator {
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .student-value {
+      font-weight: 500;
+
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    /* =========================
+       FOOTER
+       ========================= */
+
+    .bottom-red {
+      position: absolute;
+
+      left: 0;
+      right: 0;
+      bottom: 0;
+
+      height: 4mm;
+
+      background: #ff292f;
+
+      z-index: 3;
+    }
+
+    .bottom-yellow {
+      position: absolute;
+
+      right: 0;
+      bottom: 0;
+
+      width: 8mm;
+      height: 4mm;
+
+      background: #ffc21c;
+
+      transform: skewX(-35deg);
+
+      z-index: 4;
+    }
+
+    .chevron {
+      position: absolute;
+
+      left: 3mm;
+      bottom: 2.5mm;
+
+      width: 13mm;
+      height: 5mm;
+
+      z-index: 5;
+    }
+
+    .chevron span {
+      position: absolute;
+
+      width: 6mm;
+      height: 2mm;
+
+      transform: skewX(-40deg);
+
+      background: #333;
+    }
+
+    .chevron span:nth-child(1) {
+      left: 0;
+      top: 0;
+    }
+
+    .chevron span:nth-child(2) {
+      left: 3mm;
+      top: 0;
+    }
+
+    .chevron span:nth-child(3) {
+      left: 6mm;
+      top: 0;
+    }
+
+    /* =========================
+       RESPONSIVE
+       ========================= */
+
+    @media screen and (max-width: 600px) {
+      .page {
+        padding: 10px;
+      }
+
+      #kartuContainer {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =========================
        PRINT
-    ===================================================== */
+       ========================= */
 
     @media print {
 
       @page {
-
-        size:
-          53.98mm
-          85.60mm;
-
-        margin:
-          0;
-
+        size: A4;
+        margin: 8mm;
       }
 
-
-      html,
       body {
-
-        margin:
-          0 !important;
-
-        padding:
-          0 !important;
-
-        width:
-          53.98mm;
-
-        background:
-          #ffffff !important;
-
+        background: white;
       }
 
-
-      body * {
-
-        visibility:
-          hidden;
-
+      .toolbar {
+        display: none !important;
       }
 
-
-      #kartuContainer,
-      #kartuContainer * {
-
-        visibility:
-          visible;
-
+      .page {
+        padding: 0;
       }
-
 
       #kartuContainer {
+        display: grid;
 
-        display:
-          block;
+        grid-template-columns:
+          repeat(3, 53.98mm);
 
-        width:
-          53.98mm;
+        gap: 5mm;
 
-        margin:
-          0;
-
-        padding:
-          0;
-
+        justify-content: start;
       }
-
 
       .student-card {
+        box-shadow: none;
 
-        width:
-          53.98mm !important;
-
-        height:
-          85.60mm !important;
-
-        min-width:
-          53.98mm !important;
-
-        min-height:
-          85.60mm !important;
-
-        max-width:
-          53.98mm !important;
-
-        max-height:
-          85.60mm !important;
-
-        margin:
-          0;
-
-        border-radius:
-          0;
-
-        box-shadow:
-          none;
-
-        page-break-after:
-          always;
-
-        break-after:
-          page;
-
+        width: 53.98mm;
+        height: 85.60mm;
       }
-
-
-      .student-card:last-child {
-
-        page-break-after:
-          auto;
-
-        break-after:
-          auto;
-
-      }
-
-
-      .no-print {
-
-        display:
-          none !important;
-
-      }
-
     }
-
   </style>
-
 </head>
-
 
 <body>
 
+  <div class="page">
 
-  <div class="card">
+    <!-- TOOLBAR -->
+    <div class="toolbar">
 
-
-    <div class="card-header no-print">
-
-      <div class="card-title">
-
-        <i class="fa-solid fa-id-card"></i>
-
-        Kartu Siswa
-
-      </div>
-
-
-      <button
-        id="printButton"
-        class="btn btn-primary"
-        type="button"
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Cari nama / NISN..."
       >
 
-        <i class="fa-solid fa-print"></i>
+      <select id="kelasFilter">
+        <option value="">Semua Kelas</option>
+      </select>
 
-        Cetak
+      <button id="refreshButton">
+        ↻ Refresh
+      </button>
 
+      <button id="printButton">
+        🖨 Cetak Kartu
       </button>
 
     </div>
 
-
-    <div class="card-body">
-
-
-      <div class="kartu-toolbar no-print">
-
-
-        <input
-          id="searchInput"
-          type="text"
-          placeholder="Cari siswa..."
-          autocomplete="off"
-        >
-
-
-        <select
-          id="kelasFilter"
-        >
-
-          <option value="">
-            Semua Kelas
-          </option>
-
-        </select>
-
-
-        <div class="kartu-actions">
-
-          <button
-            id="refreshButton"
-            class="btn btn-secondary"
-            type="button"
-          >
-
-            <i class="fa-solid fa-rotate"></i>
-
-            Refresh
-
-          </button>
-
-        </div>
-
-
-      </div>
-
-
-      <div id="kartuContainer">
-
-        <div class="loading">
-
-          Memuat kartu siswa...
-
-        </div>
-
-      </div>
-
-
-    </div>
+    <!-- KARTU -->
+    <div id="kartuContainer"></div>
 
   </div>
 
-
+  <!-- API -->
   <script src="api.js"></script>
 
+  <!-- AUTH -->
   <script src="auth.js"></script>
 
-  <script src="layout.js"></script>
+  <!-- QR CODE -->
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js">
+  </script>
 
+  <!-- KARTU -->
   <script src="kartu.js"></script>
 
-  <script src="pwa.js"></script>
-
 </body>
-
 </html>
