@@ -1,42 +1,34 @@
-(function () {
+"use strict";
 
-  "use strict";
+if (
+  "serviceWorker" in navigator
+) {
 
+  window.addEventListener(
+    "load",
+    async function () {
 
-  if (
-    "serviceWorker" in navigator
-  ) {
+      try {
 
-    window.addEventListener(
-      "load",
-      function () {
+        const registration =
+          await navigator
+            .serviceWorker
+            .register(
+              "./sw.js"
+            );
 
-        navigator.serviceWorker
-          .register("./sw.js")
-          .then(
-            function (registration) {
+        console.log(
+          "Service Worker aktif:",
+          registration.scope
+        );
 
-              console.log(
-                "Service Worker aktif:",
-                registration.scope
-              );
+      } catch (error) {
 
-            }
-          )
-          .catch(
-            function (error) {
-
-              console.error(
-                "Service Worker gagal:",
-                error
-              );
-
-            }
-          );
-
+        console.error(
+          "Service Worker gagal:",
+          error
+        );
       }
-    );
-
-  }
-
-})();
+    }
+  );
+}
