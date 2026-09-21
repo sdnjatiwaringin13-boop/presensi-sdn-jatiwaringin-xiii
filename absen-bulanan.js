@@ -1,1347 +1,741 @@
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
+(function () {
+  "use strict";
 
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
-let currentUser = null;
+  const currentUser = Auth.requireRole([
+    "ADMIN",
+    "GURU"
+  ]);
 
-let laporanData = null;
+  let reportData = null;
+  let guruList = [];
 
+  const namaBulan = [
+    "",
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember"
+  ];
 
-const namaBulan = [
-  "",
-  "Januari",
-  "Februari",
-  "Maret",
-  "April",
-  "Mei",
-  "Juni",
-  "Juli",
-  "Agustus",
-  "September",
-  "Oktober",
-  "November",
-  "Desember"
-];
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
 
+  async function init() {
 
-/* =====================================================
-   INIT
-===================================================== */
+    const sekarang = new Date();
 
-document.addEventListener(
-  "DOMContentLoaded",
-  function () {
+    document.getElementById("bulan").value =
+      sekarang.getMonth() + 1;
 
-    console.log(
-      "absen-bulanan.js berhasil dimuat."
-    );
+    document.getElementById("tahun").value =
+      sekarang.getFullYear();
 
-
-    const saved =
-      localStorage.getItem(
-        "presensiUser"
+    document
+      .getElementById("btnTampilkan")
+      .addEventListener(
+        "click",
+        tampilkanRekap
       );
 
+    document
+      .getElementById("btnCetak")
+      .addEventListener(
+        "click",
+        () => window.print()
+      );
 
-    if (!saved) {
+    document
+      .getElementById("btnExcel")
+      .addEventListener(
+        "click",
+        downloadExcel
+      );
 
-      location.href =
-        "index.html";
+    await loadGuru();
 
-      return;
+    if (currentUser.role === "GURU") {
+      document.getElementById("guruWrapper")
+        .style.display = "none";
 
+      await tampilkanRekap();
     }
+  }
 
+  async function loadGuru() {
 
     try {
 
-      currentUser =
-        JSON.parse(saved);
+      const select =
+        document.getElementById(
+          "pilihGuru"
+        );
 
-    } catch (error) {
+      if (currentUser.role === "GURU") {
 
-      console.error(error);
+        select.innerHTML = `
+          <option value="${escapeHTML(
+            currentUser.idGuru
+          )}">
+            ${escapeHTML(
+              currentUser.nama || "Guru"
+            )}
+          </option>
+        `;
 
-      localStorage.removeItem(
-        "presensiUser"
-      );
-
-      location.href =
-        "index.html";
-
-      return;
-
-    }
-
-
-    console.log(
-      "USER:",
-      currentUser
-    );
-
-
-    if (
-      String(
-        currentUser.role || ""
-      )
-        .toUpperCase()
-        !== "GURU"
-    ) {
-
-      alert(
-        "Halaman ini khusus Guru."
-      );
-
-      location.href =
-        "index.html";
-
-      return;
-
-    }
-
-
-    if (!currentUser.idGuru) {
-
-      alert(
-        "ID Guru tidak ditemukan."
-      );
-
-      return;
-
-    }
-
-
-    const sekarang =
-      new Date();
-
-
-    /*
-     * SET BULAN
-     */
-
-    document.getElementById(
-      "bulan"
-    ).value =
-      sekarang.getMonth() + 1;
-
-
-    /*
-     * SET TAHUN
-     */
-
-    document.getElementById(
-      "tahun"
-    ).value =
-      sekarang.getFullYear();
-
-
-    /*
-     * BUAT LAPORAN
-     */
-
-    buatLaporan();
-
-  }
-);
-
-
-/* =====================================================
-   API
-===================================================== */
-
-async function callAPI(
-  payload
-) {
-
-  console.log(
-    "REQUEST API:",
-    payload
-  );
-
-
-  const response =
-    await fetch(
-      API_URL,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type":
-            "text/plain;charset=utf-8"
-        },
-
-        body:
-          JSON.stringify(payload)
+        return;
       }
-    );
 
+      const result =
+        await callAPI({
+          action: "getGuru"
+        });
 
-  const text =
-    await response.text();
+      if (!result.success) {
+        throw new Error(result.message);
+      }
 
+      guruList = result.data || [];
 
-  console.log(
-    "RESPONSE API:",
-    text
-  );
+      select.innerHTML = `
+        <option value="">
+          Pilih guru / wali kelas
+        </option>
+      `;
 
+      guruList.forEach(guru => {
 
-  if (!text) {
+        const option =
+          document.createElement("option");
 
-    throw new Error(
-      "Server tidak memberikan response."
-    );
+        option.value =
+          guru.ID_GURU;
 
-  }
+        option.textContent =
+          guru.NAMA;
 
-
-  let result;
-
-
-  try {
-
-    result =
-      JSON.parse(text);
-
-  } catch (error) {
-
-    console.error(
-      "Response bukan JSON:",
-      text
-    );
-
-    throw new Error(
-      "Response server bukan JSON."
-    );
-
-  }
-
-
-  return result;
-
-}
-
-
-/* =====================================================
-   BUAT LAPORAN
-===================================================== */
-
-async function buatLaporan() {
-
-  const bulanElement =
-    document.getElementById(
-      "bulan"
-    );
-
-
-  const tahunElement =
-    document.getElementById(
-      "tahun"
-    );
-
-
-  if (
-    !bulanElement ||
-    !tahunElement
-  ) {
-
-    alert(
-      "Elemen bulan/tahun tidak ditemukan."
-    );
-
-    return;
-
-  }
-
-
-  const bulan =
-    Number(
-      bulanElement.value
-    );
-
-
-  const tahun =
-    Number(
-      tahunElement.value
-    );
-
-
-  if (
-    !bulan ||
-    bulan < 1 ||
-    bulan > 12
-  ) {
-
-    showMessage(
-      "Bulan tidak valid.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !tahun ||
-    tahun < 2020
-  ) {
-
-    showMessage(
-      "Tahun tidak valid.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  const loading =
-    document.getElementById(
-      "loading"
-    );
-
-
-  if (loading) {
-
-    loading.style.display =
-      "block";
-
-  }
-
-
-  try {
-
-    const result =
-      await callAPI({
-
-        action:
-          "getAbsenBulanan",
-
-        idGuru:
-          currentUser.idGuru,
-
-        bulan:
-          bulan,
-
-        tahun:
-          tahun
+        select.appendChild(option);
 
       });
 
+    } catch (error) {
 
-    console.log(
-      "HASIL LAPORAN:",
-      result
-    );
+      tampilkanPesan(
+        error.message,
+        "error"
+      );
 
+    }
+  }
+
+  async function tampilkanRekap() {
+
+    const idGuru =
+      currentUser.role === "GURU"
+        ? currentUser.idGuru
+        : document.getElementById(
+            "pilihGuru"
+          ).value;
+
+    const bulan =
+      Number(
+        document.getElementById(
+          "bulan"
+        ).value
+      );
+
+    const tahun =
+      Number(
+        document.getElementById(
+          "tahun"
+        ).value
+      );
+
+    if (!idGuru) {
+
+      tampilkanPesan(
+        "Silakan pilih guru / wali kelas.",
+        "error"
+      );
+
+      return;
+    }
 
     if (
-      !result ||
-      result.success !== true
+      !bulan ||
+      bulan < 1 ||
+      bulan > 12
     ) {
 
-      throw new Error(
-        result &&
-        result.message
-          ? result.message
-          : "Gagal membuat laporan."
+      tampilkanPesan(
+        "Bulan tidak valid.",
+        "error"
       );
 
+      return;
     }
 
+    if (
+      !tahun ||
+      tahun < 2020
+    ) {
 
-    if (!result.data) {
-
-      throw new Error(
-        "Server tidak mengirim data laporan."
+      tampilkanPesan(
+        "Tahun tidak valid.",
+        "error"
       );
 
+      return;
     }
 
+    const button =
+      document.getElementById(
+        "btnTampilkan"
+      );
 
-    /*
-     * SIMPAN DATA
-     */
+    button.disabled = true;
+    button.textContent =
+      "Memuat...";
 
-    laporanData =
-      result.data;
+    try {
 
+      const result =
+        await callAPI({
 
-    /*
-     * TAMPILKAN
-     */
+          action:
+            "getAbsenBulanan",
 
-    renderLaporan(
-      laporanData
-    );
+          idGuru:
+            idGuru,
 
+          bulan:
+            bulan,
 
-    showMessage(
-      "Laporan berhasil dimuat.",
-      "success"
-    );
+          tahun:
+            tahun
 
-  } catch (error) {
+        });
 
-    console.error(
-      "ERROR LAPORAN:",
-      error
-    );
+      if (!result.success) {
+        throw new Error(
+          result.message
+        );
+      }
 
+      reportData =
+        result.data;
 
-    showMessage(
-      error.message,
-      "error"
-    );
+      renderReport();
 
-  } finally {
+    } catch (error) {
 
-    if (loading) {
+      tampilkanPesan(
+        error.message,
+        "error"
+      );
 
-      loading.style.display =
-        "none";
+    } finally {
 
+      button.disabled = false;
+      button.textContent =
+        "Tampilkan Rekap";
     }
-
   }
 
-}
+  function renderReport() {
 
+    if (!reportData) {
+      return;
+    }
 
-/* =====================================================
-   RENDER LAPORAN
-===================================================== */
+    const sekolah =
+      reportData.sekolah || {};
 
-function renderLaporan(
-  data
-) {
+    const kelas =
+      reportData.kelas || {};
 
-  console.log(
-    "RENDER DATA:",
-    data
-  );
+    const guru =
+      reportData.guru || {};
 
+    const kepala =
+      reportData.kepalaSekolah || {};
 
-  document.getElementById(
-    "namaSekolah"
-  ).textContent =
-    data.sekolah &&
-    data.sekolah.nama
-      ? data.sekolah.nama
-      : "SD NEGERI JATIWARINGIN XIII";
-
-
-  document.getElementById(
-    "kelas"
-  ).textContent =
-    data.kelas &&
-    data.kelas.nama
-      ? data.kelas.nama
-      : "-";
-
-
-  document.getElementById(
-    "waliKelas"
-  ).textContent =
-    data.guru &&
-    data.guru.nama
-      ? data.guru.nama
-      : "-";
-
-
-  document.getElementById(
-    "periode"
-  ).textContent =
-    namaBulan[
-      Number(data.bulan)
-    ] +
-    " " +
-    data.tahun;
-
-
-  document.getElementById(
-    "namaKepala"
-  ).textContent =
-    data.kepalaSekolah &&
-    data.kepalaSekolah.nama
-      ? data.kepalaSekolah.nama
-      : "-";
-
-
-  document.getElementById(
-    "nipKepala"
-  ).textContent =
-    data.kepalaSekolah &&
-    data.kepalaSekolah.nip
-      ? data.kepalaSekolah.nip
-      : "-";
-
-
-  document.getElementById(
-    "namaWali"
-  ).textContent =
-    data.guru &&
-    data.guru.nama
-      ? data.guru.nama
-      : "-";
-
-
-  document.getElementById(
-    "nipWali"
-  ).textContent =
-    data.guru &&
-    data.guru.nip
-      ? data.guru.nip
-      : "-";
-
-
-  buatHeader(
-    Number(data.jumlahHari)
-  );
-
-
-  buatBody(
-    data.siswa || [],
-    Number(data.jumlahHari)
-  );
-
-}
-
-
-/* =====================================================
-   HEADER TABEL
-===================================================== */
-
-function buatHeader(
-  jumlahHari
-) {
-
-  const head =
     document.getElementById(
-      "tableHead"
-    );
+      "reportKelas"
+    ).textContent =
+      kelas.nama || "-";
 
+    document.getElementById(
+      "reportGuru"
+    ).textContent =
+      guru.nama || "-";
 
-  if (!head) {
+    document.getElementById(
+      "reportBulan"
+    ).textContent =
+      `${namaBulan[reportData.bulan] || "-"} ${
+        reportData.tahun || ""
+      }`;
 
-    return;
+    document.getElementById(
+      "kepalaSekolah"
+    ).textContent =
+      kepala.nama || "-";
 
+    document.getElementById(
+      "nipKepala"
+    ).textContent =
+      kepala.nip
+        ? "NIP. " + kepala.nip
+        : "NIP. -";
+
+    document.getElementById(
+      "waliKelas"
+    ).textContent =
+      guru.nama || "-";
+
+    document.getElementById(
+      "nipWali"
+    ).textContent =
+      guru.nip
+        ? "NIP. " + guru.nip
+        : "NIP. -";
+
+    const sekolahName =
+      sekolah.nama ||
+      "SD NEGERI JATIWARINGIN XIII";
+
+    const header =
+      document.querySelector(
+        ".report-header h2"
+      );
+
+    if (header) {
+      header.textContent =
+        sekolahName;
+    }
+
+    renderTable();
   }
 
+  function renderTable() {
 
-  let html = `
-    <tr>
+    const thead =
+      document.getElementById(
+        "rekapTableHead"
+      );
 
-      <th
-        class="no"
-      >
-        No
-      </th>
+    const tbody =
+      document.getElementById(
+        "rekapTableBody"
+      );
 
-      <th
-        class="nama"
-      >
-        Nama Siswa
-      </th>
-  `;
+    const jumlahHari =
+      Number(
+        reportData.jumlahHari || 0
+      );
 
+    const siswa =
+      reportData.siswa || [];
 
-  for (
-    let d = 1;
-    d <= jumlahHari;
-    d++
-  ) {
-
-    html += `
-      <th>${d}</th>
+    let headHTML = `
+      <tr>
+        <th>No</th>
+        <th>NISN</th>
+        <th>Nama Siswa</th>
     `;
 
-  }
+    for (
+      let hari = 1;
+      hari <= jumlahHari;
+      hari++
+    ) {
 
+      headHTML += `
+        <th>${hari}</th>
+      `;
 
-  html += `
-    </tr>
-  `;
+    }
 
-
-  head.innerHTML =
-    html;
-
-}
-
-
-/* =====================================================
-   BODY TABEL
-===================================================== */
-
-function buatBody(
-  siswa,
-  jumlahHari
-) {
-
-  const body =
-    document.getElementById(
-      "tableBody"
-    );
-
-
-  if (!body) {
-
-    return;
-
-  }
-
-
-  body.innerHTML = "";
-
-
-  if (
-    !siswa ||
-    siswa.length === 0
-  ) {
-
-    body.innerHTML = `
-      <tr>
-
-        <td
-          colspan="${jumlahHari + 2}"
-        >
-          Tidak ada siswa pada kelas ini.
-        </td>
-
+    headHTML += `
       </tr>
     `;
 
-    return;
+    thead.innerHTML =
+      headHTML;
 
-  }
+    if (!siswa.length) {
 
-
-  siswa.forEach(
-    function (
-      item,
-      index
-    ) {
-
-      let html = `
+      tbody.innerHTML = `
         <tr>
-
-          <td class="no">
-            ${index + 1}
+          <td
+            colspan="${jumlahHari + 3}"
+            class="text-center"
+          >
+            Tidak ada data siswa.
           </td>
-
-          <td class="nama">
-            ${escapeHTML(
-              item.nama || ""
-            )}
-          </td>
-      `;
-
-
-      for (
-        let d = 1;
-        d <= jumlahHari;
-        d++
-      ) {
-
-        const kode =
-          item.hari &&
-          item.hari[d]
-            ? item.hari[d]
-            : "";
-
-
-        html += `
-          <td>
-            ${escapeHTML(
-              kode
-            )}
-          </td>
-        `;
-
-      }
-
-
-      html += `
         </tr>
       `;
 
-
-      body.insertAdjacentHTML(
-        "beforeend",
-        html
-      );
-
+      return;
     }
-  );
 
-}
+    tbody.innerHTML =
+      siswa.map(
+        (item, index) => {
 
+          let row = `
+            <tr>
 
-/* =====================================================
-   DOWNLOAD EXCEL
-   TANPA LIBRARY
-===================================================== */
+              <td>
+                ${index + 1}
+              </td>
 
-function downloadExcel() {
+              <td>
+                ${escapeHTML(
+                  item.nisn
+                )}
+              </td>
 
-  console.log(
-    "DOWNLOAD EXCEL DIPANGGIL"
-  );
+              <td class="student-name">
+                ${escapeHTML(
+                  item.nama
+                )}
+              </td>
+          `;
 
+          for (
+            let hari = 1;
+            hari <= jumlahHari;
+            hari++
+          ) {
 
-  if (!laporanData) {
+            const status =
+              item.hari &&
+              item.hari[hari]
+                ? item.hari[hari]
+                : "-";
 
-    alert(
-      "Silakan tampilkan laporan terlebih dahulu."
-    );
+            row += `
+              <td class="attendance-cell status-${String(
+                status
+              ).toLowerCase()}">
+                ${escapeHTML(status)}
+              </td>
+            `;
 
-    return;
+          }
 
+          row += `
+            </tr>
+          `;
+
+          return row;
+
+        }
+      ).join("");
   }
 
+  function downloadExcel() {
 
-  const data =
-    laporanData;
+    if (!reportData) {
 
+      tampilkanPesan(
+        "Tampilkan rekap terlebih dahulu.",
+        "error"
+      );
 
-  const jumlahHari =
-    Number(
-      data.jumlahHari
+      return;
+    }
+
+    if (
+      typeof XLSX === "undefined"
+    ) {
+
+      downloadCSV();
+
+      return;
+    }
+
+    const jumlahHari =
+      Number(
+        reportData.jumlahHari || 0
+      );
+
+    const siswa =
+      reportData.siswa || [];
+
+    const rows = [];
+
+    rows.push([
+      "DAFTAR ABSENSI SISWA"
+    ]);
+
+    rows.push([
+      reportData.sekolah?.nama ||
+      "SD NEGERI JATIWARINGIN XIII"
+    ]);
+
+    rows.push([]);
+
+    rows.push([
+      "Kelas",
+      reportData.kelas?.nama || "-"
+    ]);
+
+    rows.push([
+      "Wali Kelas",
+      reportData.guru?.nama || "-"
+    ]);
+
+    rows.push([
+      "Bulan",
+      `${namaBulan[
+        reportData.bulan
+      ] || "-"} ${reportData.tahun || ""}`
+    ]);
+
+    rows.push([]);
+
+    const header = [
+      "No",
+      "NISN",
+      "Nama Siswa"
+    ];
+
+    for (
+      let hari = 1;
+      hari <= jumlahHari;
+      hari++
+    ) {
+      header.push(String(hari));
+    }
+
+    rows.push(header);
+
+    siswa.forEach(
+      (item, index) => {
+
+        const row = [
+          index + 1,
+          item.nisn || "",
+          item.nama || ""
+        ];
+
+        for (
+          let hari = 1;
+          hari <= jumlahHari;
+          hari++
+        ) {
+
+          row.push(
+            item.hari?.[hari] || "-"
+          );
+
+        }
+
+        rows.push(row);
+      }
     );
 
-
-  const namaSekolah =
-    data.sekolah &&
-    data.sekolah.nama
-      ? data.sekolah.nama
-      : "SD NEGERI JATIWARINGIN XIII";
-
-
-  const namaKelas =
-    data.kelas &&
-    data.kelas.nama
-      ? data.kelas.nama
-      : "-";
-
-
-  const namaWali =
-    data.guru &&
-    data.guru.nama
-      ? data.guru.nama
-      : "-";
-
-
-  const nipWali =
-    data.guru &&
-    data.guru.nip
-      ? data.guru.nip
-      : "-";
-
-
-  const namaKepala =
-    data.kepalaSekolah &&
-    data.kepalaSekolah.nama
-      ? data.kepalaSekolah.nama
-      : "-";
-
-
-  const nipKepala =
-    data.kepalaSekolah &&
-    data.kepalaSekolah.nip
-      ? data.kepalaSekolah.nip
-      : "-";
-
-
-  const periode =
-    namaBulan[
-      Number(data.bulan)
-    ] +
-    " " +
-    data.tahun;
-
-
-  let html = `
-<!DOCTYPE html>
-
-<html>
-
-<head>
-
-<meta charset="UTF-8">
-
-<style>
-
-body {
-  font-family: Arial;
-}
-
-.title {
-  font-size: 18pt;
-  font-weight: bold;
-  text-align: center;
-}
-
-.school {
-  font-size: 14pt;
-  font-weight: bold;
-  text-align: center;
-}
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-th {
-  border: 1px solid #000;
-  background: #d9eaf7;
-  font-weight: bold;
-  text-align: center;
-  padding: 5px;
-}
-
-td {
-  border: 1px solid #000;
-  padding: 4px;
-  text-align: center;
-}
-
-.nama {
-  text-align: left;
-}
-
-.no {
-  text-align: center;
-}
-
-.ttd td {
-  border: none;
-  text-align: center;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<table>
-
-<tr>
-
-<td
-  colspan="${jumlahHari + 2}"
-  class="title"
->
-DAFTAR ABSENSI SISWA
-</td>
-
-</tr>
-
-
-<tr>
-
-<td
-  colspan="${jumlahHari + 2}"
-  class="school"
->
-${escapeExcelHTML(
-  namaSekolah
-)}
-</td>
-
-</tr>
-
-
-<tr>
-
-<td
-  colspan="${jumlahHari + 2}"
->
-&nbsp;
-</td>
-
-</tr>
-
-
-<tr>
-
-<td>
-<b>Kelas</b>
-</td>
-
-<td
-  colspan="${jumlahHari + 1}"
->
-${escapeExcelHTML(
-  namaKelas
-)}
-</td>
-
-</tr>
-
-
-<tr>
-
-<td>
-<b>Wali Kelas</b>
-</td>
-
-<td
-  colspan="${jumlahHari + 1}"
->
-${escapeExcelHTML(
-  namaWali
-)}
-</td>
-
-</tr>
-
-
-<tr>
-
-<td>
-<b>NIP Wali Kelas</b>
-</td>
-
-<td
-  colspan="${jumlahHari + 1}"
->
-${escapeExcelHTML(
-  nipWali
-)}
-</td>
-
-</tr>
-
-
-<tr>
-
-<td>
-<b>Bulan</b>
-</td>
-
-<td
-  colspan="${jumlahHari + 1}"
->
-${escapeExcelHTML(
-  periode
-)}
-</td>
-
-</tr>
-
-
-<tr>
-
-<td
-  colspan="${jumlahHari + 2}"
->
-&nbsp;
-</td>
-
-</tr>
-
-
-<tr>
-
-<th>
-No
-</th>
-
-<th>
-Nama Siswa
-</th>
-`;
-
-
-  for (
-    let d = 1;
-    d <= jumlahHari;
-    d++
+    rows.push([]);
+
+    rows.push([
+      "Keterangan",
+      "H = Hadir, I = Izin, S = Sakit, A = Alpa, - = Belum ada data"
+    ]);
+
+    const worksheet =
+      XLSX.utils.aoa_to_sheet(rows);
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      worksheet,
+      "Absensi"
+    );
+
+    const bulan =
+      String(
+        reportData.bulan
+      ).padStart(2, "0");
+
+    const namaFile =
+      `Absensi-${reportData.kelas?.nama || "Kelas"}-${bulan}-${reportData.tahun}.xlsx`;
+
+    XLSX.writeFile(
+      workbook,
+      namaFile
+    );
+  }
+
+  function downloadCSV() {
+
+    if (!reportData) {
+      return;
+    }
+
+    const jumlahHari =
+      Number(
+        reportData.jumlahHari || 0
+      );
+
+    const siswa =
+      reportData.siswa || [];
+
+    const rows = [];
+
+    const header = [
+      "No",
+      "NISN",
+      "Nama Siswa"
+    ];
+
+    for (
+      let hari = 1;
+      hari <= jumlahHari;
+      hari++
+    ) {
+      header.push(String(hari));
+    }
+
+    rows.push(header);
+
+    siswa.forEach(
+      (item, index) => {
+
+        const row = [
+          index + 1,
+          item.nisn || "",
+          item.nama || ""
+        ];
+
+        for (
+          let hari = 1;
+          hari <= jumlahHari;
+          hari++
+        ) {
+
+          row.push(
+            item.hari?.[hari] || "-"
+          );
+
+        }
+
+        rows.push(row);
+      }
+    );
+
+    const csv =
+      rows
+        .map(row =>
+          row.map(value =>
+            `"${String(value)
+              .replace(/"/g, '""')}"`
+          ).join(",")
+        )
+        .join("\n");
+
+    const blob =
+      new Blob(
+        [csv],
+        {
+          type:
+            "text/csv;charset=utf-8;"
+        }
+      );
+
+    const url =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = url;
+
+    link.download =
+      "rekap-absensi.csv";
+
+    link.click();
+
+    URL.revokeObjectURL(url);
+  }
+
+  async function callAPI(payload) {
+
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body:
+            JSON.stringify(payload)
+        }
+      );
+
+    return await response.json();
+  }
+
+  function tampilkanPesan(
+    message,
+    type
   ) {
 
-    html += `
-      <th>${d}</th>
-    `;
-
-  }
-
-
-  html += `
-</tr>
-`;
-
-
-  const siswa =
-    data.siswa || [];
-
-
-  siswa.forEach(
-    function (
-      item,
-      index
-    ) {
-
-      html += `
-        <tr>
-
-          <td>
-            ${index + 1}
-          </td>
-
-          <td class="nama">
-            ${escapeExcelHTML(
-              item.nama || ""
-            )}
-          </td>
-      `;
-
-
-      for (
-        let d = 1;
-        d <= jumlahHari;
-        d++
-      ) {
-
-        const kode =
-          item.hari &&
-          item.hari[d]
-            ? item.hari[d]
-            : "";
-
-
-        html += `
-          <td>
-            ${escapeExcelHTML(
-              kode
-            )}
-          </td>
-        `;
-
-      }
-
-
-      html += `
-        </tr>
-      `;
-
-    }
-  );
-
-
-  html += `
-
-<tr>
-
-<td
-  colspan="${jumlahHari + 2}"
->
-&nbsp;
-</td>
-
-</tr>
-
-
-<tr>
-
-<td>
-<b>Keterangan</b>
-</td>
-
-<td
-  colspan="${jumlahHari + 1}"
->
-H = Hadir,
-I = Izin,
-S = Sakit,
-A = Alpa
-</td>
-
-</tr>
-
-
-<tr>
-
-<td
-  colspan="${jumlahHari + 2}"
->
-&nbsp;
-</td>
-
-</tr>
-
-
-<tr class="ttd">
-
-<td
-  colspan="${Math.ceil(
-    (jumlahHari + 2) / 2
-  )}"
->
-<b>Kepala Sekolah</b>
-</td>
-
-<td
-  colspan="${Math.floor(
-    (jumlahHari + 2) / 2
-  )}"
->
-<b>Wali Kelas</b>
-</td>
-
-</tr>
-
-
-<tr class="ttd">
-
-<td
-  colspan="${Math.ceil(
-    (jumlahHari + 2) / 2
-  )}"
->
-<br><br><br>
-<b>
-${escapeExcelHTML(
-  namaKepala
-)}
-</b>
-<br>
-NIP.
-${escapeExcelHTML(
-  nipKepala
-)}
-</td>
-
-
-<td
-  colspan="${Math.floor(
-    (jumlahHari + 2) / 2
-  )}"
->
-<br><br><br>
-<b>
-${escapeExcelHTML(
-  namaWali
-)}
-</b>
-<br>
-NIP.
-${escapeExcelHTML(
-  nipWali
-)}
-</td>
-
-</tr>
-
-</table>
-
-</body>
-
-</html>
-`;
-
-
-  const blob =
-    new Blob(
-      [
-        "\uFEFF",
-        html
-      ],
-      {
-        type:
-          "application/vnd.ms-excel"
-      }
-    );
-
-
-  const url =
-    URL.createObjectURL(
-      blob
-    );
-
-
-  const link =
-    document.createElement(
-      "a"
-    );
-
-
-  const namaFile =
-    "Absensi_" +
-    sanitasiNamaFile(
-      namaKelas
-    ) +
-    "_" +
-    namaBulan[
-      Number(data.bulan)
-    ] +
-    "_" +
-    data.tahun +
-    ".xls";
-
-
-  link.href =
-    url;
-
-
-  link.download =
-    namaFile;
-
-
-  document.body.appendChild(
-    link
-  );
-
-
-  link.click();
-
-
-  document.body.removeChild(
-    link
-  );
-
-
-  setTimeout(
-    function () {
-
-      URL.revokeObjectURL(
-        url
+    const element =
+      document.getElementById(
+        "rekapMessage"
       );
 
-    },
-    1000
-  );
+    element.textContent =
+      message;
 
-}
+    element.className =
+      "message " +
+      (
+        type === "success"
+          ? "message-success"
+          : "message-error"
+      );
 
+    element.style.display =
+      "block";
 
-/* =====================================================
-   SANITASI NAMA FILE
-===================================================== */
+    setTimeout(() => {
 
-function sanitasiNamaFile(
-  nama
-) {
+      element.style.display =
+        "none";
 
-  return String(
-    nama || "Kelas"
-  )
-    .replace(
-      /[\\/:*?"<>|]/g,
-      "_"
-    )
-    .replace(
-      /\s+/g,
-      "_"
-    );
-
-}
-
-
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
-
-function escapeHTML(
-  value
-) {
-
-  return String(
-    value ?? ""
-  )
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =====================================================
-   ESCAPE EXCEL HTML
-===================================================== */
-
-function escapeExcelHTML(
-  value
-) {
-
-  return String(
-    value ?? ""
-  )
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =====================================================
-   MESSAGE
-===================================================== */
-
-function showMessage(
-  message,
-  type
-) {
-
-  const element =
-    document.getElementById(
-      "message"
-    );
-
-
-  if (!element) {
-
-    alert(message);
-
-    return;
-
+    }, 5000);
   }
 
+  function escapeHTML(value) {
 
-  element.className =
-    "message " +
-    type;
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 
-
-  element.textContent =
-    message;
-
-}
+})();
