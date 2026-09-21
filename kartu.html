@@ -2,75 +2,98 @@
 <html lang="id">
 
 <head>
+  <meta charset="UTF-8">
 
-    <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+  <title>
+    Kartu Siswa
+  </title>
 
-    <title>
-        Kartu Siswa - SDN Jatiwaringin XIII
-    </title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
 
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
 
-    <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
-    >
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
-
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
-
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
 </head>
-
 
 <body>
 
-    <div class="card">
+  <div class="card">
 
-        <div class="card-header">
+    <div class="card-header">
 
-            <div class="card-title">
+      <div class="card-title">
+        <i class="fa-solid fa-id-card"></i>
+        Kartu Siswa
+      </div>
 
-                <i class="fa-solid fa-id-card"></i>
-
-                Kartu Siswa
-
-            </div>
-
-        </div>
-
-
-        <div class="card-body">
-
-            <div
-                id="kartuMessage"
-            ></div>
-
-
-            <div
-                id="kartuContainer"
-            ></div>
-
-        </div>
+      <button
+        type="button"
+        id="printButton"
+        class="btn btn-primary"
+      >
+        <i class="fa-solid fa-print"></i>
+        Cetak
+      </button>
 
     </div>
 
+    <div class="card-body">
 
-    <script src="auth.js"></script>
-    <script src="layout.js"></script>
-    <script src="kartu.js"></script>
-    <script src="pwa.js"></script>
+      <div class="toolbar">
+
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Cari siswa..."
+        >
+
+        <select id="kelasFilter">
+
+          <option value="">
+            Semua Kelas
+          </option>
+
+        </select>
+
+        <button
+          type="button"
+          id="refreshButton"
+          class="btn btn-secondary"
+        >
+          Refresh
+        </button>
+
+      </div>
+
+      <div id="kartuContainer"></div>
+
+    </div>
+
+  </div>
+
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"
+  ></script>
+
+  <script src="api.js"></script>
+  <script src="auth.js"></script>
+  <script src="layout.js"></script>
+  <script src="kartu.js"></script>
+  <script src="pwa.js"></script>
 
 </body>
-
 </html>
