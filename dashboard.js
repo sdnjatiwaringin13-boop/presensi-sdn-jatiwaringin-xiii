@@ -1,1116 +1,464 @@
-/*******************************************************
- * DASHBOARD
- * SD NEGERI JATIWARINGIN XIII
- *******************************************************/
+(function () {
+  "use strict";
 
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
+  const user = Auth.requireLogin();
 
-let currentUser = null;
+  document.addEventListener("DOMContentLoaded", initDashboard);
 
 
-/* =====================================================
-   INIT
-===================================================== */
+  async function initDashboard() {
 
-document.addEventListener(
-  "DOMContentLoaded",
-  function () {
+    tampilkanUser();
 
-    initDashboard();
+    tampilkanTanggal();
 
-  }
-);
+    buatMenu();
 
-
-/* =====================================================
-   INIT DASHBOARD
-===================================================== */
-
-function initDashboard() {
-
-  const saved =
-    localStorage.getItem(
-      "presensiUser"
-    );
-
-
-  /* ===================================================
-     BELUM LOGIN
-  =================================================== */
-
-  if (!saved) {
-
-    window.location.href =
-      "index.html";
-
-    return;
-
-  }
-
-
-  /* ===================================================
-     BACA USER
-  =================================================== */
-
-  try {
-
-    currentUser =
-      JSON.parse(saved);
-
-  } catch (error) {
-
-    console.error(
-      "USER ERROR:",
-      error
-    );
-
-
-    localStorage.removeItem(
-      "presensiUser"
-    );
-
-
-    window.location.href =
-      "index.html";
-
-    return;
-
-  }
-
-
-  /* ===================================================
-     VALIDASI USER
-  =================================================== */
-
-  const role =
-    String(
-      currentUser.role || ""
-    )
-      .trim()
-      .toUpperCase();
-
-
-  if (
-    role !== "ADMIN" &&
-    role !== "GURU"
-  ) {
-
-    localStorage.removeItem(
-      "presensiUser"
-    );
-
-
-    window.location.href =
-      "index.html";
-
-    return;
-
-  }
-
-
-  /* ===================================================
-     TAMPILKAN USER
-  =================================================== */
-
-  tampilkanUser();
-
-
-  /* ===================================================
-     BUAT MENU
-  =================================================== */
-
-  buatMenu();
-
-
-  /* ===================================================
-     LOAD DATA
-  =================================================== */
-
-  loadDashboard();
-
-}
-
-
-/* =====================================================
-   TAMPILKAN USER
-===================================================== */
-
-function tampilkanUser() {
-
-  const nama =
-    currentUser.nama ||
-    currentUser.username ||
-    "Pengguna";
-
-
-  document.getElementById(
-    "welcomeName"
-  ).textContent =
-    "Selamat Datang, " +
-    nama;
-
-
-  const role =
-    String(
-      currentUser.role || ""
-    )
-      .toUpperCase();
-
-
-  const roleElement =
-    document.getElementById(
-      "welcomeRole"
-    );
-
-
-  if (
-    role === "ADMIN"
-  ) {
-
-    roleElement.textContent =
-      "Administrator Sistem";
-
-  } else {
-
-    roleElement.textContent =
-      "Guru / Wali Kelas";
-
-  }
-
-}
-
-
-/* =====================================================
-   MENU
-===================================================== */
-
-function buatMenu() {
-
-  const menu =
-    document.getElementById(
-      "menu"
-    );
-
-
-  const role =
-    String(
-      currentUser.role || ""
-    )
-      .trim()
-      .toUpperCase();
-
-
-  let html = "";
-
-
-  /* ===================================================
-     ADMIN
-  =================================================== */
-
-  if (
-    role === "ADMIN"
-  ) {
-
-    html = `
-
-      <div
-        class="menu-card"
-        onclick="
-          location.href='admin.html'
-        "
-      >
-
-        <div class="menu-icon">
-          👨‍💼
-        </div>
-
-        <h3>
-          Administrasi
-        </h3>
-
-        <p>
-          Kelola data siswa, guru,
-          kelas dan sistem presensi.
-        </p>
-
-      </div>
-
-
-      <div
-        class="menu-card"
-        onclick="
-          location.href='kartu.html'
-        "
-      >
-
-        <div class="menu-icon">
-          🪪
-        </div>
-
-        <h3>
-          Kartu QR Siswa
-        </h3>
-
-        <p>
-          Membuat dan mencetak
-          kartu QR siswa.
-        </p>
-
-      </div>
-
-
-      <div
-        class="menu-card"
-        onclick="
-          location.href='scan.html'
-        "
-      >
-
-        <div class="menu-icon">
-          📷
-        </div>
-
-        <h3>
-          Scan QR
-        </h3>
-
-        <p>
-          Memindai QR Code
-          siswa menggunakan kamera.
-        </p>
-
-      </div>
-
-
-      <div
-        class="menu-card"
-        onclick="
-          location.href='absen-bulanan.html'
-        "
-      >
-
-        <div class="menu-icon">
-          📊
-        </div>
-
-        <h3>
-          Laporan Bulanan
-        </h3>
-
-        <p>
-          Melihat, mencetak dan
-          mengunduh laporan absensi.
-        </p>
-
-      </div>
-
-
-      <div
-        class="menu-card"
-        onclick="
-          location.href='pengaturan.html'
-        "
-      >
-
-        <div class="menu-icon">
-          ⚙️
-        </div>
-
-        <h3>
-          Pengaturan Sekolah
-        </h3>
-
-        <p>
-          Mengatur nama sekolah,
-          kepala sekolah dan NIP.
-        </p>
-
-      </div>
-
-    `;
-
-  }
-
-
-  /* ===================================================
-     GURU
-  =================================================== */
-
-  if (
-    role === "GURU"
-  ) {
-
-    html = `
-
-      <div
-        class="menu-card"
-        onclick="
-          location.href='presensi.html'
-        "
-      >
-
-        <div class="menu-icon">
-          📝
-        </div>
-
-        <h3>
-          Presensi Siswa
-        </h3>
-
-        <p>
-          Melakukan presensi siswa
-          berdasarkan kelas.
-        </p>
-
-      </div>
-
-
-      <div
-        class="menu-card"
-        onclick="
-          location.href='scan.html'
-        "
-      >
-
-        <div class="menu-icon">
-          📷
-        </div>
-
-        <h3>
-          Scan QR
-        </h3>
-
-        <p>
-          Melakukan presensi siswa
-          menggunakan QR Code.
-        </p>
-
-      </div>
-
-
-      <div
-        class="menu-card"
-        onclick="
-          location.href='absen-bulanan.html'
-        "
-      >
-
-        <div class="menu-icon">
-          📊
-        </div>
-
-        <h3>
-          Laporan Bulanan
-        </h3>
-
-        <p>
-          Melihat, mencetak dan
-          mengunduh absensi bulanan.
-        </p>
-
-      </div>
-
-    `;
-
-  }
-
-
-  menu.innerHTML =
-    html;
-
-}
-
-
-/* =====================================================
-   LOAD DASHBOARD
-===================================================== */
-
-async function loadDashboard() {
-
-  try {
-
-    const role =
-      String(
-        currentUser.role || ""
-      )
-        .trim()
-        .toUpperCase();
-
-
-    /* =================================================
-       ADMIN
-    ================================================= */
-
-    if (
-      role === "ADMIN"
-    ) {
-
-      document.getElementById(
-        "adminSection"
-      ).style.display =
-        "block";
-
-
-      await loadStatistikAdmin();
-
+    if (user.role === "ADMIN") {
+      await loadAdminData();
     }
 
-
-    /* =================================================
-       GURU
-    ================================================= */
-
-    if (
-      role === "GURU"
-    ) {
-
-      await loadInfoGuru();
-
+    if (user.role === "GURU") {
+      await loadGuruData();
     }
-
-
-    /* =================================================
-       PRESENSI
-    ================================================= */
 
     await loadPresensiHariIni();
-
-
-  } catch (error) {
-
-    console.error(
-      "DASHBOARD ERROR:",
-      error
-    );
-
-
-    showError(
-      error.message
-    );
-
   }
 
-}
 
+  function tampilkanUser() {
 
-/* =====================================================
-   STATISTIK ADMIN
-===================================================== */
+    const nama =
+      user.nama ||
+      user.username ||
+      "Pengguna";
 
-async function loadStatistikAdmin() {
+    const role =
+      user.role ||
+      "-";
 
-  try {
+    document.getElementById("dashboardUserName")
+      .textContent = nama;
 
-    /* =================================================
-       SISWA
-    ================================================= */
+    document.getElementById("dashboardRole")
+      .textContent = role;
 
-    const siswaResult =
-      await callAPI({
-
-        action:
-          "getSiswa"
-
-      });
-
-
-    if (
-      siswaResult &&
-      siswaResult.success
-    ) {
-
-      const siswa =
-        Array.isArray(
-          siswaResult.data
-        )
-          ? siswaResult.data
-          : [];
-
-
-      const aktif =
-        siswa.filter(
-          function (item) {
-
-            const status =
-              String(
-                item.STATUS || ""
-              )
-                .trim()
-                .toUpperCase();
-
-
-            return (
-              status !==
-              "NONAKTIF"
-            );
-
-          }
-        );
-
-
-      document.getElementById(
-        "totalSiswa"
-      ).textContent =
-        aktif.length;
-
-    }
-
-
-    /* =================================================
-       GURU
-    ================================================= */
-
-    const guruResult =
-      await callAPI({
-
-        action:
-          "getGuru"
-
-      });
-
-
-    if (
-      guruResult &&
-      guruResult.success
-    ) {
-
-      const guru =
-        Array.isArray(
-          guruResult.data
-        )
-          ? guruResult.data
-          : [];
-
-
-      const aktif =
-        guru.filter(
-          function (item) {
-
-            const status =
-              String(
-                item.STATUS || ""
-              )
-                .trim()
-                .toUpperCase();
-
-
-            return (
-              status !==
-              "NONAKTIF"
-            );
-
-          }
-        );
-
-
-      document.getElementById(
-        "totalGuru"
-      ).textContent =
-        aktif.length;
-
-    }
-
-
-    /* =================================================
-       KELAS
-    ================================================= */
-
-    const kelasResult =
-      await callAPI({
-
-        action:
-          "getKelas"
-
-      });
-
-
-    if (
-      kelasResult &&
-      kelasResult.success
-    ) {
-
-      const kelas =
-        Array.isArray(
-          kelasResult.data
-        )
-          ? kelasResult.data
-          : [];
-
-
-      const aktif =
-        kelas.filter(
-          function (item) {
-
-            const status =
-              String(
-                item.STATUS || ""
-              )
-                .trim()
-                .toUpperCase();
-
-
-            return (
-              status !==
-              "NONAKTIF"
-            );
-
-          }
-        );
-
-
-      document.getElementById(
-        "totalKelas"
-      ).textContent =
-        aktif.length;
-
-    }
-
-
-  } catch (error) {
-
-    console.error(
-      "STATISTIK ERROR:",
-      error
-    );
-
+    document.getElementById("dashboardGreeting")
+      .textContent =
+      "Selamat datang, " + nama + ".";
   }
 
-}
+
+  function tampilkanTanggal() {
+
+    const sekarang = new Date();
+
+    const tanggal =
+      sekarang.toLocaleDateString(
+        "id-ID",
+        {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        }
+      );
+
+    document.getElementById("tanggalHariIni")
+      .textContent = tanggal;
+  }
 
 
-/* =====================================================
-   INFO GURU
-===================================================== */
+  function buatMenu() {
 
-async function loadInfoGuru() {
+    const menuGrid =
+      document.getElementById("menuGrid");
 
-  const guruInfo =
-    document.getElementById(
-      "guruInfo"
-    );
+    let menu = [];
 
 
-  guruInfo.style.display =
-    "block";
+    if (user.role === "ADMIN") {
 
+      menu = [
 
-  document.getElementById(
-    "guruNama"
-  ).textContent =
-    currentUser.nama ||
-    currentUser.username ||
-    "-";
+        {
+          icon: "⚙️",
+          title: "Administrasi",
+          description: "Menu administrasi sistem",
+          url: "admin.html"
+        },
 
+        {
+          icon: "👨‍🎓",
+          title: "Data Siswa",
+          description: "Kelola data siswa",
+          url: "siswa.html"
+        },
 
-  document.getElementById(
-    "guruId"
-  ).textContent =
-    currentUser.idGuru ||
-    "-";
+        {
+          icon: "👨‍🏫",
+          title: "Data Guru",
+          description: "Kelola data guru",
+          url: "guru.html"
+        },
 
+        {
+          icon: "🏫",
+          title: "Data Kelas",
+          description: "Kelola data kelas",
+          url: "kelas.html"
+        },
 
-  try {
+        {
+          icon: "📱",
+          title: "Kartu QR Siswa",
+          description: "Cetak kartu QR siswa",
+          url: "kartu.html"
+        },
 
-    const result =
-      await callAPI({
+        {
+          icon: "📷",
+          title: "Scan Presensi",
+          description: "Presensi menggunakan QR",
+          url: "scan.html"
+        },
 
-        action:
-          "getKelasGuru",
+        {
+          icon: "📊",
+          title: "Rekap Bulanan",
+          description: "Lihat rekap absensi",
+          url: "absen-bulanan.html"
+        },
 
-        idGuru:
-          currentUser.idGuru
+        {
+          icon: "⚙️",
+          title: "Pengaturan",
+          description: "Pengaturan sekolah",
+          url: "pengaturan.html"
+        }
 
-      });
-
-
-    if (
-      result &&
-      result.success
-    ) {
-
-      const kelas =
-        Array.isArray(
-          result.data
-        )
-          ? result.data
-          : [];
-
-
-      const namaKelas =
-        kelas
-          .map(
-            function (item) {
-
-              return (
-                item.NAMA_KELAS ||
-                item.namaKelas ||
-                "-"
-              );
-
-            }
-          )
-          .filter(
-            function (item) {
-
-              return item !== "-";
-
-            }
-          );
-
-
-      document.getElementById(
-        "guruKelas"
-      ).textContent =
-        namaKelas.length
-          ? namaKelas.join(", ")
-          : "Belum ada kelas";
+      ];
 
     } else {
 
-      document.getElementById(
-        "guruKelas"
-      ).textContent =
-        "Belum ada kelas";
-
-    }
-
-
-  } catch (error) {
-
-    console.error(
-      "KELAS GURU ERROR:",
-      error
-    );
-
-
-    document.getElementById(
-      "guruKelas"
-    ).textContent =
-      "Tidak dapat memuat";
-
-  }
-
-}
-
-
-/* =====================================================
-   PRESENSI HARI INI
-===================================================== */
-
-async function loadPresensiHariIni() {
-
-  const sekarang =
-    new Date();
-
-
-  const tanggal =
-    sekarang.getFullYear() +
-    "-" +
-    String(
-      sekarang.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    ) +
-    "-" +
-    String(
-      sekarang.getDate()
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  try {
-
-    const result =
-      await callAPI({
-
-        action:
-          "getRekap",
-
-        tanggal:
-          tanggal
-
-      });
-
-
-    if (
-      !result ||
-      result.success !== true
-    ) {
-
-      setPresensiNol();
-
-      return;
-
-    }
-
-
-    const data =
-      Array.isArray(
-        result.data
-      )
-        ? result.data
-        : [];
-
-
-    let hadir = 0;
-
-    let izin = 0;
-
-    let sakit = 0;
-
-    let alpa = 0;
-
-
-    data.forEach(
-      function (item) {
-
-        const status =
-          String(
-            item.STATUS || ""
-          )
-            .trim()
-            .toUpperCase();
-
-
-        if (
-          status === "HADIR"
-        ) {
-
-          hadir++;
-
-        }
-
-
-        else if (
-          status === "IZIN"
-        ) {
-
-          izin++;
-
-        }
-
-
-        else if (
-          status === "SAKIT"
-        ) {
-
-          sakit++;
-
-        }
-
-
-        else if (
-          status === "ALPA"
-        ) {
-
-          alpa++;
-
-        }
-
-      }
-    );
-
-
-    document.getElementById(
-      "hadir"
-    ).textContent =
-      hadir;
-
-
-    document.getElementById(
-      "izin"
-    ).textContent =
-      izin;
-
-
-    document.getElementById(
-      "sakit"
-    ).textContent =
-      sakit;
-
-
-    document.getElementById(
-      "alpa"
-    ).textContent =
-      alpa;
-
-
-  } catch (error) {
-
-    console.error(
-      "REKAP ERROR:",
-      error
-    );
-
-
-    setPresensiNol();
-
-  }
-
-}
-
-
-/* =====================================================
-   PRESENSI NOL
-===================================================== */
-
-function setPresensiNol() {
-
-  document.getElementById(
-    "hadir"
-  ).textContent =
-    "0";
-
-
-  document.getElementById(
-    "izin"
-  ).textContent =
-    "0";
-
-
-  document.getElementById(
-    "sakit"
-  ).textContent =
-    "0";
-
-
-  document.getElementById(
-    "alpa"
-  ).textContent =
-    "0";
-
-}
-
-
-/* =====================================================
-   API
-===================================================== */
-
-async function callAPI(
-  payload
-) {
-
-  const response =
-    await fetch(
-      API_URL,
-      {
-        method:
-          "POST",
-
-        headers: {
-          "Content-Type":
-            "text/plain;charset=utf-8"
+      menu = [
+
+        {
+          icon: "📝",
+          title: "Presensi Siswa",
+          description: "Input presensi siswa",
+          url: "presensi.html"
         },
 
-        body:
-          JSON.stringify(
-            payload
-          )
+        {
+          icon: "📷",
+          title: "Scan QR",
+          description: "Presensi dengan QR siswa",
+          url: "scan.html"
+        },
+
+        {
+          icon: "📊",
+          title: "Rekap Bulanan",
+          description: "Lihat rekap presensi",
+          url: "absen-bulanan.html"
+        }
+
+      ];
+
+    }
+
+
+    menuGrid.innerHTML = menu.map(item => `
+
+      <a
+        href="${item.url}"
+        class="menu-card"
+      >
+
+        <div class="menu-icon">
+          ${item.icon}
+        </div>
+
+        <div>
+          <h3>${escapeHTML(item.title)}</h3>
+
+          <p>
+            ${escapeHTML(item.description)}
+          </p>
+        </div>
+
+      </a>
+
+    `).join("");
+  }
+
+
+  async function loadAdminData() {
+
+    document.getElementById("adminStats")
+      .style.display = "block";
+
+    try {
+
+      const [
+        siswa,
+        guru,
+        kelas
+      ] = await Promise.all([
+
+        callAPI({
+          action: "getSiswa",
+          aktifOnly: false
+        }),
+
+        callAPI({
+          action: "getGuru"
+        }),
+
+        callAPI({
+          action: "getKelas"
+        })
+
+      ]);
+
+
+      if (siswa.success) {
+
+        document.getElementById("totalSiswa")
+          .textContent =
+          siswa.data.length;
 
       }
-    );
 
 
-  if (!response.ok) {
+      if (guru.success) {
 
-    throw new Error(
-      "HTTP Error " +
-      response.status
-    );
+        document.getElementById("totalGuru")
+          .textContent =
+          guru.data.length;
+
+      }
+
+
+      if (kelas.success) {
+
+        document.getElementById("totalKelas")
+          .textContent =
+          kelas.data.length;
+
+      }
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
 
   }
 
 
-  const text =
-    await response.text();
+  async function loadGuruData() {
+
+    document.getElementById("guruInfoCard")
+      .style.display = "block";
 
 
-  if (!text) {
+    try {
 
-    throw new Error(
-      "Server tidak memberikan response."
-    );
+      const result =
+        await callAPI({
+
+          action: "getKelasGuru",
+
+          idGuru: user.idGuru
+
+        });
+
+
+      if (
+        !result.success ||
+        !result.data ||
+        !result.data.length
+      ) {
+
+        document.getElementById("guruName")
+          .textContent =
+          user.nama || "-";
+
+        document.getElementById("guruClass")
+          .textContent =
+          "Belum ada kelas";
+
+        return;
+      }
+
+
+      const kelas = result.data[0];
+
+
+      document.getElementById("guruName")
+        .textContent =
+        user.nama || "-";
+
+
+      document.getElementById("guruClass")
+        .textContent =
+        kelas.NAMA_KELAS || "-";
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
 
   }
 
 
-  let result;
+  async function loadPresensiHariIni() {
+
+    try {
+
+      const tanggal =
+        getToday();
 
 
-  try {
+      const payload = {
+        action: "getRekap",
+        tanggal: tanggal
+      };
 
-    result =
-      JSON.parse(
-        text
+
+      if (user.role === "GURU") {
+
+        try {
+
+          const kelasResult =
+            await callAPI({
+
+              action: "getKelasGuru",
+
+              idGuru: user.idGuru
+
+            });
+
+
+          if (
+            kelasResult.success &&
+            kelasResult.data &&
+            kelasResult.data.length
+          ) {
+
+            payload.kelas =
+              kelasResult.data[0].NAMA_KELAS;
+
+          }
+
+        } catch (error) {
+
+          console.error(error);
+
+        }
+
+      }
+
+
+      const result =
+        await callAPI(payload);
+
+
+      if (!result.success) {
+        return;
+      }
+
+
+      const counts =
+        result.counts || {};
+
+
+      document.getElementById("attendanceHadir")
+        .textContent =
+        counts.HADIR || 0;
+
+
+      document.getElementById("attendanceIzin")
+        .textContent =
+        counts.IZIN || 0;
+
+
+      document.getElementById("attendanceSakit")
+        .textContent =
+        counts.SAKIT || 0;
+
+
+      document.getElementById("attendanceAlpa")
+        .textContent =
+        counts.ALPA || 0;
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  }
+
+
+  async function callAPI(payload) {
+
+    const response =
+      await fetch(
+        API_URL,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body: JSON.stringify(payload)
+        }
       );
 
-  } catch (error) {
 
-    console.error(
-      "RESPONSE SERVER:",
-      text
-    );
-
-
-    throw new Error(
-      "Response server bukan JSON."
-    );
+    return await response.json();
 
   }
 
 
-  return result;
+  function getToday() {
 
-}
+    const now = new Date();
 
+    const year =
+      now.getFullYear();
 
-/* =====================================================
-   ERROR
-===================================================== */
+    const month =
+      String(now.getMonth() + 1)
+        .padStart(2, "0");
 
-function showError(
-  message
-) {
+    const day =
+      String(now.getDate())
+        .padStart(2, "0");
 
-  const element =
-    document.getElementById(
-      "errorBox"
-    );
+    return `${year}-${month}-${day}`;
 
-
-  if (!element) {
-    return;
   }
 
 
-  element.textContent =
-    message ||
-    "Terjadi kesalahan.";
+  function escapeHTML(value) {
 
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
 
-  element.style.display =
-    "block";
+  }
 
-}
-
-
-/* =====================================================
-   LOGOUT
-===================================================== */
-
-function logout() {
-
-  localStorage.removeItem(
-    "presensiUser"
-  );
-
-
-  window.location.href =
-    "index.html";
-
-}
+})();
