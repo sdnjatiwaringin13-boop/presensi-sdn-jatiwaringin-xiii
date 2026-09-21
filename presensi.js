@@ -6,37 +6,55 @@
   let siswaTampil = [];
   let presensiHariIni = new Map();
   let user = null;
+  let sedangMemuat = false;
+  let sedangMenyimpan = false;
 
-  const $ = id => document.getElementById(id);
+  const $ = (id) =>
+    document.getElementById(id);
 
-  document.addEventListener("DOMContentLoaded", init);
 
-
-  /* =========================================================
+  /* =====================================================
      INIT
-  ========================================================= */
+  ===================================================== */
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
+
 
   async function init() {
 
     try {
 
-      user = Auth.requireRole(["ADMIN", "GURU"]);
+      user =
+        Auth.requireRole([
+          "ADMIN",
+          "GURU"
+        ]);
 
-      if (!user) {
-        return;
-      }
+      if (!user) return;
+
 
       bindEvents();
+
 
       await Promise.all([
         loadKelas(),
         loadData()
       ]);
 
+
     } catch (error) {
 
+      console.error(
+        "INIT PRESENSI:",
+        error
+      );
+
       showMessage(
-        error.message || "Gagal membuka halaman presensi.",
+        error.message ||
+        "Gagal membuka halaman presensi.",
         "error"
       );
 
@@ -45,119 +63,100 @@
   }
 
 
-  /* =========================================================
+  /* =====================================================
      EVENT
-  ========================================================= */
+  ===================================================== */
 
   function bindEvents() {
 
-    $("kelasSelect")?.addEventListener(
-      "change",
-      filterSiswa
-    );
+    $("kelasSelect")
+      ?.addEventListener(
+        "change",
+        filterSiswa
+      );
 
-    $("searchInput")?.addEventListener(
-      "input",
-      filterSiswa
-    );
 
-    $("refreshButton")?.addEventListener(
-      "click",
-      async function () {
+    $("searchInput")
+      ?.addEventListener(
+        "input",
+        filterSiswa
+      );
 
-        const button = $("refreshButton");
 
-        if (button) {
-          button.disabled = true;
-          button.innerHTML =
-            '<i class="fa-solid fa-spinner fa-spin"></i> Memuat...';
-        }
+    $("refreshButton")
+      ?.addEventListener(
+        "click",
+        refreshData
+      );
 
-        try {
 
-          await loadData();
-
-          showMessage(
-            "Data presensi berhasil diperbarui.",
-            "success"
-          );
-
-        } catch (error) {
-
-          showMessage(
-            error.message,
-            "error"
-          );
-
-        } finally {
-
-          if (button) {
-
-            button.disabled = false;
-
-            button.innerHTML =
-              '<i class="fa-solid fa-rotate"></i> Refresh';
-
-          }
-
-        }
-
-      }
-    );
-
-    $("simpanButton")?.addEventListener(
-      "click",
-      simpanSemua
-    );
+    $("simpanButton")
+      ?.addEventListener(
+        "click",
+        simpanSemua
+      );
 
   }
 
 
-  /* =========================================================
+  /* =====================================================
      LOAD KELAS
-  ========================================================= */
+  ===================================================== */
 
   async function loadKelas() {
 
-    const select = $("kelasSelect");
+    const select =
+      $("kelasSelect");
 
-    if (!select) {
-      return;
-    }
+
+    if (!select) return;
+
 
     try {
 
-      const role =
-        String(
-          Auth.getRole(user) || ""
-        ).toUpperCase();
+      select.disabled = true;
 
 
       let result;
 
 
-      if (role === "GURU") {
+      if (
+        String(
+          Auth.getRole(user)
+        ).toUpperCase() === "GURU"
+      ) {
 
         result =
           await callAPI({
-            action: "getKelasGuru",
-            idGuru: user.idGuru
+
+            action:
+              "getKelasGuru",
+
+            idGuru:
+              user.idGuru || ""
+
           });
 
       } else {
 
         result =
           await callAPI({
-            action: "getKelas"
+
+            action:
+              "getKelas"
+
           });
 
       }
 
 
-      if (!result.success) {
+      if (
+        !result ||
+        !result.success
+      ) {
 
         throw new Error(
-          result.message ||
+          result?.message ||
           "Gagal mengambil data kelas."
         );
 
@@ -165,55 +164,109 @@
 
 
       const data =
-        Array.isArray(result.data)
+        Array.isArray(
+          result.data
+        )
           ? result.data
           : [];
 
 
-      select.innerHTML =
-        '<option value="">Semua Kelas</option>';
+      const kelasMap =
+        new Map();
 
 
-      data.forEach(function (item) {
+      data.forEach(
+        function (item) {
 
-        const nama =
-          String(
-            item.NAMA_KELAS || ""
-          ).trim();
+          const nama =
+            String(
+              item.NAMA_KELAS ||
+              ""
+            ).trim();
 
-        if (!nama) {
-          return;
+
+          if (nama) {
+
+            kelasMap.set(
+              nama,
+              nama
+            );
+
+          }
+
         }
+      );
 
 
-        const option =
-          document.createElement("option");
+      select.innerHTML =
+        `<option value="">
+          Semua Kelas
+        </option>` +
+        Array.from(
+          kelasMap.values()
+        )
+          .sort(
+            naturalSort
+          )
+          .map(
+            function (nama) {
 
-        option.value = nama;
-        option.textContent = nama;
+              return `
+                <option value="${escapeAttr(nama)}">
+                  ${escapeHTML(nama)}
+                </option>
+              `;
 
-        select.appendChild(option);
-
-      });
+            }
+          )
+          .join("");
 
 
     } catch (error) {
 
-      select.innerHTML =
-        '<option value="">Gagal memuat kelas</option>';
+      console.error(
+        "LOAD KELAS:",
+        error
+      );
 
-      throw error;
+
+      select.innerHTML =
+        `<option value="">
+          Gagal memuat kelas
+        </option>`;
+
+
+      showMessage(
+        "Gagal memuat kelas: " +
+        error.message,
+        "error"
+      );
+
+
+    } finally {
+
+      select.disabled = false;
 
     }
 
   }
 
 
-  /* =========================================================
-     LOAD DATA
-  ========================================================= */
+  /* =====================================================
+     LOAD DATA SISWA + PRESENSI HARI INI
+  ===================================================== */
 
-  async function loadData() {
+  async function loadData(
+    forceRefresh = false
+  ) {
+
+    if (sedangMemuat) {
+      return;
+    }
+
+
+    sedangMemuat = true;
+
 
     const table =
       $("siswaTable");
@@ -223,8 +276,10 @@
 
       table.innerHTML = `
         <tr>
-          <td colspan="7" class="loading">
-            <i class="fa-solid fa-spinner fa-spin"></i>
+          <td
+            colspan="7"
+            class="loading"
+          >
             Memuat data siswa...
           </td>
         </tr>
@@ -233,20 +288,20 @@
     }
 
 
-    const role =
-      String(
-        Auth.getRole(user) || ""
-      ).toUpperCase();
-
-
     try {
 
-      const today =
+      const tanggal =
         localDate();
 
 
+      const role =
+        String(
+          Auth.getRole(user)
+        ).toUpperCase();
+
+
       /*
-       * Ambil siswa dan presensi hari ini
+       * Ambil siswa dan presensi
        * secara bersamaan.
        */
 
@@ -256,27 +311,46 @@
       ] = await Promise.all([
 
         callAPI({
-          action: "getSiswa",
-          aktifOnly: true
+
+          action:
+            "getSiswa",
+
+          aktifOnly:
+            true,
+
+          forceRefresh:
+            forceRefresh
+
         }),
 
         callAPI({
-          action: "getRekap",
-          tanggal: today,
+
+          action:
+            "getRekap",
+
+          tanggal:
+            tanggal,
 
           idGuru:
             role === "GURU"
-              ? user.idGuru
-              : ""
+              ? user.idGuru || ""
+              : "",
+
+          forceRefresh:
+            forceRefresh
+
         })
 
       ]);
 
 
-      if (!siswaResult.success) {
+      if (
+        !siswaResult ||
+        !siswaResult.success
+      ) {
 
         throw new Error(
-          siswaResult.message ||
+          siswaResult?.message ||
           "Gagal mengambil data siswa."
         );
 
@@ -292,64 +366,77 @@
 
 
       /*
-       * Untuk GURU, hanya tampilkan kelas
+       * Jika user GURU,
+       * hanya tampilkan kelas
        * yang menjadi tanggung jawabnya.
        */
 
-      if (role === "GURU") {
+      if (
+        role === "GURU"
+      ) {
 
         const kelasResult =
           await callAPI({
-            action: "getKelasGuru",
-            idGuru: user.idGuru
+
+            action:
+              "getKelasGuru",
+
+            idGuru:
+              user.idGuru || ""
+
           });
 
 
-        if (!kelasResult.success) {
+        if (
+          kelasResult &&
+          kelasResult.success
+        ) {
 
-          throw new Error(
-            kelasResult.message ||
-            "Gagal mengambil kelas guru."
-          );
+          const allowed =
+            new Set(
+              (
+                Array.isArray(
+                  kelasResult.data
+                )
+                  ? kelasResult.data
+                  : []
+              )
+                .map(
+                  function (item) {
+
+                    return String(
+                      item.NAMA_KELAS ||
+                      ""
+                    ).trim();
+
+                  }
+                )
+                .filter(Boolean)
+            );
+
+
+          semuaSiswa =
+            semuaSiswa.filter(
+              function (siswa) {
+
+                return allowed.has(
+                  String(
+                    siswa.KELAS ||
+                    ""
+                  ).trim()
+                );
+
+              }
+            );
 
         }
-
-
-        const kelasGuru =
-          Array.isArray(
-            kelasResult.data
-          )
-            ? kelasResult.data
-            : [];
-
-
-        const allowed =
-          new Set(
-            kelasGuru.map(
-              item =>
-                String(
-                  item.NAMA_KELAS || ""
-                ).trim()
-            )
-          );
-
-
-        semuaSiswa =
-          semuaSiswa.filter(
-            siswa =>
-              allowed.has(
-                String(
-                  siswa.KELAS || ""
-                ).trim()
-              )
-          );
 
       }
 
 
       /*
        * Simpan presensi hari ini
-       * ke Map agar pencarian sangat cepat.
+       * dalam Map supaya render cepat.
        */
 
       presensiHariIni =
@@ -359,20 +446,29 @@
       if (
         rekapResult &&
         rekapResult.success &&
-        Array.isArray(rekapResult.data)
+        Array.isArray(
+          rekapResult.data
+        )
       ) {
 
         rekapResult.data.forEach(
           function (item) {
 
-            if (!item.ID) {
-              return;
-            }
+            const id =
+              String(
+                item.ID ||
+                ""
+              ).trim();
 
-            presensiHariIni.set(
-              String(item.ID),
-              item
-            );
+
+            if (id) {
+
+              presensiHariIni.set(
+                id,
+                item
+              );
+
+            }
 
           }
         );
@@ -383,7 +479,16 @@
       filterSiswa();
 
 
+      updateCounter();
+
+
     } catch (error) {
+
+      console.error(
+        "LOAD DATA:",
+        error
+      );
+
 
       if (table) {
 
@@ -393,9 +498,11 @@
               colspan="7"
               class="error"
             >
+              Gagal memuat data:
+              <br>
               ${escapeHTML(
                 error.message ||
-                "Gagal memuat data."
+                "Terjadi kesalahan."
               )}
             </td>
           </tr>
@@ -403,28 +510,63 @@
 
       }
 
-      throw error;
+
+      showMessage(
+        error.message ||
+        "Gagal memuat data.",
+        "error"
+      );
+
+
+    } finally {
+
+      sedangMemuat = false;
 
     }
 
   }
 
 
-  /* =========================================================
-     FILTER SISWA
-  ========================================================= */
+  /* =====================================================
+     REFRESH
+  ===================================================== */
+
+  async function refreshData() {
+
+    if (
+      sedangMemuat ||
+      sedangMenyimpan
+    ) {
+      return;
+    }
+
+
+    await loadData(
+      true
+    );
+
+  }
+
+
+  /* =====================================================
+     FILTER
+  ===================================================== */
 
   function filterSiswa() {
 
     const kelas =
       String(
-        $("kelasSelect")?.value || ""
+        $("kelasSelect")
+          ?.value ||
+        ""
       ).trim();
 
 
     const keyword =
       String(
-        $("searchInput")?.value || ""
+        $("searchInput")
+          ?.value ||
+        ""
       )
         .toLowerCase()
         .trim();
@@ -437,31 +579,40 @@
           const cocokKelas =
             !kelas ||
             String(
-              siswa.KELAS || ""
+              siswa.KELAS ||
+              ""
             ).trim() === kelas;
 
 
           const nisn =
             String(
-              siswa.NISN || ""
-            ).toLowerCase();
+              siswa.NISN ||
+              ""
+            )
+              .toLowerCase();
 
 
           const nama =
             String(
-              siswa.NAMA || ""
-            ).toLowerCase();
+              siswa.NAMA ||
+              ""
+            )
+              .toLowerCase();
 
 
-          const cocokCari =
+          const cocokSearch =
             !keyword ||
-            nisn.includes(keyword) ||
-            nama.includes(keyword);
+            nisn.includes(
+              keyword
+            ) ||
+            nama.includes(
+              keyword
+            );
 
 
           return (
             cocokKelas &&
-            cocokCari
+            cocokSearch
           );
 
         }
@@ -470,24 +621,28 @@
 
     renderSiswa();
 
+
+    updateCounter();
+
   }
 
 
-  /* =========================================================
+  /* =====================================================
      RENDER SISWA
-  ========================================================= */
+  ===================================================== */
 
   function renderSiswa() {
 
     const table =
       $("siswaTable");
 
-    if (!table) {
-      return;
-    }
+
+    if (!table) return;
 
 
-    if (!siswaTampil.length) {
+    if (
+      !siswaTampil.length
+    ) {
 
       table.innerHTML = `
         <tr>
@@ -500,167 +655,180 @@
         </tr>
       `;
 
-      updateCounter();
 
       return;
 
     }
 
 
-    const fragment =
-      document.createDocumentFragment();
+    table.innerHTML =
+      siswaTampil
+        .map(
+          function (siswa, index) {
+
+            const id =
+              String(
+                siswa.ID ||
+                ""
+              );
 
 
-    siswaTampil.forEach(
-      function (siswa, index) {
-
-        const existing =
-          presensiHariIni.get(
-            String(siswa.ID)
-          );
+            const existing =
+              presensiHariIni.get(
+                id
+              );
 
 
-        const status =
-          existing &&
-          existing.STATUS
-            ? String(
-                existing.STATUS
-              ).toUpperCase()
-            : "HADIR";
+            const status =
+              normalizeStatus(
+                existing?.STATUS ||
+                "HADIR"
+              );
 
 
-        const saved =
-          Boolean(existing);
+            const saved =
+              Boolean(
+                existing
+              );
 
 
-        const tr =
-          document.createElement("tr");
-
-
-        tr.dataset.siswa =
-          String(siswa.ID);
-
-
-        tr.innerHTML = `
-
-          <td>
-            ${index + 1}
-          </td>
-
-          <td>
-            ${escapeHTML(
-              siswa.NISN || "-"
-            )}
-          </td>
-
-          <td>
-            ${escapeHTML(
-              siswa.NAMA || "-"
-            )}
-          </td>
-
-          <td>
-            ${escapeHTML(
-              siswa.KELAS || "-"
-            )}
-          </td>
-
-          <td>
-            ${escapeHTML(
-              siswa.JK || "-"
-            )}
-          </td>
-
-          <td>
-
-            <select
-              class="status-presensi"
-              data-id="${escapeAttr(
-                siswa.ID
-              )}"
-            >
-
-              <option
-                value="HADIR"
-                ${status === "HADIR"
-                  ? "selected"
-                  : ""}
+            return `
+              <tr
+                data-siswa="${escapeAttr(id)}"
               >
-                Hadir
-              </option>
 
-              <option
-                value="IZIN"
-                ${status === "IZIN"
-                  ? "selected"
-                  : ""}
-              >
-                Izin
-              </option>
+                <td>
+                  ${index + 1}
+                </td>
 
-              <option
-                value="SAKIT"
-                ${status === "SAKIT"
-                  ? "selected"
-                  : ""}
-              >
-                Sakit
-              </option>
+                <td>
+                  ${escapeHTML(
+                    siswa.NISN ||
+                    "-"
+                  )}
+                </td>
 
-              <option
-                value="ALPA"
-                ${status === "ALPA"
-                  ? "selected"
-                  : ""}
-              >
-                Alpa
-              </option>
+                <td>
+                  ${escapeHTML(
+                    siswa.NAMA ||
+                    "-"
+                  )}
+                </td>
 
-            </select>
+                <td>
+                  ${escapeHTML(
+                    siswa.KELAS ||
+                    "-"
+                  )}
+                </td>
 
-          </td>
+                <td>
+                  ${escapeHTML(
+                    siswa.JK ||
+                    "-"
+                  )}
+                </td>
 
-          <td>
+                <td>
 
-            <button
-              type="button"
-              class="
-                btn
-                btn-sm
-                ${saved
-                  ? "btn-success"
-                  : "btn-primary"}
-              "
-              data-simpan="${escapeAttr(
-                siswa.ID
-              )}"
-            >
+                  <select
+                    class="status-presensi"
+                    data-id="${escapeAttr(id)}"
+                  >
 
-              ${saved
-                ? "Tersimpan"
-                : "Simpan"}
+                    <option
+                      value="HADIR"
+                      ${
+                        status === "HADIR"
+                          ? "selected"
+                          : ""
+                      }
+                    >
+                      Hadir
+                    </option>
 
-            </button>
+                    <option
+                      value="IZIN"
+                      ${
+                        status === "IZIN"
+                          ? "selected"
+                          : ""
+                      }
+                    >
+                      Izin
+                    </option>
 
-          </td>
+                    <option
+                      value="SAKIT"
+                      ${
+                        status === "SAKIT"
+                          ? "selected"
+                          : ""
+                      }
+                    >
+                      Sakit
+                    </option>
 
-        `;
+                    <option
+                      value="ALPA"
+                      ${
+                        status === "ALPA"
+                          ? "selected"
+                          : ""
+                      }
+                    >
+                      Alpa
+                    </option>
+
+                  </select>
+
+                </td>
+
+                <td>
+
+                  <button
+                    type="button"
+                    class="btn ${
+                      saved
+                        ? "btn-success"
+                        : "btn-primary"
+                    } btn-sm"
+                    data-simpan="${escapeAttr(id)}"
+                  >
+                    ${
+                      saved
+                        ? "Tersimpan"
+                        : "Simpan"
+                    }
+                  </button>
+
+                </td>
+
+              </tr>
+            `;
+
+          }
+        )
+        .join("");
 
 
-        const button =
-          tr.querySelector(
-            "[data-simpan]"
-          );
+    /*
+     * Event tombol simpan per siswa.
+     */
 
-
-        if (button) {
+    table
+      .querySelectorAll(
+        "[data-simpan]"
+      )
+      .forEach(
+        function (button) {
 
           button.addEventListener(
             "click",
             function () {
 
               simpanSatu(
-                siswa.ID,
+                button.dataset.simpan,
                 button
               );
 
@@ -668,42 +836,368 @@
           );
 
         }
-
-
-        fragment.appendChild(tr);
-
-      }
-    );
-
-
-    table.innerHTML = "";
-
-    table.appendChild(
-      fragment
-    );
-
-
-    updateCounter();
+      );
 
   }
 
 
-  /* =========================================================
-     SIMPAN SATU
-     Tetap tersedia jika guru ingin
-     menyimpan satu siswa saja.
-  ========================================================= */
+  /* =====================================================
+     SIMPAN SEMUA
+     VERSI BATCH
+  ===================================================== */
+
+  async function simpanSemua() {
+
+    if (sedangMenyimpan) {
+      return;
+    }
+
+
+    if (
+      !siswaTampil.length
+    ) {
+
+      showMessage(
+        "Tidak ada siswa yang dapat disimpan.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const mainButton =
+      $("simpanButton");
+
+
+    sedangMenyimpan =
+      true;
+
+
+    if (mainButton) {
+
+      mainButton.disabled =
+        true;
+
+      mainButton.innerHTML =
+        `
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          Menyimpan...
+        `;
+
+    }
+
+
+    /*
+     * Ambil data status dari tabel.
+     */
+
+    const data =
+      siswaTampil.map(
+        function (siswa) {
+
+          const id =
+            String(
+              siswa.ID ||
+              ""
+            );
+
+
+          const row =
+            document.querySelector(
+              `tr[data-siswa="${cssEscape(id)}"]`
+            );
+
+
+          const select =
+            row?.querySelector(
+              ".status-presensi"
+            );
+
+
+          const status =
+            normalizeStatus(
+              select?.value ||
+              "HADIR"
+            );
+
+
+          return {
+
+            id:
+              siswa.ID,
+
+            nisn:
+              siswa.NISN,
+
+            nama:
+              siswa.NAMA,
+
+            kelas:
+              siswa.KELAS,
+
+            status:
+              status,
+
+            idGuru:
+              user?.idGuru ||
+              "",
+
+            sumber:
+              "MANUAL"
+
+          };
+
+        }
+      );
+
+
+    /*
+     * Pastikan semua data valid.
+     */
+
+    const validData =
+      data.filter(
+        function (item) {
+
+          return (
+            item.id &&
+            item.nama &&
+            item.status
+          );
+
+        }
+      );
+
+
+    if (
+      !validData.length
+    ) {
+
+      showMessage(
+        "Data presensi tidak valid.",
+        "error"
+      );
+
+
+      selesaiSimpan(
+        mainButton
+      );
+
+
+      return;
+
+    }
+
+
+    showMessage(
+      `Sedang menyimpan ${validData.length} siswa...`,
+      "info"
+    );
+
+
+    try {
+
+      /*
+       * SATU REQUEST untuk semua siswa.
+       */
+
+      const result =
+        await callAPI({
+
+          action:
+            "simpanPresensiBatch",
+
+          data:
+            validData
+
+        });
+
+
+      console.log(
+        "HASIL SIMPAN BATCH:",
+        result
+      );
+
+
+      if (
+        !result ||
+        result.success !== true
+      ) {
+
+        throw new Error(
+          result?.message ||
+          "Server gagal menyimpan presensi."
+        );
+
+      }
+
+
+      /*
+       * Update cache lokal.
+       */
+
+      if (
+        Array.isArray(
+          result.data
+        )
+      ) {
+
+        result.data.forEach(
+          function (item) {
+
+            const d =
+              item.data ||
+              item;
+
+
+            const id =
+              String(
+                d.id ||
+                item.id ||
+                ""
+              );
+
+
+            if (!id) return;
+
+
+            presensiHariIni.set(
+              id,
+              {
+
+                ID:
+                  id,
+
+                STATUS:
+                  d.status ||
+                  item.status ||
+                  "HADIR",
+
+                JAM:
+                  new Date()
+                    .toLocaleTimeString(
+                      "id-ID"
+                    )
+
+              }
+            );
+
+          }
+        );
+
+      }
+
+
+      /*
+       * Update tampilan tombol.
+       */
+
+      renderSiswa();
+
+
+      updateCounter();
+
+
+      const berhasil =
+        Number(
+          result.berhasil ||
+          0
+        );
+
+
+      const gagal =
+        Number(
+          result.gagal ||
+          0
+        );
+
+
+      if (
+        gagal > 0
+      ) {
+
+        showMessage(
+          `Selesai. Berhasil: ${berhasil}. Gagal: ${gagal}.`,
+          "error"
+        );
+
+
+        /*
+         * Tampilkan detail error
+         * di console.
+         */
+
+        console.error(
+          "DETAIL ERROR PRESENSI:",
+          result.errors || []
+        );
+
+      } else {
+
+        showMessage(
+          `Presensi berhasil disimpan untuk ${berhasil} siswa.`,
+          "success"
+        );
+
+      }
+
+
+    } catch (error) {
+
+      console.error(
+        "SIMPAN SEMUA:",
+        error
+      );
+
+
+      showMessage(
+        "Presensi gagal disimpan: " +
+        (
+          error.message ||
+          "Kesalahan server."
+        ),
+        "error"
+      );
+
+    } finally {
+
+      selesaiSimpan(
+        mainButton
+      );
+
+    }
+
+  }
+
+
+  /* =====================================================
+     SIMPAN SATU SISWA
+  ===================================================== */
 
   async function simpanSatu(
     id,
     button
   ) {
 
+    if (sedangMenyimpan) {
+      return;
+    }
+
+
     const siswa =
       semuaSiswa.find(
-        item =>
-          String(item.ID) ===
-          String(id)
+        function (item) {
+
+          return (
+            String(
+              item.ID
+            ) ===
+            String(id)
+          );
+
+        }
       );
 
 
@@ -714,13 +1208,15 @@
         "error"
       );
 
-      return false;
+      return;
 
     }
 
 
     const row =
-      button?.closest("tr");
+      button?.closest(
+        "tr"
+      );
 
 
     const select =
@@ -730,18 +1226,27 @@
 
 
     const status =
-      String(
-        select?.value || "HADIR"
-      ).toUpperCase();
-
-
-    setButtonLoading(
-      button,
-      true
-    );
+      normalizeStatus(
+        select?.value ||
+        "HADIR"
+      );
 
 
     try {
+
+      if (button) {
+
+        button.disabled =
+          true;
+
+        button.innerHTML =
+          `
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            Menyimpan...
+          `;
+
+      }
+
 
       const result =
         await callAPI({
@@ -765,7 +1270,8 @@
             status,
 
           idGuru:
-            user.idGuru || "",
+            user?.idGuru ||
+            "",
 
           sumber:
             "MANUAL"
@@ -773,53 +1279,104 @@
         });
 
 
-      if (!result.success) {
+      if (
+        !result ||
+        result.success !== true
+      ) {
 
         throw new Error(
-          result.message ||
+          result?.message ||
           "Presensi gagal disimpan."
         );
 
       }
 
 
+      /*
+       * Update cache lokal.
+       */
+
       presensiHariIni.set(
-        String(siswa.ID),
+        String(
+          siswa.ID
+        ),
         {
+
           ID:
             siswa.ID,
 
           STATUS:
             status,
 
-          TANGGAL:
-            localDate()
+          JAM:
+            new Date()
+              .toLocaleTimeString(
+                "id-ID"
+              )
+
         }
       );
 
 
-      setButtonSaved(
-        button
-      );
+      if (button) {
 
+        button.disabled =
+          false;
 
-      showMessage(
-        `${siswa.NAMA}: presensi berhasil disimpan.`,
-        "success"
-      );
+        button.innerHTML =
+          `
+            <i class="fa-solid fa-check"></i>
+            Tersimpan
+          `;
+
+        button.classList.remove(
+          "btn-primary"
+        );
+
+        button.classList.add(
+          "btn-success"
+        );
+
+      }
 
 
       updateCounter();
 
 
-      return true;
+      showMessage(
+        `${siswa.NAMA} berhasil disimpan.`,
+        "success"
+      );
 
 
     } catch (error) {
 
-      setButtonFailed(
-        button
+      console.error(
+        "SIMPAN SATU:",
+        error
       );
+
+
+      if (button) {
+
+        button.disabled =
+          false;
+
+        button.innerHTML =
+          `
+            <i class="fa-solid fa-xmark"></i>
+            Gagal
+          `;
+
+        button.classList.remove(
+          "btn-success"
+        );
+
+        button.classList.add(
+          "btn-danger"
+        );
+
+      }
 
 
       showMessage(
@@ -830,384 +1387,22 @@
         "error"
       );
 
-
-      return false;
-
     }
 
   }
 
 
-  /* =========================================================
-     SIMPAN SEMUA
-     
-     SEKARANG HANYA 1 REQUEST.
-     
-     Tidak ada lagi:
-       Promise.all(...5 request...)
-  ========================================================= */
-
-  async function simpanSemua() {
-
-    const mainButton =
-      $("simpanButton");
-
-
-    if (
-      !siswaTampil.length
-    ) {
-
-      showMessage(
-        "Tidak ada siswa yang dapat disimpan.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    const data =
-      siswaTampil.map(
-        function (siswa) {
-
-          const row =
-            document.querySelector(
-              `tr[data-siswa="${CSS.escape(
-                String(siswa.ID)
-              )}"]`
-            );
-
-
-          const select =
-            row?.querySelector(
-              ".status-presensi"
-            );
-
-
-          return {
-
-            id:
-              siswa.ID,
-
-            nisn:
-              siswa.NISN,
-
-            nama:
-              siswa.NAMA,
-
-            kelas:
-              siswa.KELAS,
-
-            status:
-              String(
-                select?.value ||
-                "HADIR"
-              ).toUpperCase(),
-
-            idGuru:
-              user.idGuru || "",
-
-            sumber:
-              "MANUAL"
-
-          };
-
-        }
-      );
-
-
-    if (!data.length) {
-
-      showMessage(
-        "Tidak ada data presensi.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    /*
-     * Loading semua tombol.
-     */
-
-    const buttons =
-      Array.from(
-        document.querySelectorAll(
-          "[data-simpan]"
-        )
-      );
-
-
-    buttons.forEach(
-      function (button) {
-
-        button.disabled = true;
-        button.textContent =
-          "Menyimpan...";
-
-      }
-    );
-
-
-    if (mainButton) {
-
-      mainButton.disabled = true;
-
-      mainButton.innerHTML =
-        '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
-
-    }
-
-
-    try {
-
-      showMessage(
-        `Menyimpan ${data.length} siswa...`,
-        "info"
-      );
-
-
-      /*
-       * SATU REQUEST KE APPS SCRIPT
-       */
-
-      const result =
-        await callAPI({
-
-          action:
-            "simpanPresensiBatch",
-
-          data:
-            data
-
-        });
-
-
-      if (!result.success) {
-
-        throw new Error(
-          result.message ||
-          "Gagal menyimpan presensi."
-        );
-
-      }
-
-
-      /*
-       * Update data lokal.
-       */
-
-      data.forEach(
-        function (item) {
-
-          presensiHariIni.set(
-            String(item.id),
-            {
-              ID:
-                item.id,
-
-              STATUS:
-                item.status,
-
-              TANGGAL:
-                localDate()
-            }
-          );
-
-        }
-      );
-
-
-      /*
-       * Update tombol.
-       */
-
-      buttons.forEach(
-        function (button) {
-
-          button.disabled = false;
-
-          button.textContent =
-            "Tersimpan";
-
-          button.classList.remove(
-            "btn-primary"
-          );
-
-          button.classList.add(
-            "btn-success"
-          );
-
-        }
-      );
-
-
-      const berhasil =
-        Number(
-          result.berhasil || 0
-        );
-
-
-      const gagal =
-        Number(
-          result.gagal || 0
-        );
-
-
-      showMessage(
-        `Selesai. Berhasil: ${berhasil}. Gagal: ${gagal}.`,
-        gagal > 0
-          ? "error"
-          : "success"
-      );
-
-
-      updateCounter();
-
-
-    } catch (error) {
-
-      buttons.forEach(
-        function (button) {
-
-          button.disabled = false;
-
-          button.textContent =
-            "Simpan";
-
-        }
-      );
-
-
-      showMessage(
-        error.message ||
-        "Gagal menyimpan presensi.",
-        "error"
-      );
-
-    } finally {
-
-      if (mainButton) {
-
-        mainButton.disabled = false;
-
-        mainButton.innerHTML =
-          "Simpan Semua";
-
-      }
-
-    }
-
-  }
-
-
-  /* =========================================================
-     BUTTON HELPERS
-  ========================================================= */
-
-  function setButtonLoading(
-    button,
-    loading
-  ) {
-
-    if (!button) {
-      return;
-    }
-
-
-    if (loading) {
-
-      button.disabled = true;
-
-      button.dataset.oldText =
-        button.textContent;
-
-      button.textContent =
-        "Menyimpan...";
-
-    } else {
-
-      button.disabled = false;
-
-      button.textContent =
-        button.dataset.oldText ||
-        "Simpan";
-
-    }
-
-  }
-
-
-  function setButtonSaved(
-    button
-  ) {
-
-    if (!button) {
-      return;
-    }
-
-
-    button.disabled = false;
-
-    button.textContent =
-      "Tersimpan";
-
-
-    button.classList.remove(
-      "btn-primary"
-    );
-
-
-    button.classList.add(
-      "btn-success"
-    );
-
-  }
-
-
-  function setButtonFailed(
-    button
-  ) {
-
-    if (!button) {
-      return;
-    }
-
-
-    button.disabled = false;
-
-    button.textContent =
-      "Gagal";
-
-
-    button.classList.remove(
-      "btn-success"
-    );
-
-
-    button.classList.add(
-      "btn-primary"
-    );
-
-  }
-
-
-  /* =========================================================
+  /* =====================================================
      COUNTER
-  ========================================================= */
+  ===================================================== */
 
   function updateCounter() {
 
-    const element =
+    const counter =
       $("presensiCounter");
 
 
-    if (!element) {
-      return;
-    }
+    if (!counter) return;
 
 
     let hadir = 0;
@@ -1219,68 +1414,79 @@
     siswaTampil.forEach(
       function (siswa) {
 
-        const row =
-          document.querySelector(
-            `tr[data-siswa="${CSS.escape(
-              String(siswa.ID)
-            )}"]`
-          );
-
-
-        const select =
-          row?.querySelector(
-            ".status-presensi"
+        const data =
+          presensiHariIni.get(
+            String(
+              siswa.ID
+            )
           );
 
 
         const status =
-          String(
-            select?.value || ""
-          ).toUpperCase();
+          normalizeStatus(
+            data?.STATUS ||
+            "HADIR"
+          );
 
 
-        if (status === "HADIR") {
+        if (
+          status === "HADIR"
+        ) {
+
           hadir++;
-        }
 
-        if (status === "SAKIT") {
+        } else if (
+          status === "SAKIT"
+        ) {
+
           sakit++;
-        }
 
-        if (status === "IZIN") {
+        } else if (
+          status === "IZIN"
+        ) {
+
           izin++;
-        }
 
-        if (status === "ALPA") {
+        } else if (
+          status === "ALPA"
+        ) {
+
           alpa++;
+
         }
 
       }
     );
 
 
-    element.textContent =
-      `Hadir: ${hadir} | Sakit: ${sakit} | Izin: ${izin} | Alpa: ${alpa}`;
+    counter.innerHTML =
+      `
+        <strong>Hadir:</strong> ${hadir}
+        |
+        <strong>Sakit:</strong> ${sakit}
+        |
+        <strong>Izin:</strong> ${izin}
+        |
+        <strong>Alpa:</strong> ${alpa}
+      `;
 
   }
 
 
-  /* =========================================================
+  /* =====================================================
      MESSAGE
-  ========================================================= */
+  ===================================================== */
 
   function showMessage(
     message,
-    type = "info"
+    type
   ) {
 
     const element =
       $("presensiMessage");
 
 
-    if (!element) {
-      return;
-    }
+    if (!element) return;
 
 
     element.textContent =
@@ -1288,7 +1494,11 @@
 
 
     element.className =
-      `alert alert-${type}`;
+      "alert alert-" +
+      (
+        type ||
+        "info"
+      );
 
 
     element.style.display =
@@ -1297,27 +1507,167 @@
   }
 
 
-  /* =========================================================
-     DATE
-  ========================================================= */
+  /* =====================================================
+     SELESAI SIMPAN
+  ===================================================== */
+
+  function selesaiSimpan(
+    button
+  ) {
+
+    sedangMenyimpan =
+      false;
+
+
+    if (button) {
+
+      button.disabled =
+        false;
+
+      button.innerHTML =
+        `
+          <i class="fa-solid fa-save"></i>
+          Simpan Semua
+        `;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     NORMALIZE STATUS
+  ===================================================== */
+
+  function normalizeStatus(
+    value
+  ) {
+
+    const status =
+      String(
+        value ||
+        ""
+      )
+        .trim()
+        .toUpperCase();
+
+
+    if (
+      [
+        "HADIR",
+        "SAKIT",
+        "IZIN",
+        "ALPA"
+      ].includes(status)
+    ) {
+
+      return status;
+
+    }
+
+
+    return "HADIR";
+
+  }
+
+
+  /* =====================================================
+     TANGGAL LOKAL INDONESIA
+  ===================================================== */
 
   function localDate(
     date = new Date()
   ) {
 
-    return [
+    const year =
+      date.getFullYear();
 
-      date.getFullYear(),
 
+    const month =
       String(
         date.getMonth() + 1
-      ).padStart(2, "0"),
+      )
+        .padStart(
+          2,
+          "0"
+        );
 
+
+    const day =
       String(
         date.getDate()
-      ).padStart(2, "0")
+      )
+        .padStart(
+          2,
+          "0"
+        );
 
-    ].join("-");
+
+    return (
+      year +
+      "-" +
+      month +
+      "-" +
+      day
+    );
+
+  }
+
+
+  /* =====================================================
+     SORT KELAS
+  ===================================================== */
+
+  function naturalSort(
+    a,
+    b
+  ) {
+
+    return String(a)
+      .localeCompare(
+        String(b),
+        "id",
+        {
+          numeric: true,
+          sensitivity: "base"
+        }
+      );
+
+  }
+
+
+  /* =====================================================
+     CSS ESCAPE
+  ===================================================== */
+
+  function cssEscape(
+    value
+  ) {
+
+    const text =
+      String(
+        value ||
+        ""
+      );
+
+
+    if (
+      window.CSS &&
+      typeof CSS.escape ===
+        "function"
+    ) {
+
+      return CSS.escape(
+        text
+      );
+
+    }
+
+
+    return text.replace(
+      /([ !"#$%&'()*+,./:;<=>?@[\\\]^`{|}~])/g,
+      "\\$1"
+    );
 
   }
 
