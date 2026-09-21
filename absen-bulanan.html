@@ -1,754 +1,290 @@
-"use strict";
+<!DOCTYPE html>
+<html lang="id">
 
-(function () {
+<head>
+  <meta charset="UTF-8">
 
-  let user = null;
-  let dataReport = null;
-  let daftarGuru = [];
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  const $ = (id) =>
-    document.getElementById(id);
+  <title>
+    Laporan Kehadiran Siswa
+  </title>
 
-  function init() {
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+  >
 
-    user =
-      getCurrentUser();
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
 
-    if (!user) {
-      location.href =
-        "index.html";
-      return;
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+  <style>
+
+    .report-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: end;
     }
 
-    const role =
-      String(user.role || "")
-        .toUpperCase();
-
-    if (
-      role !== "ADMIN" &&
-      role !== "GURU"
-    ) {
-      location.href =
-        "dashboard.html";
-      return;
+    .report-toolbar .form-group {
+      min-width: 150px;
     }
 
-    setDefaultPeriod();
-
-    bindEvents();
-
-    if (role === "ADMIN") {
-      loadGuru();
-    } else {
-      hideGuruSelector();
-    }
-  }
-
-  function setDefaultPeriod() {
-
-    const now =
-      new Date();
-
-    const bulan =
-      $("bulan");
-
-    const tahun =
-      $("tahun");
-
-    if (bulan) {
-      bulan.value =
-        now.getMonth() + 1;
+    .laporan-bulanan {
+      overflow-x: auto;
     }
 
-    if (tahun) {
-      tahun.value =
-        now.getFullYear();
+    .table-report {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 1200px;
+      font-size: 10px;
     }
-  }
 
-  function bindEvents() {
+    .table-report th,
+    .table-report td {
+      border: 1px solid #222;
+      padding: 3px;
+      text-align: center;
+    }
 
-    $("tampilButton")?.addEventListener(
-      "click",
-      loadReport
-    );
+    .table-report .nama-siswa {
+      text-align: left;
+      min-width: 160px;
+    }
 
-    $("loadButton")?.addEventListener(
-      "click",
-      loadReport
-    );
+    .report-header {
+      text-align: center;
+      margin-bottom: 15px;
+    }
 
-    $("printButton")?.addEventListener(
-      "click",
-      () => window.print()
-    );
+    .report-header h2 {
+      margin-bottom: 15px;
+    }
 
-    $("exportExcelButton")?.addEventListener(
-      "click",
-      exportExcel
-    );
+    .report-info {
+      text-align: left;
+      max-width: 500px;
+      margin-bottom: 10px;
+    }
 
-    $("downloadButton")?.addEventListener(
-      "click",
-      exportExcel
-    );
-  }
+    .report-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 35px;
+      text-align: center;
+    }
 
-  async function loadGuru() {
+    @media print {
 
-    try {
-
-      const result =
-        await callAPI({
-          action: "getGuru"
-        });
-
-      if (!result.success) {
-        throw new Error(
-          result.message ||
-          "Gagal mengambil data guru."
-        );
+      @page {
+        size: 330mm 215mm landscape;
+        margin: 8mm;
       }
 
-      daftarGuru =
-        Array.isArray(result.data)
-          ? result.data
-          : [];
+      .app-sidebar,
+      .app-topbar,
+      .report-toolbar,
+      .card-header {
+        display: none !important;
+      }
 
-      const select =
-        $("guruSelect");
+      .app-main {
+        margin: 0 !important;
+      }
 
-      if (!select) return;
+      .app-page-content {
+        padding: 0 !important;
+      }
 
-      select.innerHTML = `
-        <option value="">
-          Pilih Guru / Wali Kelas
-        </option>
+      .card {
+        border: none !important;
+        box-shadow: none !important;
+      }
 
-        ${daftarGuru.map(
-          guru => `
-            <option
-              value="${escapeAttr(
-                guru.ID_GURU
-              )}">
-              ${escapeHTML(
-                guru.NAMA ||
-                guru.ID_GURU
-              )}
+      .table-report {
+        font-size: 7px;
+      }
+
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+
+    <div class="card-header">
+
+      <div class="card-title">
+        <i class="fa-solid fa-calendar-days"></i>
+        Laporan Bulanan
+      </div>
+
+    </div>
+
+    <div class="card-body">
+
+      <div class="report-toolbar">
+
+        <div
+          class="form-group"
+          id="guruWrapper"
+        >
+
+          <label>
+            Guru / Wali Kelas
+          </label>
+
+          <select id="guruSelect">
+
+            <option value="">
+              Pilih Guru
             </option>
-          `
-        ).join("")}
-      `;
 
-    } catch (error) {
-
-      console.error(error);
-
-      alert(error.message);
-    }
-  }
-
-  function hideGuruSelector() {
-
-    const wrapper =
-      $("guruWrapper") ||
-      $("guruContainer");
-
-    if (wrapper) {
-      wrapper.style.display =
-        "none";
-    }
-  }
-
-  async function loadReport() {
-
-    const bulan =
-      Number(
-        $("bulan")?.value
-      );
-
-    const tahun =
-      Number(
-        $("tahun")?.value
-      );
-
-    const role =
-      String(user.role)
-        .toUpperCase();
-
-    let idGuru =
-      user.idGuru || "";
-
-    if (role === "ADMIN") {
-
-      idGuru =
-        String(
-          $("guruSelect")?.value ||
-          ""
-        );
-    }
-
-    if (!bulan || !tahun) {
-      alert(
-        "Bulan dan tahun wajib dipilih."
-      );
-      return;
-    }
-
-    if (!idGuru) {
-      alert(
-        "Guru/Wali Kelas wajib dipilih."
-      );
-      return;
-    }
-
-    showLoading();
-
-    try {
-
-      const result =
-        await callAPI({
-
-          action:
-            "getAbsenBulanan",
-
-          idGuru,
-
-          bulan,
-
-          tahun
-
-        });
-
-      if (!result.success) {
-        throw new Error(
-          result.message ||
-          "Gagal mengambil laporan."
-        );
-      }
-
-      dataReport =
-        result.data;
-
-      renderReport(
-        dataReport
-      );
-
-    } catch (error) {
-
-      console.error(error);
-
-      showError(
-        error.message
-      );
-    }
-  }
-
-  function renderReport(data) {
-
-    const container =
-      $("reportContent") ||
-      $("laporan");
-
-    if (!container) return;
-
-    const sekolah =
-      data.sekolah || {};
-
-    const kelas =
-      data.kelas || {};
-
-    const guru =
-      data.guru || {};
-
-    const kepala =
-      data.kepalaSekolah || {};
-
-    const siswa =
-      Array.isArray(data.siswa)
-        ? data.siswa
-        : [];
-
-    const bulan =
-      Number(data.bulan);
-
-    const tahun =
-      Number(data.tahun);
-
-    const jumlahHari =
-      Number(data.jumlahHari || 0);
-
-    const namaBulan =
-      [
-        "",
-        "Januari",
-        "Februari",
-        "Maret",
-        "April",
-        "Mei",
-        "Juni",
-        "Juli",
-        "Agustus",
-        "September",
-        "Oktober",
-        "November",
-        "Desember"
-      ][bulan] || "";
-
-    const hariKeys =
-      getDayKeys(
-        siswa,
-        jumlahHari
-      );
-
-    const rows =
-      siswa.map(
-        (item, index) => {
-
-          const hari =
-            item.hari || {};
-
-          const rekap =
-            hitungRekap(hari);
-
-          const persen =
-            rekap.total
-              ? (
-                rekap.hadir /
-                rekap.total
-              ) * 100
-              : 0;
-
-          return `
-            <tr>
-
-              <td>
-                ${index + 1}
-              </td>
-
-              <td>
-                ${escapeHTML(
-                  item.nisn || "-"
-                )}
-              </td>
-
-              <td class="nama-siswa">
-                ${escapeHTML(
-                  item.nama || "-"
-                )}
-              </td>
-
-              <td>
-                ${escapeHTML(
-                  item.jk || "-"
-                )}
-              </td>
-
-              ${hariKeys.map(
-                day => `
-                  <td>
-                    ${escapeHTML(
-                      hari[day] || "-"
-                    )}
-                  </td>
-                `
-              ).join("")}
-
-              <td>${rekap.hadir}</td>
-              <td>${rekap.sakit}</td>
-              <td>${rekap.izin}</td>
-              <td>${rekap.alpa}</td>
-              <td>${rekap.total}</td>
-              <td>${persen.toFixed(1)}%</td>
-
-            </tr>
-          `;
-        }
-      ).join("");
-
-    container.innerHTML = `
-
-      <div class="laporan-bulanan">
-
-        <div class="report-header">
-
-          <h2>
-            LAPORAN KEHADIRAN SISWA
-            SDN JATIWARINGIN XIII
-          </h2>
-
-          <div>
-            Bulan:
-            <strong>
-              ${namaBulan}
-              ${tahun}
-            </strong>
-          </div>
-
-          <div>
-            Kelas:
-            <strong>
-              ${escapeHTML(
-                kelas.nama ||
-                kelas.NAMA_KELAS ||
-                "-"
-              )}
-            </strong>
-          </div>
+          </select>
 
         </div>
 
-        <table
-          class="table-report">
+        <div class="form-group">
 
-          <thead>
+          <label>
+            Bulan
+          </label>
 
-            <tr>
+          <select id="bulan">
 
-              <th rowspan="2">
-                NO
-              </th>
+            <option value="1">
+              Januari
+            </option>
 
-              <th rowspan="2">
-                NISN
-              </th>
+            <option value="2">
+              Februari
+            </option>
 
-              <th rowspan="2">
-                NAMA SISWA
-              </th>
+            <option value="3">
+              Maret
+            </option>
 
-              <th rowspan="2">
-                L/P
-              </th>
+            <option value="4">
+              April
+            </option>
 
-              <th
-                colspan="${hariKeys.length}">
-                TANGGAL
-              </th>
+            <option value="5">
+              Mei
+            </option>
 
-              <th colspan="6">
-                REKAPITULASI
-              </th>
+            <option value="6">
+              Juni
+            </option>
 
-            </tr>
+            <option value="7">
+              Juli
+            </option>
 
-            <tr>
+            <option value="8">
+              Agustus
+            </option>
 
-              ${hariKeys.map(
-                day => `
-                  <th>
-                    ${day}
-                  </th>
-                `
-              ).join("")}
+            <option value="9">
+              September
+            </option>
 
-              <th>H</th>
-              <th>S</th>
-              <th>I</th>
-              <th>A</th>
-              <th>JML</th>
-              <th>%</th>
+            <option value="10">
+              Oktober
+            </option>
 
-            </tr>
+            <option value="11">
+              November
+            </option>
 
-          </thead>
+            <option value="12">
+              Desember
+            </option>
 
-          <tbody>
-            ${rows}
-          </tbody>
+          </select>
 
-        </table>
+        </div>
 
-        <div class="report-footer">
+        <div class="form-group">
 
-          <div>
-            <p>
-              Mengetahui,
-            </p>
+          <label>
+            Tahun
+          </label>
 
-            <p>
-              Kepala Sekolah
-            </p>
+          <input
+            type="number"
+            id="tahun"
+            min="2020"
+            max="2100"
+          >
 
-            <br><br><br>
+        </div>
 
-            <strong>
-              ${escapeHTML(
-                kepala.nama ||
-                "-"
-              )}
-            </strong>
+        <button
+          type="button"
+          id="tampilButton"
+          class="btn btn-primary"
+        >
+          <i class="fa-solid fa-search"></i>
+          Tampilkan
+        </button>
 
-            <br>
+        <button
+          type="button"
+          id="printButton"
+          class="btn btn-secondary"
+        >
+          <i class="fa-solid fa-print"></i>
+          Cetak
+        </button>
 
-            NIP.
-            ${escapeHTML(
-              kepala.nip ||
-              "-"
-            )}
-          </div>
+        <button
+          type="button"
+          id="exportExcelButton"
+          class="btn btn-success"
+        >
+          <i class="fa-solid fa-file-excel"></i>
+          Excel
+        </button>
 
-          <div>
-            <p>
-              Guru / Wali Kelas
-            </p>
+      </div>
 
-            <br><br><br>
+      <div id="reportContent">
 
-            <strong>
-              ${escapeHTML(
-                guru.nama ||
-                "-"
-              )}
-            </strong>
-
-            <br>
-
-            NIP.
-            ${escapeHTML(
-              guru.nip ||
-              "-"
-            )}
-          </div>
-
+        <div class="empty">
+          Pilih periode kemudian klik
+          <strong>Tampilkan</strong>.
         </div>
 
       </div>
-    `;
-  }
 
-  function getDayKeys(
-    siswa,
-    jumlahHari
-  ) {
+    </div>
 
-    const keys =
-      new Set();
+  </div>
 
-    siswa.forEach(
-      item => {
+  <script
+    src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
+  ></script>
 
-        const hari =
-          item.hari || {};
+  <script src="api.js"></script>
+  <script src="auth.js"></script>
+  <script src="layout.js"></script>
+  <script src="absen-bulanan.js"></script>
+  <script src="pwa.js"></script>
 
-        Object.keys(hari)
-          .forEach(
-            key =>
-              keys.add(
-                Number(key)
-              )
-          );
-      }
-    );
-
-    if (!keys.size) {
-
-      for (
-        let i = 1;
-        i <= jumlahHari;
-        i++
-      ) {
-        keys.add(i);
-      }
-    }
-
-    return [
-      ...keys
-    ].sort(
-      (a, b) => a - b
-    );
-  }
-
-  function hitungRekap(hari) {
-
-    let hadir = 0;
-    let sakit = 0;
-    let izin = 0;
-    let alpa = 0;
-
-    Object.values(hari)
-      .forEach(status => {
-
-        switch (
-          String(status)
-            .toUpperCase()
-        ) {
-
-          case "H":
-            hadir++;
-            break;
-
-          case "S":
-            sakit++;
-            break;
-
-          case "I":
-            izin++;
-            break;
-
-          case "A":
-            alpa++;
-            break;
-        }
-      });
-
-    const total =
-      hadir +
-      sakit +
-      izin +
-      alpa;
-
-    return {
-      hadir,
-      sakit,
-      izin,
-      alpa,
-      total
-    };
-  }
-
-  function showLoading() {
-
-    const container =
-      $("reportContent") ||
-      $("laporan");
-
-    if (container) {
-
-      container.innerHTML = `
-        <div class="loading">
-          Memuat laporan...
-        </div>
-      `;
-    }
-  }
-
-  function showError(message) {
-
-    const container =
-      $("reportContent") ||
-      $("laporan");
-
-    if (container) {
-
-      container.innerHTML = `
-        <div class="alert alert-danger">
-          ${escapeHTML(message)}
-        </div>
-      `;
-    }
-  }
-
-  function exportExcel() {
-
-    if (!dataReport) {
-      alert(
-        "Tampilkan laporan terlebih dahulu."
-      );
-      return;
-    }
-
-    if (
-      typeof XLSX ===
-      "undefined"
-    ) {
-      exportCSV();
-      return;
-    }
-
-    const table =
-      document.querySelector(
-        ".table-report"
-      );
-
-    if (!table) {
-      alert(
-        "Tabel laporan tidak ditemukan."
-      );
-      return;
-    }
-
-    const workbook =
-      XLSX.utils.book_new();
-
-    const worksheet =
-      XLSX.utils.table_to_sheet(
-        table
-      );
-
-    XLSX.utils.book_append_sheet(
-      workbook,
-      worksheet,
-      "Laporan"
-    );
-
-    XLSX.writeFile(
-      workbook,
-      "Laporan-Kehadiran-Siswa.xlsx"
-    );
-  }
-
-  function exportCSV() {
-
-    const table =
-      document.querySelector(
-        ".table-report"
-      );
-
-    if (!table) return;
-
-    const rows =
-      [...table.rows].map(
-        row =>
-          [...row.cells]
-            .map(
-              cell =>
-                `"${String(
-                  cell.innerText
-                ).replace(
-                  /"/g,
-                  '""'
-                )}"`
-            )
-            .join(",")
-      );
-
-    const blob =
-      new Blob(
-        [rows.join("\n")],
-        {
-          type:
-            "text/csv;charset=utf-8;"
-        }
-      );
-
-    const url =
-      URL.createObjectURL(
-        blob
-      );
-
-    const link =
-      document.createElement("a");
-
-    link.href = url;
-
-    link.download =
-      "Laporan-Kehadiran-Siswa.csv";
-
-    link.click();
-
-    URL.revokeObjectURL(url);
-  }
-
-  window.loadAbsenBulanan =
-    loadReport;
-
-  window.exportAbsenBulanan =
-    exportExcel;
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    init
-  );
-
-})();
+</body>
+</html>
