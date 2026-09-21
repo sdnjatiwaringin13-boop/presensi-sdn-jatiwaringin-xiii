@@ -1,225 +1,140 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
 
-  <meta charset="UTF-8">
+    <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-  <title>Presensi Siswa</title>
+    <title>
+        Presensi - SDN Jatiwaringin XIII
+    </title>
 
-  <meta
-    name="theme-color"
-    content="#1565c0"
-  >
 
-  <link
-    rel="manifest"
-    href="manifest.json"
-  >
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
 
-  <link
-    rel="stylesheet"
-    href="style.css"
-  >
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 
 </head>
 
+
 <body>
 
-<header class="topbar">
+    <div class="card">
 
-  <div class="topbar-left">
+        <div class="card-header">
 
-    <div class="topbar-logo">
-      SD
-    </div>
+            <div class="card-title">
 
-    <div>
+                <i class="fa-solid fa-calendar-check"></i>
 
-      <div class="topbar-title">
-        Presensi Siswa
-      </div>
+                Presensi Siswa
 
-      <div class="topbar-school">
-        SD Negeri Jatiwaringin XIII
-      </div>
+            </div>
 
-    </div>
-
-  </div>
+        </div>
 
 
-  <div class="topbar-right">
+        <div class="card-body">
 
-    <button
-      class="btn btn-secondary btn-small"
-      onclick="location.href='dashboard.html'"
-    >
-      Dashboard
-    </button>
+            <!--
+                KONTEN PRESENSI LAMA
+                tetap digunakan oleh presensi.js
+            -->
 
-    <button
-      class="btn btn-danger btn-small"
-      onclick="Auth.logout()"
-    >
-      Keluar
-    </button>
-
-  </div>
-
-</header>
+            <div id="presensiMessage"></div>
 
 
-<main class="container">
+            <div class="form-grid">
 
-  <div class="page-header">
+                <div class="form-group">
 
-    <div>
+                    <label for="pilihKelas">
+                        Kelas
+                    </label>
 
-      <h1>Presensi Siswa</h1>
+                    <select
+                        id="pilihKelas"
+                    >
 
-      <p>
-        Input presensi siswa berdasarkan kelas.
-      </p>
+                        <option value="">
+                            Pilih Kelas
+                        </option>
 
-    </div>
+                    </select>
 
-  </div>
-
-
-  <section class="card">
-
-    <div class="form-grid">
-
-      <div class="form-group">
-
-        <label for="tanggalPresensi">
-          Tanggal
-        </label>
-
-        <input
-          type="date"
-          id="tanggalPresensi"
-        >
-
-      </div>
+                </div>
 
 
-      <div class="form-group">
+                <div class="form-group">
 
-        <label for="kelasPresensi">
-          Kelas
-        </label>
+                    <label for="tanggal">
+                        Tanggal
+                    </label>
 
-        <select id="kelasPresensi">
+                    <input
+                        type="date"
+                        id="tanggal"
+                    >
 
-          <option value="">
-            Pilih kelas
-          </option>
+                </div>
 
-        </select>
+            </div>
 
-      </div>
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>No</th>
+                            <th>NISN</th>
+                            <th>Nama</th>
+                            <th>Kelas</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody
+                        id="presensiTableBody"
+                    ></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
 
     </div>
 
 
-    <div class="form-actions">
-
-      <button
-        class="btn btn-primary"
-        id="btnTampilkanSiswa"
-      >
-        Tampilkan Siswa
-      </button>
-
-    </div>
-
-  </section>
-
-
-  <section class="card">
-
-    <div class="card-header">
-
-      <h2>Daftar Siswa</h2>
-
-      <div id="presensiSummary"></div>
-
-    </div>
-
-
-    <div class="table-wrapper">
-
-      <table>
-
-        <thead>
-
-          <tr>
-
-            <th>No</th>
-            <th>NISN</th>
-            <th>Nama Siswa</th>
-            <th>Kelas</th>
-            <th>JK</th>
-            <th>Status</th>
-
-          </tr>
-
-        </thead>
-
-
-        <tbody id="presensiTableBody">
-
-          <tr>
-
-            <td
-              colspan="6"
-              class="text-center"
-            >
-              Silakan pilih kelas.
-
-            </td>
-
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-
-    <div class="form-actions">
-
-      <button
-        class="btn btn-primary"
-        id="btnSimpanPresensi"
-      >
-        Simpan Presensi
-      </button>
-
-    </div>
-
-
-    <div
-      id="presensiMessage"
-      class="message"
-      style="display:none;"
-    ></div>
-
-  </section>
-
-</main>
-
-
-<script src="auth.js"></script>
-<script src="presensi.js"></script>
-<script src="pwa.js"></script>
+    <script src="auth.js"></script>
+    <script src="layout.js"></script>
+    <script src="presensi.js"></script>
+    <script src="pwa.js"></script>
 
 </body>
+
 </html>
