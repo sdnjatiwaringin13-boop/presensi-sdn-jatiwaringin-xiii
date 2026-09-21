@@ -2104,3 +2104,37 @@ tbody tr:hover {
     }
 
 }
+
+
+/* =====================================================
+   KETERANGAN LAPORAN
+===================================================== */
+
+.report-keterangan {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+
+    margin:
+        5px
+        20px
+        20px;
+
+    padding:
+        10px
+        12px;
+
+    border:
+        1px solid #d0d5dd;
+
+    border-radius: 6px;
+
+    font-size: 12px;
+
+    background: #f8f9fa;
+}
+
+.report-keterangan strong {
+    margin-right: 5px;
+}
