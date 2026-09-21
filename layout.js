@@ -1,1256 +1,519 @@
 "use strict";
 
-/*
-==========================================================
-LAYOUT UTAMA
-PRESENSI SISWA
-SD NEGERI JATIWARINGIN XIII
-==========================================================
-*/
-
-(function () {
-
-    const currentPage =
-        (location.pathname.split("/").pop() || "dashboard.html")
-            .toLowerCase();
-
-
-    /*
-    ======================================================
-    KONFIGURASI JUDUL SETIAP HALAMAN
-    ======================================================
-    */
+/* =========================================================
+   LAYOUT ADMINISTRATOR
+   ========================================================= */
 
-    const PAGE_CONFIG = {
+document.addEventListener("DOMContentLoaded", function () {
 
-        "dashboard.html": {
-            title: "Dashboard",
-            subtitle: "Control Panel",
-            icon: "fa-gauge-high"
-        },
+  const user = getCurrentUser();
 
-        "admin.html": {
-            title: "Administrator",
-            subtitle: "Manajemen Administrator",
-            icon: "fa-user-shield"
-        },
+  if (!user) {
+    location.href = "index.html";
+    return;
+  }
 
-        "siswa.html": {
-            title: "Data Siswa",
-            subtitle: "Master Data Siswa",
-            icon: "fa-user-graduate"
-        },
+  buildLayout(user);
 
-        "guru.html": {
-            title: "Data Guru",
-            subtitle: "Master Data Guru",
-            icon: "fa-chalkboard-user"
-        },
+});
 
-        "kelas.html": {
-            title: "Data Kelas",
-            subtitle: "Master Data Kelas",
-            icon: "fa-school"
-        },
 
-        "presensi.html": {
-            title: "Presensi",
-            subtitle: "Presensi Siswa",
-            icon: "fa-calendar-check"
-        },
+/* =========================================================
+   BUILD LAYOUT
+   ========================================================= */
 
-        "scan.html": {
-            title: "Scan QR",
-            subtitle: "Presensi QR Code",
-            icon: "fa-qrcode"
-        },
+function buildLayout(user) {
 
-        "kartu.html": {
-            title: "Kartu Siswa",
-            subtitle: "Cetak Kartu Siswa",
-            icon: "fa-id-card"
-        },
+  const role =
+    String(user.role || "")
+      .toUpperCase();
 
-        "absen-bulanan.html": {
-            title: "Laporan Kehadiran",
-            subtitle: "Daftar Presensi Siswa Per Bulan",
-            icon: "fa-calendar-days"
-        },
 
-        "pengaturan.html": {
-            title: "Pengaturan",
-            subtitle: "Pengaturan Sistem",
-            icon: "fa-gear"
-        }
+  const nama =
+    user.nama ||
+    user.username ||
+    "Administrator";
 
-    };
 
+  const username =
+    user.username ||
+    "-";
 
-    const config =
-        PAGE_CONFIG[currentPage] ||
-        PAGE_CONFIG["dashboard.html"];
 
+  document.body.classList.add(
+    "admin-layout"
+  );
 
-    /*
-    ======================================================
-    BACA USER
-    ======================================================
-    */
 
-    function getUser() {
+  /* =======================================================
+     SIDEBAR
+     ======================================================= */
 
-        try {
+  const sidebar =
+    document.getElementById("sidebar");
 
-            if (
-                window.Auth &&
-                typeof Auth.getCurrentUser === "function"
-            ) {
 
-                return Auth.getCurrentUser();
+  if (sidebar) {
 
-            }
+    sidebar.innerHTML = `
 
+      <div class="sidebar-brand">
 
-            const raw =
-                localStorage.getItem("presensiUser");
+        <div class="brand-icon">
+          <i class="fa-solid fa-school"></i>
+        </div>
 
+        <div class="brand-text">
 
-            if (!raw) {
-                return null;
-            }
+          <strong>Administrator</strong>
 
+          <small>
+            Presensi Sekolah
+          </small>
 
-            return JSON.parse(raw);
+        </div>
 
-        } catch (error) {
+      </div>
 
-            console.error(
-                "Gagal membaca data pengguna:",
-                error
-            );
 
-            return null;
-        }
+      <div class="sidebar-user">
 
-    }
+        <div class="sidebar-user-icon">
+          <i class="fa-solid fa-user"></i>
+        </div>
 
+        <div>
 
-    /*
-    ======================================================
-    ESCAPE HTML
-    ======================================================
-    */
+          <strong>
+            ${escapeHTML(nama)}
+          </strong>
 
-    function escapeHTML(value) {
+          <small>
+            <span class="online-dot"></span>
+            ${role}
+          </small>
 
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        </div>
 
-    }
+      </div>
 
 
-    /*
-    ======================================================
-    BUAT LAYOUT
-    ======================================================
-    */
+      <div class="menu-title">
+        MENU UTAMA
+      </div>
 
-    function buildLayout() {
 
-        /*
-        Jangan menjalankan layout pada login.
-        */
+      <nav class="sidebar-menu">
 
-        if (
-            currentPage === "index.html" ||
-            currentPage === ""
-        ) {
+        <a href="dashboard.html"
+           class="menu-item"
+           data-page="dashboard.html">
 
-            return;
+          <i class="fa-solid fa-gauge"></i>
+          <span>Dashboard</span>
 
-        }
+        </a>
 
 
-        /*
-        Simpan isi halaman lama.
-        Kita hanya memindahkan isi halaman,
-        bukan mengubah JavaScript backend/frontend.
-        */
+        ${
+          role === "ADMIN"
+          ? `
 
-        const oldNodes = [];
+          <div class="menu-group">
 
-        Array.from(document.body.children)
-            .forEach(function (node) {
+            <button
+              type="button"
+              class="menu-item menu-toggle"
+              id="dataMasterToggle">
 
-                /*
-                Script tidak perlu ditampilkan
-                di dalam area halaman.
-                */
+              <i class="fa-solid fa-database"></i>
 
-                if (
-                    node.tagName === "SCRIPT" ||
-                    node.tagName === "STYLE" ||
-                    node.tagName === "LINK"
-                ) {
+              <span>Data Master</span>
 
-                    return;
+              <i class="fa-solid fa-chevron-down arrow"></i>
 
-                }
+            </button>
 
 
-                oldNodes.push(node);
+            <div
+              class="submenu"
+              id="dataMasterSubmenu">
 
-            });
+              <a href="siswa.html"
+                 data-page="siswa.html">
 
+                <i class="fa-solid fa-user-graduate"></i>
+                Data Siswa
 
-        /*
-        Buat wrapper lama.
-        */
+              </a>
 
-        const pageContent =
-            document.createElement("div");
 
-        pageContent.id =
-            "legacyPageContent";
+              <a href="guru.html"
+                 data-page="guru.html">
 
-        pageContent.className =
-            "legacy-page-content";
+                <i class="fa-solid fa-chalkboard-user"></i>
+                Data Guru
 
+              </a>
 
-        oldNodes.forEach(function (node) {
 
-            pageContent.appendChild(node);
+              <a href="kelas.html"
+                 data-page="kelas.html">
 
-        });
+                <i class="fa-solid fa-school"></i>
+                Data Kelas
 
-
-        /*
-        Bersihkan body.
-        */
-
-        document.body.innerHTML = "";
-
-
-        /*
-        ==================================================
-        SIDEBAR
-        ==================================================
-        */
-
-        const sidebar =
-            document.createElement("aside");
-
-        sidebar.id =
-            "appSidebar";
-
-        sidebar.className =
-            "app-sidebar";
-
-
-        sidebar.innerHTML = `
-
-            <div class="sidebar-brand">
-
-                <div class="brand-icon">
-                    <i class="fa-solid fa-school"></i>
-                </div>
-
-                <div class="brand-text">
-
-                    <div class="brand-title">
-                        Administrator
-                    </div>
-
-                    <div class="brand-subtitle">
-                        Presensi Sekolah
-                    </div>
-
-                </div>
+              </a>
 
             </div>
 
+          </div>
 
-            <div class="sidebar-user">
-
-                <div class="sidebar-user-avatar">
-
-                    <i class="fa-solid fa-user"></i>
-
-                </div>
-
-                <div class="sidebar-user-info">
-
-                    <div
-                        id="layoutUserName"
-                        class="sidebar-user-name"
-                    >
-                        Administrator
-                    </div>
-
-                    <div
-                        id="layoutUserRole"
-                        class="sidebar-user-role"
-                    >
-                        <span class="online-dot"></span>
-                        Online
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <nav class="app-menu">
-
-                <div class="menu-section-title">
-                    MENU UTAMA
-                </div>
-
-
-                <!-- DASHBOARD -->
-
-                <a
-                    href="dashboard.html"
-                    class="app-menu-link"
-                    data-page="dashboard.html"
-                >
-
-                    <i class="fa-solid fa-gauge-high"></i>
-
-                    <span>
-                        Dashboard
-                    </span>
-
-                </a>
-
-
-                <!-- DATA MASTER -->
-
-                <button
-                    type="button"
-                    id="masterMenuButton"
-                    class="app-menu-link menu-parent"
-                >
-
-                    <i class="fa-solid fa-database"></i>
-
-                    <span>
-                        Data Master
-                    </span>
-
-                    <i class="fa-solid fa-chevron-down menu-arrow"></i>
-
-                </button>
-
-
-                <div
-                    id="masterSubmenu"
-                    class="app-submenu"
-                >
-
-                    <a
-                        href="siswa.html"
-                        class="app-submenu-link admin-only"
-                        data-page="siswa.html"
-                    >
-
-                        <i class="fa-solid fa-user-graduate"></i>
-
-                        <span>
-                            Data Siswa
-                        </span>
-
-                    </a>
-
-
-                    <a
-                        href="guru.html"
-                        class="app-submenu-link admin-only"
-                        data-page="guru.html"
-                    >
-
-                        <i class="fa-solid fa-chalkboard-user"></i>
-
-                        <span>
-                            Data Guru
-                        </span>
-
-                    </a>
-
-
-                    <a
-                        href="kelas.html"
-                        class="app-submenu-link admin-only"
-                        data-page="kelas.html"
-                    >
-
-                        <i class="fa-solid fa-school"></i>
-
-                        <span>
-                            Data Kelas
-                        </span>
-
-                    </a>
-
-                </div>
-
-
-                <!-- PRESENSI -->
-
-                <a
-                    href="presensi.html"
-                    class="app-menu-link guru-only"
-                    data-page="presensi.html"
-                >
-
-                    <i class="fa-solid fa-calendar-check"></i>
-
-                    <span>
-                        Presensi
-                    </span>
-
-                </a>
-
-
-                <!-- SCAN -->
-
-                <a
-                    href="scan.html"
-                    class="app-menu-link"
-                    data-page="scan.html"
-                >
-
-                    <i class="fa-solid fa-qrcode"></i>
-
-                    <span>
-                        Scan QR
-                    </span>
-
-                </a>
-
-
-                <!-- LAPORAN -->
-
-                <a
-                    href="absen-bulanan.html"
-                    class="app-menu-link"
-                    data-page="absen-bulanan.html"
-                >
-
-                    <i class="fa-solid fa-calendar-days"></i>
-
-                    <span>
-                        Laporan Bulanan
-                    </span>
-
-                </a>
-
-
-                <!-- KARTU -->
-
-                <a
-                    href="kartu.html"
-                    class="app-menu-link admin-only"
-                    data-page="kartu.html"
-                >
-
-                    <i class="fa-solid fa-id-card"></i>
-
-                    <span>
-                        Kartu Siswa
-                    </span>
-
-                </a>
-
-
-                <!-- PENGATURAN -->
-
-                <a
-                    href="pengaturan.html"
-                    class="app-menu-link admin-only"
-                    data-page="pengaturan.html"
-                >
-
-                    <i class="fa-solid fa-gear"></i>
-
-                    <span>
-                        Pengaturan
-                    </span>
-
-                </a>
-
-
-                <div class="menu-section-title account-title">
-                    AKUN
-                </div>
-
-
-                <button
-                    type="button"
-                    id="profileButton"
-                    class="app-menu-link"
-                >
-
-                    <i class="fa-solid fa-user"></i>
-
-                    <span>
-                        Profil
-                    </span>
-
-                </button>
-
-
-                <button
-                    type="button"
-                    id="logoutButton"
-                    class="app-menu-link logout-link"
-                >
-
-                    <i class="fa-solid fa-right-from-bracket"></i>
-
-                    <span>
-                        Keluar
-                    </span>
-
-                </button>
-
-            </nav>
-
-        `;
-
-
-        /*
-        ==================================================
-        MAIN
-        ==================================================
-        */
-
-        const main =
-            document.createElement("div");
-
-        main.id =
-            "appMain";
-
-        main.className =
-            "app-main";
-
-
-        main.innerHTML = `
-
-            <header class="app-topbar">
-
-                <div class="topbar-left">
-
-                    <button
-                        type="button"
-                        id="sidebarToggle"
-                        class="sidebar-toggle"
-                        title="Menu"
-                    >
-
-                        <i class="fa-solid fa-bars"></i>
-
-                    </button>
-
-
-                    <div class="topbar-heading">
-
-                        <div
-                            id="layoutPageTitle"
-                            class="topbar-title"
-                        >
-                            ${escapeHTML(config.title)}
-                        </div>
-
-                        <div
-                            id="layoutPageSubtitle"
-                            class="topbar-subtitle"
-                        >
-                            ${escapeHTML(config.subtitle)}
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="topbar-right">
-
-                    <div class="topbar-school">
-                        SD Negeri Jatiwaringin XIII
-                    </div>
-
-
-                    <div class="topbar-user">
-
-                        <div class="topbar-avatar">
-
-                            <i class="fa-solid fa-user"></i>
-
-                        </div>
-
-                        <div
-                            id="layoutTopUserName"
-                            class="topbar-user-name"
-                        >
-                            Administrator
-                        </div>
-
-                        <i
-                            class="fa-solid fa-chevron-down topbar-chevron"
-                        ></i>
-
-                    </div>
-
-                </div>
-
-            </header>
-
-
-            <main class="app-page-content">
-
-                <div class="page-breadcrumb">
-
-                    <i class="fa-solid fa-house"></i>
-
-                    <span>
-                        Dashboard
-                    </span>
-
-                    <i class="fa-solid fa-angle-right"></i>
-
-                    <strong>
-                        ${escapeHTML(config.title)}
-                    </strong>
-
-                </div>
-
-            </main>
-
-        `;
-
-
-        /*
-        Masukkan isi halaman lama
-        ke dalam area konten.
-        */
-
-        main
-            .querySelector(".app-page-content")
-            .appendChild(pageContent);
-
-
-        /*
-        Overlay mobile.
-        */
-
-        const overlay =
-            document.createElement("div");
-
-        overlay.id =
-            "appOverlay";
-
-        overlay.className =
-            "app-overlay";
-
-
-        /*
-        Masukkan semuanya ke body.
-        */
-
-        document.body.appendChild(sidebar);
-
-        document.body.appendChild(main);
-
-        document.body.appendChild(overlay);
-
-    }
-
-
-    /*
-    ======================================================
-    SET USER
-    ======================================================
-    */
-
-    function setupUser() {
-
-        const user =
-            getUser();
-
-
-        if (!user) {
-            return;
+          `
+          : ""
         }
 
 
-        const name =
-            user.nama ||
-            user.username ||
-            "Pengguna";
+        ${
+          role === "ADMIN"
+          ? `
+
+          <a href="scan.html"
+             class="menu-item"
+             data-page="scan.html">
+
+            <i class="fa-solid fa-qrcode"></i>
+            <span>Scan QR</span>
+
+          </a>
 
 
-        const role =
-            String(
-                user.role || ""
-            ).toUpperCase();
+          <a href="absen-bulanan.html"
+             class="menu-item"
+             data-page="absen-bulanan.html">
+
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>Laporan Bulanan</span>
+
+          </a>
 
 
-        let roleText =
-            "Pengguna";
+          <a href="kartu.html"
+             class="menu-item"
+             data-page="kartu.html">
+
+            <i class="fa-solid fa-id-card"></i>
+            <span>Kartu Siswa</span>
+
+          </a>
 
 
-        if (role === "ADMIN") {
+          <a href="pengaturan.html"
+             class="menu-item"
+             data-page="pengaturan.html">
 
-            roleText =
-                "Administrator";
+            <i class="fa-solid fa-gear"></i>
+            <span>Pengaturan</span>
 
-        } else if (role === "GURU") {
+          </a>
 
-            roleText =
-                "Guru / Wali Kelas";
+          `
+          : `
 
+          <a href="presensi.html"
+             class="menu-item"
+             data-page="presensi.html">
+
+            <i class="fa-solid fa-calendar-check"></i>
+            <span>Presensi</span>
+
+          </a>
+
+
+          <a href="scan.html"
+             class="menu-item"
+             data-page="scan.html">
+
+            <i class="fa-solid fa-qrcode"></i>
+            <span>Scan QR</span>
+
+          </a>
+
+
+          <a href="absen-bulanan.html"
+             class="menu-item"
+             data-page="absen-bulanan.html">
+
+            <i class="fa-solid fa-calendar-days"></i>
+            <span>Laporan Bulanan</span>
+
+          </a>
+
+          `
         }
 
+      </nav>
 
-        const userName =
-            document.getElementById(
-                "layoutUserName"
-            );
 
+      <div class="menu-title account-title">
+        AKUN
+      </div>
 
-        const userRole =
-            document.getElementById(
-                "layoutUserRole"
-            );
 
+      <nav class="sidebar-menu">
 
-        const topUser =
-            document.getElementById(
-                "layoutTopUserName"
-            );
+        <a href="profil.html"
+           class="menu-item">
 
+          <i class="fa-solid fa-user"></i>
+          <span>Profil</span>
 
-        if (userName) {
+        </a>
 
-            userName.textContent =
-                name;
 
-        }
+        <button
+          type="button"
+          id="logoutButton"
+          class="menu-item logout-menu">
 
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Keluar</span>
 
-        if (topUser) {
+        </button>
 
-            topUser.textContent =
-                name;
+      </nav>
 
-        }
+    `;
 
+  }
 
-        if (userRole) {
 
-            userRole.innerHTML = `
-                <span class="online-dot"></span>
-                ${escapeHTML(roleText)}
-            `;
+  /* =======================================================
+     TOPBAR
+     ======================================================= */
 
-        }
+  const topbar =
+    document.getElementById("topbar");
 
 
-        /*
-        ==============================================
-        MENU ADMIN
-        ==============================================
-        */
+  if (topbar) {
 
-        if (role === "ADMIN") {
+    topbar.innerHTML = `
 
-            document
-                .querySelectorAll(".guru-only")
-                .forEach(function (element) {
+      <div class="topbar-left">
 
-                    element.style.display =
-                        "none";
+        <button
+          type="button"
+          id="sidebarToggle"
+          class="sidebar-toggle">
 
-                });
+          <i class="fa-solid fa-bars"></i>
 
-        }
+        </button>
 
 
-        /*
-        ==============================================
-        MENU GURU
-        ==============================================
-        */
+        <div class="breadcrumb-title">
 
-        if (role === "GURU") {
+          <strong>
+            Dashboard
+          </strong>
 
-            document
-                .querySelectorAll(".admin-only")
-                .forEach(function (element) {
+          <small>
+            Control Panel
+          </small>
 
-                    element.style.display =
-                        "none";
+        </div>
 
-                });
+      </div>
 
-        }
 
-    }
+      <div class="topbar-right">
 
+        <span class="school-name">
+          SD Negeri Jatiwaringin XIII
+        </span>
 
-    /*
-    ======================================================
-    ACTIVE MENU
-    ======================================================
-    */
 
-    function setupActiveMenu() {
+        <div class="profile-menu">
 
-        document
-            .querySelectorAll("[data-page]")
-            .forEach(function (element) {
+          <div class="profile-avatar">
+            <i class="fa-solid fa-user"></i>
+          </div>
 
-                const target =
-                    element.getAttribute(
-                        "data-page"
-                    );
+          <strong>
+            ${escapeHTML(nama)}
+          </strong>
 
+          <i class="fa-solid fa-chevron-down"></i>
 
-                if (
-                    target !== currentPage
-                ) {
+        </div>
 
-                    return;
+      </div>
 
-                }
+    `;
 
+  }
 
-                element.classList.add(
-                    "active"
-                );
 
+  /* =======================================================
+     LOGOUT
+     ======================================================= */
 
-                /*
-                Jika halaman berada di
-                submenu Data Master,
-                buka submenu.
-                */
+  const logoutButton =
+    document.getElementById(
+      "logoutButton"
+    );
 
-                if (
-                    element.classList.contains(
-                        "app-submenu-link"
-                    )
-                ) {
 
-                    const submenu =
-                        document.getElementById(
-                            "masterSubmenu"
-                        );
+  if (logoutButton) {
 
-
-                    const button =
-                        document.getElementById(
-                            "masterMenuButton"
-                        );
-
-
-                    if (submenu) {
-
-                        submenu.classList.add(
-                            "open"
-                        );
-
-                    }
-
-
-                    if (button) {
-
-                        button.classList.add(
-                            "active-parent"
-                        );
-
-                    }
-
-                }
-
-            });
-
-    }
-
-
-    /*
-    ======================================================
-    SIDEBAR
-    ======================================================
-    */
-
-    function setupSidebar() {
-
-        const sidebar =
-            document.getElementById(
-                "appSidebar"
-            );
-
-
-        const main =
-            document.getElementById(
-                "appMain"
-            );
-
-
-        const toggle =
-            document.getElementById(
-                "sidebarToggle"
-            );
-
-
-        const overlay =
-            document.getElementById(
-                "appOverlay"
-            );
-
+    logoutButton.addEventListener(
+      "click",
+      function () {
 
         if (
-            !sidebar ||
-            !main ||
-            !toggle
+          confirm(
+            "Apakah Anda yakin ingin keluar?"
+          )
         ) {
 
-            return;
+          logout();
 
         }
 
+      }
+    );
 
-        toggle.addEventListener(
-            "click",
-            function () {
-
-                /*
-                MOBILE
-                */
-
-                if (
-                    window.innerWidth <= 768
-                ) {
-
-                    sidebar.classList.toggle(
-                        "mobile-open"
-                    );
+  }
 
 
-                    if (overlay) {
+  /* =======================================================
+     SIDEBAR TOGGLE
+     ======================================================= */
 
-                        overlay.classList.toggle(
-                            "show"
-                        );
-
-                    }
-
-                    return;
-
-                }
+  const toggle =
+    document.getElementById(
+      "sidebarToggle"
+    );
 
 
-                /*
-                DESKTOP
-                */
+  if (toggle) {
 
-                sidebar.classList.toggle(
-                    "collapsed"
-                );
+    toggle.addEventListener(
+      "click",
+      function () {
 
-
-                main.classList.toggle(
-                    "expanded"
-                );
-
-            }
+        document.body.classList.toggle(
+          "sidebar-collapsed"
         );
 
+      }
+    );
 
-        if (overlay) {
-
-            overlay.addEventListener(
-                "click",
-                function () {
-
-                    sidebar.classList.remove(
-                        "mobile-open"
-                    );
+  }
 
 
-                    overlay.classList.remove(
-                        "show"
-                    );
+  /* =======================================================
+     DATA MASTER TOGGLE
+     ======================================================= */
 
-                }
-            );
-
-        }
-
-
-        window.addEventListener(
-            "resize",
-            function () {
-
-                if (
-                    window.innerWidth > 768
-                ) {
-
-                    sidebar.classList.remove(
-                        "mobile-open"
-                    );
+  const masterToggle =
+    document.getElementById(
+      "dataMasterToggle"
+    );
 
 
-                    if (overlay) {
+  const masterSubmenu =
+    document.getElementById(
+      "dataMasterSubmenu"
+    );
 
-                        overlay.classList.remove(
-                            "show"
-                        );
 
-                    }
+  if (
+    masterToggle &&
+    masterSubmenu
+  ) {
 
-                }
+    masterToggle.addEventListener(
+      "click",
+      function () {
 
-            }
+        masterSubmenu.classList.toggle(
+          "open"
         );
 
-    }
-
-
-    /*
-    ======================================================
-    DATA MASTER DROPDOWN
-    ======================================================
-    */
-
-    function setupMasterMenu() {
-
-        const button =
-            document.getElementById(
-                "masterMenuButton"
-            );
-
-
-        const submenu =
-            document.getElementById(
-                "masterSubmenu"
-            );
-
-
-        if (
-            !button ||
-            !submenu
-        ) {
-
-            return;
-
-        }
-
-
-        button.addEventListener(
-            "click",
-            function () {
-
-                submenu.classList.toggle(
-                    "open"
-                );
-
-
-                button.classList.toggle(
-                    "open"
-                );
-
-            }
+        masterToggle.classList.toggle(
+          "open"
         );
 
-    }
+      }
+    );
+
+  }
 
 
-    /*
-    ======================================================
-    LOGOUT
-    ======================================================
-    */
+  /* =======================================================
+     ACTIVE MENU
+     ======================================================= */
 
-    function setupLogout() {
-
-        const button =
-            document.getElementById(
-                "logoutButton"
-            );
+  const currentPage =
+    location.pathname
+      .split("/")
+      .pop()
+      .toLowerCase();
 
 
-        if (!button) {
-            return;
-        }
+  document
+    .querySelectorAll(
+      "[data-page]"
+    )
+    .forEach(function (item) {
+
+      const page =
+        String(
+          item.dataset.page || ""
+        )
+        .toLowerCase();
 
 
-        button.addEventListener(
-            "click",
-            function () {
+      if (
+        page === currentPage
+      ) {
 
-                const yakin =
-                    window.confirm(
-                        "Apakah Anda yakin ingin keluar?"
-                    );
-
-
-                if (!yakin) {
-                    return;
-                }
-
-
-                if (
-                    window.Auth &&
-                    typeof Auth.logout === "function"
-                ) {
-
-                    Auth.logout();
-
-                    return;
-
-                }
-
-
-                localStorage.removeItem(
-                    "presensiUser"
-                );
-
-
-                window.location.href =
-                    "index.html";
-
-            }
+        item.classList.add(
+          "active"
         );
 
-    }
+      }
+
+    });
 
 
-    /*
-    ======================================================
-    PROFILE
-    ======================================================
-    */
+  /* =======================================================
+     USER NAME
+     ======================================================= */
 
-    function setupProfile() {
+  document
+    .querySelectorAll(
+      "[data-user-name]"
+    )
+    .forEach(function (element) {
 
-        const button =
-            document.getElementById(
-                "profileButton"
-            );
+      element.textContent =
+        nama;
 
-
-        if (!button) {
-            return;
-        }
+    });
 
 
-        button.addEventListener(
-            "click",
-            function () {
+  document
+    .querySelectorAll(
+      "[data-user-role]"
+    )
+    .forEach(function (element) {
 
-                const user =
-                    getUser();
+      element.textContent =
+        role;
 
+    });
 
-                if (!user) {
-                    return;
-                }
-
-
-                const role =
-                    String(
-                        user.role || "-"
-                    ).toUpperCase();
-
-
-                window.alert(
-                    "PROFIL PENGGUNA\n\n" +
-                    "Nama: " +
-                    (
-                        user.nama ||
-                        "-"
-                    ) +
-                    "\nUsername: " +
-                    (
-                        user.username ||
-                        "-"
-                    ) +
-                    "\nRole: " +
-                    role +
-                    "\nID Guru: " +
-                    (
-                        user.idGuru ||
-                        "-"
-                    )
-                );
-
-            }
-        );
-
-    }
-
-
-    /*
-    ======================================================
-    INIT
-    ======================================================
-    */
-
-    function init() {
-
-        if (
-            currentPage === "index.html" ||
-            currentPage === ""
-        ) {
-
-            return;
-
-        }
-
-
-        buildLayout();
-
-        setupUser();
-
-        setupActiveMenu();
-
-        setupSidebar();
-
-        setupMasterMenu();
-
-        setupLogout();
-
-        setupProfile();
-
-    }
-
-
-    /*
-    ======================================================
-    JALANKAN
-    ======================================================
-    */
-
-    if (
-        document.readyState === "loading"
-    ) {
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            init
-        );
-
-    } else {
-
-        init();
-
-    }
-
-})();
+}
