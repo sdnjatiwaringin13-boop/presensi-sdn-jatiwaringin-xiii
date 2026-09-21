@@ -1,84 +1,143 @@
-const API_URL =
-  "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
+(function () {
+
+  "use strict";
 
 
-let currentUser = null;
-let siswaList = [];
-let kelasList = [];
-let sedangMenyimpan = false;
+  const API_URL =
+    "https://script.google.com/macros/s/AKfycbw6WR2c4zx59S84HRruF5vtJJXAla1KjYGN-tk4RDBRt1MQK4IUNCna9PYzTNzNst9u/exec";
 
 
-/* =====================================================
-   API
-===================================================== */
+  const currentUser =
+    Auth.requireRole("GURU");
 
-async function callAPI(payload) {
 
-  console.log("API REQUEST:", payload);
+  let siswaList = [];
+  let existingAttendance = {};
 
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
-    body: JSON.stringify(payload)
-  });
 
-  const text = await response.text();
+  document.addEventListener(
+    "DOMContentLoaded",
+    init
+  );
 
-  console.log("API RESPONSE:", text);
 
-  if (!text) {
-    throw new Error(
-      "Server tidak mengirim response."
-    );
+  async function init() {
+
+    document.getElementById(
+      "tanggalPresensi"
+    ).value =
+      getToday();
+
+
+    document
+      .getElementById(
+        "kelasPresensi"
+      )
+      .addEventListener(
+        "change",
+        loadSiswa
+      );
+
+
+    document
+      .getElementById(
+        "btnTampilkanSiswa"
+      )
+      .addEventListener(
+        "click",
+        loadSiswa
+      );
+
+
+    document
+      .getElementById(
+        "btnSimpanPresensi"
+      )
+      .addEventListener(
+        "click",
+        simpanSemua
+      );
+
+
+    await loadKelas();
+
   }
 
-  let result;
 
-  try {
-
-    result = JSON.parse(text);
-
-  } catch (error) {
-
-    console.error(
-      "RESPONSE BUKAN JSON:",
-      text
-    );
-
-    throw new Error(
-      "Server mengirim response yang bukan JSON."
-    );
-
-  }
-
-  return result;
-
-}
-
-
-/* =====================================================
-   INIT
-===================================================== */
-
-document.addEventListener(
-  "DOMContentLoaded",
-  async function () {
+  async function loadKelas() {
 
     try {
 
-      await initPresensi();
+      const result =
+        await callAPI({
+
+          action:
+            "getKelasGuru",
+
+          idGuru:
+            currentUser.idGuru
+
+        });
+
+
+      if (!result.success) {
+        throw new Error(result.message);
+      }
+
+
+      const select =
+        document.getElementById(
+          "kelasPresensi"
+        );
+
+
+      select.innerHTML = `
+        <option value="">
+          Pilih kelas
+        </option>
+      `;
+
+
+      (result.data || []).forEach(
+        kelas => {
+
+          const option =
+            document.createElement(
+              "option"
+            );
+
+
+          option.value =
+            kelas.NAMA_KELAS;
+
+
+          option.textContent =
+            kelas.NAMA_KELAS;
+
+
+          select.appendChild(
+            option
+          );
+
+        }
+      );
+
+
+      if (
+        result.data &&
+        result.data.length === 1
+      ) {
+
+        select.value =
+          result.data[0].NAMA_KELAS;
+
+        await loadSiswa();
+
+      }
 
     } catch (error) {
 
-      console.error(
-        "INIT ERROR:",
-        error
-      );
-
-      showMessage(
-        "Gagal memuat halaman: " +
+      tampilkanPesan(
         error.message,
         "error"
       );
@@ -86,1260 +145,305 @@ document.addEventListener(
     }
 
   }
-);
 
 
-/* =====================================================
-   INIT PRESENSI
-===================================================== */
+  async function loadSiswa() {
 
-async function initPresensi() {
+    const kelas =
+      document.getElementById(
+        "kelasPresensi"
+      ).value;
 
-  const savedUser =
-    localStorage.getItem(
-      "presensiUser"
-    );
 
+    const tanggal =
+      document.getElementById(
+        "tanggalPresensi"
+      ).value;
 
-  /* ---------------------------------------------------
-     CEK LOGIN
-  --------------------------------------------------- */
 
-  if (!savedUser) {
+    if (!kelas) {
 
-    window.location.href =
-      "index.html";
+      document.getElementById(
+        "presensiTableBody"
+      ).innerHTML = `
 
-    return;
+        <tr>
 
-  }
+          <td
+            colspan="6"
+            class="text-center"
+          >
+            Silakan pilih kelas.
 
+          </td>
 
-  /* ---------------------------------------------------
-     BACA USER
-  --------------------------------------------------- */
+        </tr>
 
-  try {
-
-    currentUser =
-      JSON.parse(savedUser);
-
-  } catch (error) {
-
-    console.error(
-      "DATA USER RUSAK:",
-      error
-    );
-
-    localStorage.removeItem(
-      "presensiUser"
-    );
-
-    window.location.href =
-      "index.html";
-
-    return;
-
-  }
-
-
-  console.log(
-    "CURRENT USER:",
-    currentUser
-  );
-
-
-  /* ---------------------------------------------------
-     VALIDASI ROLE
-  --------------------------------------------------- */
-
-  const role =
-    String(
-      currentUser.role || ""
-    )
-      .trim()
-      .toUpperCase();
-
-
-  if (role !== "GURU") {
-
-    alert(
-      "Halaman ini hanya untuk akun GURU."
-    );
-
-    window.location.href =
-      "index.html";
-
-    return;
-
-  }
-
-
-  /* ---------------------------------------------------
-     VALIDASI ID GURU
-  --------------------------------------------------- */
-
-  if (!currentUser.idGuru) {
-
-    showMessage(
-      "ID Guru tidak ditemukan pada akun login.",
-      "error"
-    );
-
-    console.error(
-      "USER TANPA ID GURU:",
-      currentUser
-    );
-
-    return;
-
-  }
-
-
-  /* ---------------------------------------------------
-     TAMPILKAN INFORMASI GURU
-  --------------------------------------------------- */
-
-  tampilkanInfoGuru();
-
-
-  /* ---------------------------------------------------
-     SET TANGGAL
-  --------------------------------------------------- */
-
-  setTanggalHariIni();
-
-
-  /* ---------------------------------------------------
-     EVENT
-  --------------------------------------------------- */
-
-  pasangEvent();
-
-
-  /* ---------------------------------------------------
-     LOAD KELAS
-  --------------------------------------------------- */
-
-  await loadKelasGuru();
-
-}
-
-
-/* =====================================================
-   TAMPILKAN INFORMASI GURU
-===================================================== */
-
-function tampilkanInfoGuru() {
-
-  const guruInfo =
-    document.getElementById(
-      "guruInfo"
-    );
-
-
-  if (!guruInfo) {
-    return;
-  }
-
-
-  const nama =
-    currentUser.nama ||
-    currentUser.namaGuru ||
-    currentUser.namaGuruKelas ||
-    currentUser.username ||
-    "Guru";
-
-
-  const idGuru =
-    currentUser.idGuru ||
-    "-";
-
-
-  guruInfo.innerHTML = `
-    <strong>
-      ${escapeHTML(nama)}
-    </strong>
-    <br>
-    ID Guru:
-    ${escapeHTML(idGuru)}
-  `;
-
-}
-
-
-/* =====================================================
-   SET TANGGAL HARI INI
-===================================================== */
-
-function setTanggalHariIni() {
-
-  const input =
-    document.getElementById(
-      "tanggal"
-    );
-
-
-  if (!input) {
-    return;
-  }
-
-
-  /*
-     Menggunakan waktu lokal browser.
-     Format YYYY-MM-DD cocok untuk input date.
-  */
-
-  const now =
-    new Date();
-
-
-  const year =
-    now.getFullYear();
-
-
-  const month =
-    String(
-      now.getMonth() + 1
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  const day =
-    String(
-      now.getDate()
-    ).padStart(
-      2,
-      "0"
-    );
-
-
-  input.value =
-    `${year}-${month}-${day}`;
-
-}
-
-
-/* =====================================================
-   EVENT
-===================================================== */
-
-function pasangEvent() {
-
-  const loadButton =
-    document.getElementById(
-      "loadButton"
-    );
-
-
-  const hadirSemuaButton =
-    document.getElementById(
-      "hadirSemuaButton"
-    );
-
-
-  const resetButton =
-    document.getElementById(
-      "resetButton"
-    );
-
-
-  const simpanButton =
-    document.getElementById(
-      "simpanButton"
-    );
-
-
-  if (loadButton) {
-
-    loadButton.addEventListener(
-      "click",
-      loadSiswa
-    );
-
-  }
-
-
-  if (hadirSemuaButton) {
-
-    hadirSemuaButton.addEventListener(
-      "click",
-      hadirSemua
-    );
-
-  }
-
-
-  if (resetButton) {
-
-    resetButton.addEventListener(
-      "click",
-      resetPresensi
-    );
-
-  }
-
-
-  if (simpanButton) {
-
-    simpanButton.addEventListener(
-      "click",
-      simpanSemuaPresensi
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   LOAD KELAS GURU
-===================================================== */
-
-async function loadKelasGuru() {
-
-  const select =
-    document.getElementById(
-      "kelas"
-    );
-
-
-  if (!select) {
-    return;
-  }
-
-
-  select.innerHTML = `
-    <option value="">
-      ⏳ Memuat kelas...
-    </option>
-  `;
-
-
-  try {
-
-    const result =
-      await callAPI({
-
-        action:
-          "getKelasGuru",
-
-        idGuru:
-          currentUser.idGuru
-
-      });
-
-
-    console.log(
-      "HASIL KELAS GURU:",
-      result
-    );
-
-
-    if (
-      !result ||
-      !result.success
-    ) {
-
-      throw new Error(
-        result?.message ||
-        "Gagal mengambil kelas guru."
-      );
-
-    }
-
-
-    kelasList =
-      Array.isArray(result.data)
-        ? result.data
-        : [];
-
-
-    select.innerHTML = `
-      <option value="">
-        Pilih Kelas
-      </option>
-    `;
-
-
-    /* -------------------------------------------------
-       TIDAK ADA KELAS
-    ------------------------------------------------- */
-
-    if (
-      kelasList.length === 0
-    ) {
-
-      select.innerHTML = `
-        <option value="">
-          Belum ada kelas
-        </option>
       `;
-
-
-      showMessage(
-        "Belum ada kelas yang ditugaskan kepada guru ini.",
-        "error"
-      );
-
 
       return;
 
     }
 
 
-    /* -------------------------------------------------
-       MASUKKAN KELAS
-    ------------------------------------------------- */
+    try {
 
-    kelasList.forEach(
-      function (kelas) {
+      const siswaResult =
+        await callAPI({
 
-        const namaKelas =
-          kelas.NAMA_KELAS ||
-          kelas.namaKelas ||
-          "";
+          action:
+            "getSiswa",
 
+          kelas:
+            kelas,
 
-        if (!namaKelas) {
-          return;
-        }
+          aktifOnly:
+            true
 
-
-        const option =
-          document.createElement(
-            "option"
-          );
+        });
 
 
-        option.value =
-          namaKelas;
-
-
-        option.textContent =
-          namaKelas;
-
-
-        select.appendChild(
-          option
+      if (!siswaResult.success) {
+        throw new Error(
+          siswaResult.message
         );
-
-      }
-    );
-
-
-    /* -------------------------------------------------
-       JIKA HANYA SATU KELAS
-    ------------------------------------------------- */
-
-    if (
-      kelasList.length === 1
-    ) {
-
-      const namaKelas =
-        kelasList[0].NAMA_KELAS ||
-        kelasList[0].namaKelas ||
-        "";
-
-
-      select.value =
-        namaKelas;
-
-
-      if (namaKelas) {
-
-        await loadSiswa();
-
       }
 
-    }
 
-  } catch (error) {
-
-    console.error(
-      "GAGAL LOAD KELAS:",
-      error
-    );
+      siswaList =
+        siswaResult.data || [];
 
 
-    select.innerHTML = `
-      <option value="">
-        Gagal memuat kelas
-      </option>
-    `;
+      const rekapResult =
+        await callAPI({
+
+          action:
+            "getRekap",
+
+          tanggal:
+            tanggal,
+
+          kelas:
+            kelas
+
+        });
 
 
-    showMessage(
-      "Gagal mengambil data kelas: " +
-      error.message,
-      "error"
-    );
-
-  }
-
-}
+      existingAttendance = {};
 
 
-/* =====================================================
-   LOAD SISWA
-===================================================== */
+      if (rekapResult.success) {
 
-async function loadSiswa() {
+        (rekapResult.data || [])
+          .forEach(row => {
 
-  const kelasSelect =
-    document.getElementById(
-      "kelas"
-    );
+            const id =
+              String(row.ID || "");
 
+            existingAttendance[id] =
+              String(
+                row.STATUS || ""
+              ).toUpperCase();
 
-  const kelas =
-    kelasSelect
-      ? kelasSelect.value
-      : "";
+          });
 
-
-  if (!kelas) {
-
-    showMessage(
-      "Silakan pilih kelas terlebih dahulu.",
-      "error"
-    );
-
-    return;
-
-  }
+      }
 
 
-  tampilkanLoading();
+      renderTable();
 
+    } catch (error) {
 
-  try {
-
-    const result =
-      await callAPI({
-
-        action:
-          "getSiswa",
-
-        kelas:
-          kelas
-
-      });
-
-
-    console.log(
-      "HASIL SISWA:",
-      result
-    );
-
-
-    if (
-      !result ||
-      !result.success
-    ) {
-
-      throw new Error(
-        result?.message ||
-        "Gagal mengambil data siswa."
+      tampilkanPesan(
+        error.message,
+        "error"
       );
 
     }
 
-
-    siswaList =
-      Array.isArray(result.data)
-        ? result.data
-        : [];
+  }
 
 
-    /* -------------------------------------------------
-       HANYA SISWA AKTIF
-    ------------------------------------------------- */
+  function renderTable() {
 
-    siswaList =
-      siswaList.filter(
-        function (siswa) {
-
-          const status =
-            String(
-              siswa.STATUS ||
-              "AKTIF"
-            )
-              .trim()
-              .toUpperCase();
-
-
-          return status === "AKTIF";
-
-        }
+    const tbody =
+      document.getElementById(
+        "presensiTableBody"
       );
 
 
-    tampilkanSiswa();
+    if (!siswaList.length) {
 
+      tbody.innerHTML = `
 
-    updateSummary();
+        <tr>
 
-
-    showMessage(
-      siswaList.length +
-      " siswa berhasil dimuat.",
-      "success"
-    );
-
-
-  } catch (error) {
-
-    console.error(
-      "GAGAL LOAD SISWA:",
-      error
-    );
-
-
-    siswaList = [];
-
-
-    tampilkanErrorTable(
-      error.message
-    );
-
-
-    showMessage(
-      "Gagal memuat siswa: " +
-      error.message,
-      "error"
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   TAMPILKAN LOADING
-===================================================== */
-
-function tampilkanLoading() {
-
-  const loading =
-    document.getElementById(
-      "tableLoading"
-    );
-
-
-  const table =
-    document.getElementById(
-      "presensiTable"
-    );
-
-
-  if (loading) {
-
-    loading.style.display =
-      "block";
-
-
-    loading.innerHTML = `
-      <div class="loading-spinner"></div>
-      <div>
-        Memuat data siswa...
-      </div>
-    `;
-
-  }
-
-
-  if (table) {
-
-    table.style.display =
-      "none";
-
-  }
-
-}
-
-
-/* =====================================================
-   TAMPILKAN SISWA
-===================================================== */
-
-function tampilkanSiswa() {
-
-  const loading =
-    document.getElementById(
-      "tableLoading"
-    );
-
-
-  const table =
-    document.getElementById(
-      "presensiTable"
-    );
-
-
-  const body =
-    document.getElementById(
-      "presensiBody"
-    );
-
-
-  if (!body) {
-    return;
-  }
-
-
-  body.innerHTML = "";
-
-
-  /* -------------------------------------------------
-     TIDAK ADA SISWA
-  ------------------------------------------------- */
-
-  if (
-    siswaList.length === 0
-  ) {
-
-    if (loading) {
-
-      loading.style.display =
-        "block";
-
-
-      loading.innerHTML =
-        "Tidak ada siswa pada kelas ini.";
-
-    }
-
-
-    if (table) {
-
-      table.style.display =
-        "none";
-
-    }
-
-
-    updateSummary();
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------
-     TAMPILKAN SISWA
-  ------------------------------------------------- */
-
-  siswaList.forEach(
-    function (siswa, index) {
-
-      const tr =
-        document.createElement(
-          "tr"
-        );
-
-
-      tr.innerHTML = `
-
-        <td>
-          ${index + 1}
-        </td>
-
-        <td>
-          ${escapeHTML(
-            siswa.NISN
-          )}
-        </td>
-
-        <td>
-          <strong>
-            ${escapeHTML(
-              siswa.NAMA
-            )}
-          </strong>
-        </td>
-
-        <td>
-          ${escapeHTML(
-            siswa.KELAS
-          )}
-        </td>
-
-        <td>
-          ${escapeHTML(
-            siswa.JK
-          )}
-        </td>
-
-        <td>
-
-          <select
-            class="status-select"
-            data-id="${escapeHTML(
-              siswa.ID
-            )}"
+          <td
+            colspan="6"
+            class="text-center"
           >
+            Tidak ada siswa aktif.
 
-            <option value="HADIR">
-              HADIR
-            </option>
+          </td>
 
-            <option value="IZIN">
-              IZIN
-            </option>
-
-            <option value="SAKIT">
-              SAKIT
-            </option>
-
-            <option value="ALPA">
-              ALPA
-            </option>
-
-          </select>
-
-        </td>
+        </tr>
 
       `;
 
+      return;
 
-      body.appendChild(
-        tr
+    }
+
+
+    tbody.innerHTML =
+      siswaList.map(
+        (siswa, index) => {
+
+          const id =
+            String(siswa.ID);
+
+
+          const status =
+            existingAttendance[id]
+              || "HADIR";
+
+
+          const sudahAda =
+            Boolean(
+              existingAttendance[id]
+            );
+
+
+          return `
+
+            <tr>
+
+              <td>
+                ${index + 1}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  siswa.NISN
+                )}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  siswa.NAMA
+                )}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  siswa.KELAS
+                )}
+              </td>
+
+              <td>
+                ${escapeHTML(
+                  siswa.JK
+                )}
+              </td>
+
+              <td>
+
+                <select
+                  class="status-select"
+                  data-id="${escapeHTML(id)}"
+                  ${sudahAda ? "" : ""}
+                >
+
+                  <option
+                    value="HADIR"
+                    ${status === "HADIR" ? "selected" : ""}
+                  >
+                    HADIR
+                  </option>
+
+                  <option
+                    value="IZIN"
+                    ${status === "IZIN" ? "selected" : ""}
+                  >
+                    IZIN
+                  </option>
+
+                  <option
+                    value="SAKIT"
+                    ${status === "SAKIT" ? "selected" : ""}
+                  >
+                    SAKIT
+                  </option>
+
+                  <option
+                    value="ALPA"
+                    ${status === "ALPA" ? "selected" : ""}
+                  >
+                    ALPA
+                  </option>
+
+                </select>
+
+                ${
+                  sudahAda
+                    ? `<small class="text-muted">
+                        Sudah tersimpan
+                       </small>`
+                    : ""
+                }
+
+              </td>
+
+            </tr>
+
+          `;
+
+        }
+      ).join("");
+
+
+    updateSummary();
+
+  }
+
+
+  async function simpanSemua() {
+
+    const tanggal =
+      document.getElementById(
+        "tanggalPresensi"
+      ).value;
+
+
+    const kelas =
+      document.getElementById(
+        "kelasPresensi"
+      ).value;
+
+
+    if (!tanggal || !kelas) {
+
+      tampilkanPesan(
+        "Tanggal dan kelas wajib dipilih.",
+        "error"
       );
 
+      return;
+
     }
-  );
 
 
-  if (loading) {
+    if (!siswaList.length) {
 
-    loading.style.display =
-      "none";
-
-  }
-
-
-  if (table) {
-
-    table.style.display =
-      "table";
-
-  }
-
-
-  /* -------------------------------------------------
-     EVENT STATUS
-  ------------------------------------------------- */
-
-  const selects =
-    document.querySelectorAll(
-      ".status-select"
-    );
-
-
-  selects.forEach(
-    function (select) {
-
-      select.addEventListener(
-        "change",
-        updateSummary
+      tampilkanPesan(
+        "Tidak ada siswa untuk disimpan.",
+        "error"
       );
 
-    }
-  );
-
-
-  updateSummary();
-
-}
-
-
-/* =====================================================
-   HADIR SEMUA
-===================================================== */
-
-function hadirSemua() {
-
-  const selects =
-    document.querySelectorAll(
-      ".status-select"
-    );
-
-
-  if (
-    selects.length === 0
-  ) {
-
-    showMessage(
-      "Belum ada siswa yang ditampilkan.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  selects.forEach(
-    function (select) {
-
-      select.value =
-        "HADIR";
+      return;
 
     }
-  );
 
-
-  updateSummary();
-
-
-  showMessage(
-    "Semua siswa diubah menjadi HADIR.",
-    "success"
-  );
-
-}
-
-
-/* =====================================================
-   RESET
-===================================================== */
-
-function resetPresensi() {
-
-  const selects =
-    document.querySelectorAll(
-      ".status-select"
-    );
-
-
-  if (
-    selects.length === 0
-  ) {
-
-    showMessage(
-      "Belum ada data presensi.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  /*
-     Karena pilihan awal adalah HADIR,
-     reset dikembalikan ke HADIR.
-  */
-
-  selects.forEach(
-    function (select) {
-
-      select.value =
-        "HADIR";
-
-    }
-  );
-
-
-  updateSummary();
-
-
-  showMessage(
-    "Presensi berhasil di-reset.",
-    "info"
-  );
-
-}
-
-
-/* =====================================================
-   UPDATE SUMMARY
-===================================================== */
-
-function updateSummary() {
-
-  const selects =
-    document.querySelectorAll(
-      ".status-select"
-    );
-
-
-  let hadir = 0;
-  let izin = 0;
-  let sakit = 0;
-  let alpa = 0;
-
-
-  selects.forEach(
-    function (select) {
-
-      const status =
-        String(
-          select.value || ""
-        )
-          .trim()
-          .toUpperCase();
-
-
-      switch (status) {
-
-        case "HADIR":
-          hadir++;
-          break;
-
-        case "IZIN":
-          izin++;
-          break;
-
-        case "SAKIT":
-          sakit++;
-          break;
-
-        case "ALPA":
-          alpa++;
-          break;
-
-      }
-
-    }
-  );
-
-
-  setText(
-    "totalCount",
-    selects.length
-  );
-
-
-  setText(
-    "hadirCount",
-    hadir
-  );
-
-
-  setText(
-    "izinCount",
-    izin
-  );
-
-
-  setText(
-    "sakitCount",
-    sakit
-  );
-
-
-  setText(
-    "alpaCount",
-    alpa
-  );
-
-}
-
-
-/* =====================================================
-   SIMPAN SEMUA PRESENSI
-===================================================== */
-
-async function simpanSemuaPresensi() {
-
-  /* -------------------------------------------------
-     CEGAH DOUBLE CLICK
-  ------------------------------------------------- */
-
-  if (sedangMenyimpan) {
-
-    showMessage(
-      "Presensi sedang diproses. Mohon tunggu.",
-      "info"
-    );
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------
-     CEK SISWA
-  ------------------------------------------------- */
-
-  if (
-    siswaList.length === 0
-  ) {
-
-    showMessage(
-      "Tidak ada siswa untuk disimpan.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------
-     AMBIL TANGGAL
-  ------------------------------------------------- */
-
-  const tanggalInput =
-    document.getElementById(
-      "tanggal"
-    );
-
-
-  const kelasInput =
-    document.getElementById(
-      "kelas"
-    );
-
-
-  const tanggal =
-    tanggalInput
-      ? tanggalInput.value
-      : "";
-
-
-  const kelas =
-    kelasInput
-      ? kelasInput.value
-      : "";
-
-
-  if (!tanggal) {
-
-    showMessage(
-      "Tanggal belum dipilih.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  if (!kelas) {
-
-    showMessage(
-      "Kelas belum dipilih.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------
-     CEK GURU
-  ------------------------------------------------- */
-
-  if (
-    !currentUser ||
-    !currentUser.idGuru
-  ) {
-
-    showMessage(
-      "ID Guru tidak ditemukan.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------
-     CEK APAKAH KELAS MILIK GURU
-  ------------------------------------------------- */
-
-  const kelasGuru =
-    kelasList.find(
-      function (item) {
-
-        const namaKelas =
-          item.NAMA_KELAS ||
-          item.namaKelas ||
-          "";
-
-
-        return String(
-          namaKelas
-        ) === String(
-          kelas
-        );
-
-      }
-    );
-
-
-  if (!kelasGuru) {
-
-    showMessage(
-      "Kelas tersebut tidak terdaftar sebagai kelas Anda.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  /* -------------------------------------------------
-     KONFIRMASI
-  ------------------------------------------------- */
-
-  const yakin =
-    confirm(
-      "Simpan presensi seluruh siswa kelas " +
-      kelas +
-      " tanggal " +
-      tanggal +
-      "?"
-    );
-
-
-  if (!yakin) {
-    return;
-  }
-
-
-  sedangMenyimpan = true;
-
-
-  /* -------------------------------------------------
-     BUTTON
-  ------------------------------------------------- */
-
-  const button =
-    document.getElementById(
-      "simpanButton"
-    );
-
-
-  let teksButton =
-    "💾 Simpan Presensi";
-
-
-  if (button) {
-
-    teksButton =
-      button.textContent;
-
-
-    button.disabled =
-      true;
-
-
-    button.textContent =
-      "⏳ Menyimpan...";
-
-  }
-
-
-  try {
 
     const selects =
       document.querySelectorAll(
@@ -1347,131 +451,97 @@ async function simpanSemuaPresensi() {
       );
 
 
+    const button =
+      document.getElementById(
+        "btnSimpanPresensi"
+      );
+
+
+    button.disabled = true;
+    button.textContent =
+      "Menyimpan...";
+
+
     let berhasil = 0;
+    let dilewati = 0;
     let gagal = 0;
-    let sudahAda = 0;
 
 
-    /* -------------------------------------------------
-       SIMPAN SATU PER SATU
-    ------------------------------------------------- */
+    try {
 
-    for (
-      let i = 0;
-      i < selects.length;
-      i++
-    ) {
+      for (const select of selects) {
 
-      const select =
-        selects[i];
+        const id =
+          select.dataset.id;
 
 
-      const id =
-        select.dataset.id;
+        if (existingAttendance[id]) {
+
+          dilewati++;
+
+          continue;
+
+        }
 
 
-      const siswa =
-        siswaList.find(
-          function (item) {
-
-            return String(
-              item.ID
-            ) === String(
-              id
-            );
-
-          }
-        );
+        const siswa =
+          siswaList.find(
+            item =>
+              String(item.ID) ===
+              String(id)
+          );
 
 
-      if (!siswa) {
+        if (!siswa) {
 
-        gagal++;
+          gagal++;
 
-        continue;
+          continue;
 
-      }
-
-
-      try {
-
-        const result =
-          await callAPI({
-
-            action:
-              "simpanPresensi",
-
-            id:
-              siswa.ID,
-
-            nisn:
-              siswa.NISN,
-
-            nama:
-              siswa.NAMA,
-
-            kelas:
-              siswa.KELAS,
-
-            status:
-              String(
-                select.value || "HADIR"
-              )
-                .trim()
-                .toUpperCase(),
-
-            idGuru:
-              currentUser.idGuru,
-
-            sumber:
-              "WEB",
-
-            tanggal:
-              tanggal
-
-          });
+        }
 
 
-        console.log(
-          "HASIL SIMPAN:",
-          siswa.NAMA,
-          result
-        );
+        try {
+
+          const result =
+            await callAPI({
+
+              action:
+                "simpanPresensi",
+
+              id:
+                siswa.ID,
+
+              nisn:
+                siswa.NISN,
+
+              nama:
+                siswa.NAMA,
+
+              kelas:
+                siswa.KELAS,
+
+              status:
+                select.value,
+
+              idGuru:
+                currentUser.idGuru,
+
+              sumber:
+                "WEB",
+
+              tanggal:
+                tanggal
+
+            });
 
 
-        if (
-          result &&
-          result.success
-        ) {
+          if (result.success) {
 
-          berhasil++;
+            berhasil++;
 
-        } else {
-
-          const pesan =
-            String(
-              result?.message ||
-              ""
-            )
-              .toLowerCase();
-
-
-          if (
-            pesan.includes(
-              "sudah"
-            ) ||
-            pesan.includes(
-              "duplikat"
-            ) ||
-            pesan.includes(
-              "duplicate"
-            ) ||
-            pesan.includes(
-              "tercatat"
-            )
-          ) {
-
-            sudahAda++;
+            existingAttendance[id] =
+              select.value;
 
           } else {
 
@@ -1479,289 +549,206 @@ async function simpanSemuaPresensi() {
 
           }
 
+        } catch (error) {
 
-          console.error(
-            "GAGAL:",
-            siswa.NAMA,
-            result
-          );
+          gagal++;
+
+          console.error(error);
 
         }
 
-
-      } catch (error) {
-
-        gagal++;
-
-
-        console.error(
-          "ERROR SISWA:",
-          siswa.NAMA,
-          error
-        );
-
       }
 
-    }
+
+      renderTable();
 
 
-    /* -------------------------------------------------
-       HASIL
-    ------------------------------------------------- */
+      tampilkanPesan(
 
-    if (
-      gagal === 0 &&
-      sudahAda === 0
-    ) {
+        `Presensi selesai. Berhasil: ${berhasil}, dilewati: ${dilewati}, gagal: ${gagal}.`,
 
-      showMessage(
-        "Presensi berhasil disimpan untuk " +
-        berhasil +
-        " siswa.",
-        "success"
+        gagal
+          ? "error"
+          : "success"
+
       );
 
-    } else if (
-      gagal === 0 &&
-      sudahAda > 0
-    ) {
 
-      showMessage(
-        "Presensi selesai. " +
-        berhasil +
-        " berhasil, " +
-        sudahAda +
-        " sudah tercatat.",
-        "info"
-      );
+    } finally {
 
-    } else {
-
-      showMessage(
-        "Presensi selesai. Berhasil: " +
-        berhasil +
-        ", sudah tercatat: " +
-        sudahAda +
-        ", gagal: " +
-        gagal +
-        ".",
-        "error"
-      );
-
-    }
-
-
-  } catch (error) {
-
-    console.error(
-      "SIMPAN ERROR:",
-      error
-    );
-
-
-    showMessage(
-      "Gagal menyimpan presensi: " +
-      error.message,
-      "error"
-    );
-
-
-  } finally {
-
-    sedangMenyimpan = false;
-
-
-    if (button) {
-
-      button.disabled =
-        false;
-
+      button.disabled = false;
 
       button.textContent =
-        teksButton ||
-        "💾 Simpan Presensi";
+        "Simpan Presensi";
 
     }
 
   }
 
-}
+
+  function updateSummary() {
+
+    const summary =
+      document.getElementById(
+        "presensiSummary"
+      );
 
 
-/* =====================================================
-   ERROR TABLE
-===================================================== */
+    const counts = {
 
-function tampilkanErrorTable(
-  message
-) {
+      HADIR: 0,
+      IZIN: 0,
+      SAKIT: 0,
+      ALPA: 0
 
-  const loading =
-    document.getElementById(
-      "tableLoading"
-    );
+    };
 
 
-  const table =
-    document.getElementById(
-      "presensiTable"
-    );
+    document
+      .querySelectorAll(
+        ".status-select"
+      )
+      .forEach(select => {
+
+        if (counts[select.value] !== undefined) {
+
+          counts[select.value]++;
+
+        }
+
+      });
 
 
-  if (table) {
+    summary.innerHTML = `
 
-    table.style.display =
-      "none";
+      H: ${counts.HADIR}
+      &nbsp; | &nbsp;
+      I: ${counts.IZIN}
+      &nbsp; | &nbsp;
+      S: ${counts.SAKIT}
+      &nbsp; | &nbsp;
+      A: ${counts.ALPA}
 
-  }
-
-
-  if (loading) {
-
-    loading.style.display =
-      "block";
-
-
-    loading.innerHTML = `
-      ❌ Gagal memuat data siswa.
-      <br><br>
-      ${escapeHTML(message)}
     `;
 
   }
 
-}
+
+  document.addEventListener(
+    "change",
+    event => {
+
+      if (
+        event.target.classList.contains(
+          "status-select"
+        )
+      ) {
+
+        updateSummary();
+
+      }
+
+    }
+  );
 
 
-/* =====================================================
-   MESSAGE
-===================================================== */
+  async function callAPI(payload) {
 
-function showMessage(
-  message,
-  type = "info"
-) {
+    const response =
+      await fetch(
+        API_URL,
+        {
 
-  const element =
-    document.getElementById(
-      "message"
-    );
+          method:
+            "POST",
+
+          headers: {
+            "Content-Type":
+              "text/plain;charset=utf-8"
+          },
+
+          body:
+            JSON.stringify(payload)
+
+        }
+      );
 
 
-  if (!element) {
-
-    console.log(
-      "[" +
-      type +
-      "] " +
-      message
-    );
-
-    return;
+    return await response.json();
 
   }
 
 
-  element.className =
-    "message " +
-    type;
+  function getToday() {
+
+    const now =
+      new Date();
 
 
-  element.textContent =
-    message;
+    return [
+
+      now.getFullYear(),
+
+      String(
+        now.getMonth() + 1
+      ).padStart(2, "0"),
+
+      String(
+        now.getDate()
+      ).padStart(2, "0")
+
+    ].join("-");
+
+  }
 
 
-  setTimeout(
-    function () {
+  function tampilkanPesan(
+    message,
+    type
+  ) {
 
-      element.className =
-        "message";
+    const element =
+      document.getElementById(
+        "presensiMessage"
+      );
 
-
-      element.textContent =
-        "";
-
-    },
-    5000
-  );
-
-}
-
-
-/* =====================================================
-   SET TEXT
-===================================================== */
-
-function setText(
-  id,
-  value
-) {
-
-  const element =
-    document.getElementById(
-      id
-    );
-
-
-  if (element) {
 
     element.textContent =
-      value;
+      message;
+
+
+    element.className =
+      "message " +
+      (
+        type === "success"
+          ? "message-success"
+          : "message-error"
+      );
+
+
+    element.style.display =
+      "block";
+
+
+    setTimeout(() => {
+
+      element.style.display =
+        "none";
+
+    }, 5000);
 
   }
 
-}
 
+  function escapeHTML(value) {
 
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
 
-function escapeHTML(value) {
+  }
 
-  return String(
-    value ?? ""
-  )
-
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
-}
-
-
-/* =====================================================
-   LOGOUT
-===================================================== */
-
-function logout() {
-
-  localStorage.removeItem(
-    "presensiUser"
-  );
-
-  window.location.href =
-    "index.html";
-
-}
+})();
