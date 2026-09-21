@@ -1,0 +1,10 @@
+{
+  "name": "Presensi Siswa - SD Negeri Jatiwaringin XIII",
+  "short_name": "Presensi SD",
+  "description": "Sistem presensi siswa SD Negeri Jatiwaringin XIII",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f4f7fb",
+  "theme_color": "#1565c0",
+  "orientation": "portrait"
+}
