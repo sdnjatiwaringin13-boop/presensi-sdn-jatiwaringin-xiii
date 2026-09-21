@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
 
   <meta charset="UTF-8">
@@ -10,124 +9,176 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>Scan QR Siswa</title>
+  <title>Scan Presensi</title>
+
+  <meta
+    name="theme-color"
+    content="#1565c0"
+  >
+
+  <link
+    rel="manifest"
+    href="manifest.json"
+  >
 
   <link
     rel="stylesheet"
-    href="./style.css"
+    href="style.css"
   >
-
-  <style>
-
-    .scan-container {
-      max-width: 600px;
-      margin: 30px auto;
-      padding: 20px;
-    }
-
-    .scanner-box {
-      background: white;
-      padding: 15px;
-      border-radius: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,.1);
-    }
-
-    #reader {
-      width: 100%;
-    }
-
-    .result-box {
-      margin-top: 20px;
-      padding: 20px;
-      border-radius: 12px;
-      background: #f5f5f5;
-      text-align: center;
-    }
-
-    .success {
-      background: #e8f5e9;
-      color: #1b5e20;
-    }
-
-    .error {
-      background: #ffebee;
-      color: #b71c1c;
-    }
-
-    .student-name {
-      font-size: 25px;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-
-    .student-id {
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    button {
-      padding: 10px 18px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-
-  </style>
 
 </head>
 
-
 <body>
 
-  <div class="scan-container">
+<header class="topbar">
 
-    <h1>📷 Scan QR Siswa</h1>
+  <div class="topbar-left">
 
-    <p>
-      Arahkan kamera ke QR Code kartu siswa.
-    </p>
+    <div class="topbar-logo">
+      SD
+    </div>
+
+    <div>
+
+      <div class="topbar-title">
+        Scan Presensi
+      </div>
+
+      <div class="topbar-school">
+        SD Negeri Jatiwaringin XIII
+      </div>
+
+    </div>
+
+  </div>
 
 
-    <div class="scanner-box">
+  <div class="topbar-right">
+
+    <button
+      class="btn btn-secondary btn-small"
+      onclick="location.href='dashboard.html'"
+    >
+      Dashboard
+    </button>
+
+    <button
+      class="btn btn-danger btn-small"
+      onclick="Auth.logout()"
+    >
+      Keluar
+    </button>
+
+  </div>
+
+</header>
+
+
+<main class="container">
+
+  <div class="page-header">
+
+    <div>
+
+      <h1>Scan QR Presensi</h1>
+
+      <p>
+        Arahkan kamera ke QR siswa.
+      </p>
+
+    </div>
+
+  </div>
+
+
+  <section class="card">
+
+    <div class="form-group">
+
+      <label for="scanKelas">
+        Kelas
+      </label>
+
+      <select id="scanKelas">
+
+        <option value="">
+          Pilih kelas
+        </option>
+
+      </select>
+
+    </div>
+
+
+    <div class="qr-scanner-wrapper">
 
       <div id="reader"></div>
 
     </div>
 
 
-    <div
-      id="result"
-      class="result-box"
-    >
-      Menunggu QR Code...
+    <div class="form-actions">
+
+      <button
+        class="btn btn-primary"
+        id="btnStartScan"
+      >
+        Mulai Kamera
+      </button>
+
+      <button
+        class="btn btn-secondary"
+        id="btnStopScan"
+      >
+        Hentikan Kamera
+      </button>
+
     </div>
 
 
     <div
-  id="result"
-  class="result-box"
->
-  📷 Menunggu kamera...
-</div>
-    
-
-    <button onclick="kembali()">
-      ← Kembali
-    </button>
-
-  </div>
+      id="scanResult"
+      class="scan-result"
+    >
+      Kamera belum dimulai.
+    </div>
 
 
-  <!-- Library QR Scanner -->
-  <script
-    src="https://unpkg.com/html5-qrcode"
-    type="text/javascript">
-  </script>
+    <div
+      id="scanMessage"
+      class="message"
+      style="display:none;"
+    ></div>
+
+  </section>
 
 
-  <script src="./scan.js"></script>
+  <section class="card">
+
+    <div class="card-header">
+
+      <h2>Presensi Terakhir</h2>
+
+    </div>
+
+
+    <div
+      id="lastStudent"
+      class="last-student"
+    >
+      Belum ada siswa yang discan.
+    </div>
+
+  </section>
+
+</main>
+
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+<script src="auth.js"></script>
+<script src="scan.js"></script>
+<script src="pwa.js"></script>
 
 </body>
-
 </html>
