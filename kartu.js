@@ -1,933 +1,651 @@
-"use strict";
-
+/* =========================================================
+   KARTU PELAJAR
+   SD NEGERI JATIWARINGIN XIII
+   ========================================================= */
 
 (function () {
 
+  "use strict";
 
   let semuaSiswa = [];
 
-  let siswaTampil = [];
+  const container = document.getElementById("kartuContainer");
+  const searchInput = document.getElementById("searchInput");
+  const kelasFilter = document.getElementById("kelasFilter");
+  const refreshButton = document.getElementById("refreshButton");
+  const printButton = document.getElementById("printButton");
 
 
-  const $ =
-    id =>
-      document.getElementById(
-        id
-      );
-
-
-  document.addEventListener(
-    "DOMContentLoaded",
-    init
-  );
-
-
-  /* =====================================================
+  /* =========================================================
      INIT
-  ===================================================== */
+     ========================================================= */
 
-  async function init() {
+  document.addEventListener("DOMContentLoaded", function () {
 
-    bindEvents();
+    loadSiswa();
 
-    await loadSiswa();
-
-  }
-
-
-  /* =====================================================
-     EVENT
-  ===================================================== */
-
-  function bindEvents() {
-
-
-    $("searchInput")
-      ?.addEventListener(
+    if (searchInput) {
+      searchInput.addEventListener(
         "input",
-        renderSiswa
+        filterSiswa
       );
+    }
 
-
-    $("kelasFilter")
-      ?.addEventListener(
+    if (kelasFilter) {
+      kelasFilter.addEventListener(
         "change",
-        renderSiswa
+        filterSiswa
       );
+    }
 
-
-    $("refreshButton")
-      ?.addEventListener(
+    if (refreshButton) {
+      refreshButton.addEventListener(
         "click",
         function () {
-
-          loadSiswa(
-            true
-          );
-
+          loadSiswa(true);
         }
       );
+    }
 
-
-    $("printButton")
-      ?.addEventListener(
+    if (printButton) {
+      printButton.addEventListener(
         "click",
-        cetak
+        function () {
+          window.print();
+        }
+      );
+    }
+
+  });
+
+
+  /* =========================================================
+     LOAD DATA SISWA
+     ========================================================= */
+
+  async function loadSiswa(forceRefresh) {
+
+    try {
+
+      showLoading();
+
+      const response = await callAPI({
+        action: "getSiswa",
+        aktifOnly: true,
+        forceRefresh: !!forceRefresh
+      });
+
+      if (!response) {
+        throw new Error(
+          "Server tidak memberikan respons."
+        );
+      }
+
+      if (!response.success) {
+        throw new Error(
+          response.message ||
+          "Data siswa gagal dimuat."
+        );
+      }
+
+      semuaSiswa = Array.isArray(response.data)
+        ? response.data
+        : [];
+
+      isiFilterKelas();
+
+      tampilkanSiswa(semuaSiswa);
+
+    } catch (error) {
+
+      console.error(
+        "loadSiswa:",
+        error
       );
 
-  }
-
-
-  /* =====================================================
-     LOAD SISWA
-  ===================================================== */
-
-  async function loadSiswa(
-    forceRefresh = false
-  ) {
-
-
-    const box =
-      $("kartuContainer");
-
-
-    if (box) {
-
-      box.innerHTML = `
-
-        <div class="loading">
-
-          <i class="fa-solid fa-spinner fa-spin"></i>
-
-          Memuat data siswa...
-
+      container.innerHTML = `
+        <div style="
+          grid-column:1/-1;
+          padding:30px;
+          background:white;
+          border-radius:10px;
+          text-align:center;
+          color:#b00020;
+        ">
+          <strong>Data siswa gagal dimuat.</strong>
+          <br>
+          <small>${escapeHTML(
+            error.message || "Terjadi kesalahan."
+          )}</small>
         </div>
-
       `;
 
     }
 
-
-    try {
-
-
-      /*
-       * Ambil data siswa.
-       *
-       * Cache digunakan otomatis oleh api.js.
-       */
-
-      const result =
-        await callAPI({
-
-          action:
-            "getSiswa",
-
-          aktifOnly:
-            true,
-
-          forceRefresh:
-            forceRefresh
-
-        });
-
-
-      console.log(
-        "HASIL GET SISWA:",
-        result
-      );
-
-
-      if (
-        !result ||
-        result.success !== true
-      ) {
-
-        throw new Error(
-          result?.message ||
-          "Gagal mengambil data siswa."
-        );
-
-      }
-
-
-      semuaSiswa =
-        Array.isArray(
-          result.data
-        )
-          ? result.data
-          : [];
-
-
-      loadKelas();
-
-
-      renderSiswa();
-
-
-    } catch (error) {
-
-
-      console.error(
-        "KARTU SISWA:",
-        error
-      );
-
-
-      if (box) {
-
-        box.innerHTML = `
-
-          <div class="empty">
-
-            <i
-              class="fa-solid fa-triangle-exclamation"
-            ></i>
-
-            <br>
-
-            ${escapeHTML(
-              error.message
-            )}
-
-          </div>
-
-        `;
-
-      }
-
-    }
-
   }
 
 
-  /* =====================================================
-     KELAS
-  ===================================================== */
+  /* =========================================================
+     FILTER KELAS
+     ========================================================= */
 
-  function loadKelas() {
+  function isiFilterKelas() {
 
-
-    const select =
-      $("kelasFilter");
-
-
-    if (!select) {
-
+    if (!kelasFilter) {
       return;
-
     }
 
+    const daftarKelas = [
+      ...new Set(
+        semuaSiswa
+          .map(function (siswa) {
+            return String(
+              siswa.KELAS ||
+              siswa.kelas ||
+              ""
+            ).trim();
+          })
+          .filter(Boolean)
+      )
+    ];
 
-    const sebelumnya =
-      select.value;
-
-
-    const kelas =
-      [
-        ...new Set(
-
-          semuaSiswa
-            .map(
-              s =>
-                String(
-                  s.KELAS ||
-                  ""
-                ).trim()
-            )
-            .filter(Boolean)
-
-        )
-      ]
-      .sort(
-        function (a, b) {
-
-          return a.localeCompare(
-            b,
-            "id",
-            {
-              numeric: true
-            }
-          );
-
+    daftarKelas.sort(function (a, b) {
+      return a.localeCompare(
+        b,
+        "id",
+        {
+          numeric: true
         }
       );
+    });
 
+    kelasFilter.innerHTML =
+      `<option value="">Semua Kelas</option>`;
 
-    select.innerHTML = `
+    daftarKelas.forEach(function (kelas) {
 
-      <option value="">
-        Semua Kelas
-      </option>
+      const option =
+        document.createElement("option");
 
-      ${
-        kelas
-          .map(
-            function (kelas) {
+      option.value = kelas;
+      option.textContent = kelas;
 
-              return `
+      kelasFilter.appendChild(option);
 
-                <option
-                  value="${escapeAttr(kelas)}"
-                >
-
-                  ${escapeHTML(kelas)}
-
-                </option>
-
-              `;
-
-            }
-          )
-          .join("")
-
-      }
-
-    `;
-
-
-    if (
-      kelas.includes(
-        sebelumnya
-      )
-    ) {
-
-      select.value =
-        sebelumnya;
-
-    }
+    });
 
   }
 
 
-  /* =====================================================
-     FILTER
-  ===================================================== */
+  /* =========================================================
+     FILTER SISWA
+     ========================================================= */
 
-  function renderSiswa() {
+  function filterSiswa() {
 
-
-    const box =
-      $("kartuContainer");
-
-
-    if (!box) {
-
-      return;
-
-    }
-
-
-    const query =
+    const keyword =
       String(
-        $("searchInput")
-          ?.value ||
-        ""
+        searchInput?.value || ""
       )
         .trim()
         .toLowerCase();
 
-
     const kelas =
       String(
-        $("kelasFilter")
-          ?.value ||
-        ""
+        kelasFilter?.value || ""
       )
-        .trim();
+        .trim()
+        .toLowerCase();
 
+    const hasil =
+      semuaSiswa.filter(function (siswa) {
 
-    siswaTampil =
-      semuaSiswa.filter(
-        function (siswa) {
+        const nama =
+          String(
+            siswa.NAMA ||
+            siswa.nama ||
+            ""
+          ).toLowerCase();
 
+        const nisn =
+          String(
+            siswa.NISN ||
+            siswa.nisn ||
+            ""
+          ).toLowerCase();
 
-          const nama =
-            String(
-              siswa.NAMA ||
-              ""
-            )
-              .toLowerCase();
+        const dataKelas =
+          String(
+            siswa.KELAS ||
+            siswa.kelas ||
+            ""
+          ).toLowerCase();
 
+        const cocokKeyword =
+          !keyword ||
+          nama.includes(keyword) ||
+          nisn.includes(keyword);
 
-          const nisn =
-            String(
-              siswa.NISN ||
-              ""
-            )
-              .toLowerCase();
+        const cocokKelas =
+          !kelas ||
+          dataKelas === kelas;
 
-
-          const cocokSearch =
-            !query ||
-            nama.includes(
-              query
-            ) ||
-            nisn.includes(
-              query
-            );
-
-
-          const cocokKelas =
-            !kelas ||
-            String(
-              siswa.KELAS ||
-              ""
-            ).trim() ===
-            kelas;
-
-
-          return (
-            cocokSearch &&
-            cocokKelas
-          );
-
-        }
-      );
-
-
-    if (
-      !siswaTampil.length
-    ) {
-
-      box.innerHTML = `
-
-        <div class="empty">
-
-          <i class="fa-solid fa-user-slash"></i>
-
-          <br><br>
-
-          Data siswa tidak ditemukan.
-
-        </div>
-
-      `;
-
-      return;
-
-    }
-
-
-    /*
-     * Render HTML kartu.
-     */
-
-    box.innerHTML =
-      siswaTampil
-        .map(
-          function (
-            siswa,
-            index
-          ) {
-
-            return buatKartu(
-              siswa,
-              index
-            );
-
-          }
-        )
-        .join("");
-
-
-    /*
-     * Buat QR setelah HTML selesai.
-     */
-
-    siswaTampil.forEach(
-      function (
-        siswa,
-        index
-      ) {
-
-        buatQR(
-          siswa,
-          index
+        return (
+          cocokKeyword &&
+          cocokKelas
         );
 
-      }
-    );
+      });
+
+    tampilkanSiswa(hasil);
 
   }
 
 
-  /* =====================================================
+  /* =========================================================
+     TAMPILKAN KARTU
+     ========================================================= */
+
+  function tampilkanSiswa(data) {
+
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = "";
+
+    if (!data.length) {
+
+      container.innerHTML = `
+        <div style="
+          grid-column:1/-1;
+          background:white;
+          padding:30px;
+          text-align:center;
+          border-radius:10px;
+        ">
+          Data siswa tidak ditemukan.
+        </div>
+      `;
+
+      return;
+    }
+
+
+    data.forEach(function (siswa, index) {
+
+      const kartu =
+        buatKartu(siswa, index);
+
+      container.appendChild(kartu);
+
+    });
+
+  }
+
+
+  /* =========================================================
      BUAT KARTU
-  ===================================================== */
+     ========================================================= */
 
-  function buatKartu(
-    siswa,
-    index
-  ) {
-
+  function buatKartu(siswa, index) {
 
     const id =
-      String(
-        siswa.ID ||
-        ""
-      ).trim();
-
+      siswa.ID ||
+      siswa.id ||
+      "";
 
     const nisn =
-      String(
-        siswa.NISN ||
-        ""
-      ).trim();
-
+      siswa.NISN ||
+      siswa.nisn ||
+      "-";
 
     const nama =
-      String(
-        siswa.NAMA ||
-        "-"
-      ).trim();
+      siswa.NAMA ||
+      siswa.nama ||
+      "-";
+
+    /*
+     * Backend yang digunakan sebelumnya
+     * belum selalu mempunyai TANGGAL_LAHIR.
+     *
+     * Karena itu kita cek beberapa kemungkinan
+     * nama kolom.
+     */
+
+    const tanggalLahir =
+      siswa.TANGGAL_LAHIR ||
+      siswa.tanggalLahir ||
+      siswa.TGL_LAHIR ||
+      siswa.tglLahir ||
+      "-";
 
 
-    const kelas =
-      String(
-        siswa.KELAS ||
-        "-"
-      ).trim();
+    const card =
+      document.createElement("div");
+
+    card.className = "student-card";
 
 
-    const jk =
-      String(
-        siswa.JK ||
-        "-"
-      ).trim();
+    /* =====================================================
+       HTML KARTU
+       ===================================================== */
+
+    card.innerHTML = `
+
+      <!-- DEKORASI -->
+      <div class="top-red"></div>
+
+      <div class="top-gray"></div>
+
+      <div class="top-yellow"></div>
+
+      <div class="yellow-dots"></div>
+
+      <div class="circle-decoration">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
 
 
-    const qrId =
-      "qr_" +
-      index;
+      <!-- HEADER SEKOLAH -->
+
+      <div class="school-header">
+
+        <div class="school-title">
+          SD NEGERI<br>
+          JATIWARINGIN XIII
+        </div>
+
+      </div>
 
 
-    return `
+      <!-- JUDUL -->
 
-      <article
-        class="student-card"
-      >
+      <div class="card-title">
+        KARTU PELAJAR
+      </div>
 
+
+      <!-- QR -->
+
+      <div class="qr-wrapper">
 
         <div
-          class="student-card-head"
-        >
+          class="qr-code"
+          id="qr-${index}">
+        </div>
 
+      </div>
+
+
+      <!-- DATA -->
+
+      <div class="student-info">
+
+        <div class="student-row">
+
+          <div class="student-label">
+            NAMA
+          </div>
+
+          <div class="student-separator">
+            :
+          </div>
 
           <div
-            class="school-mark"
-          >
+            class="student-value"
+            title="${escapeAttr(nama)}">
 
-            SD
-
-          </div>
-
-
-          <div>
-
-            <strong>
-              SD NEGERI JATIWARINGIN XIII
-            </strong>
-
-            <small>
-              KARTU IDENTITAS SISWA
-            </small>
+            ${escapeHTML(nama)}
 
           </div>
-
 
         </div>
 
 
-        <div
-          class="student-card-body"
-        >
+        <div class="student-row">
 
-
-          <div
-            class="student-info"
-          >
-
-
-            <h3>
-
-              ${escapeHTML(
-                nama
-              )}
-
-            </h3>
-
-
-            <p>
-
-              <b>
-                NISN
-              </b>
-
-              <span>
-                ${escapeHTML(
-                  nisn ||
-                  "-"
-                )}
-              </span>
-
-            </p>
-
-
-            <p>
-
-              <b>
-                Kelas
-              </b>
-
-              <span>
-                ${escapeHTML(
-                  kelas
-                )}
-              </span>
-
-            </p>
-
-
-            <p>
-
-              <b>
-                JK
-              </b>
-
-              <span>
-                ${escapeHTML(
-                  jk
-                )}
-              </span>
-
-            </p>
-
-
-            <p>
-
-              <b>
-                ID
-              </b>
-
-              <span>
-                ${escapeHTML(
-                  id ||
-                  nisn ||
-                  "-"
-                )}
-              </span>
-
-            </p>
-
-
+          <div class="student-label">
+            NISN
           </div>
 
-
-          <div
-            class="qr-wrap"
-          >
-
-
-            <div
-              id="${qrId}"
-              class="qr-code"
-            ></div>
-
-
-            <small>
-              Scan untuk presensi
-            </small>
-
-
+          <div class="student-separator">
+            :
           </div>
 
+          <div class="student-value">
+
+            ${escapeHTML(nisn)}
+
+          </div>
 
         </div>
 
 
-      </article>
+        <div class="student-row">
+
+          <div class="student-label">
+            TGL LAHIR
+          </div>
+
+          <div class="student-separator">
+            :
+          </div>
+
+          <div class="student-value">
+
+            ${escapeHTML(
+              formatTanggalLahir(tanggalLahir)
+            )}
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- FOOTER -->
+
+      <div class="chevron">
+
+        <span></span>
+        <span></span>
+        <span></span>
+
+      </div>
+
+      <div class="bottom-red"></div>
+
+      <div class="bottom-yellow"></div>
+
+    `;
+
+
+    /* =====================================================
+       GENERATE QR
+       ===================================================== */
+
+    const qrElement =
+      card.querySelector(
+        `#qr-${index}`
+      );
+
+    if (qrElement) {
+
+      /*
+       * ID TIDAK DITAMPILKAN DI KARTU,
+       * tetapi tetap dimasukkan ke QR.
+       *
+       * Scanner dapat membaca:
+       *
+       * {
+       *   id: "...",
+       *   nisn: "..."
+       * }
+       */
+
+      const qrData =
+        JSON.stringify({
+          id: String(id),
+          nisn: String(nisn)
+        });
+
+
+      new QRCode(
+        qrElement,
+        {
+          text: qrData,
+
+          width: 180,
+          height: 180,
+
+          colorDark: "#000000",
+          colorLight: "#ffffff",
+
+          correctLevel:
+            QRCode.CorrectLevel.M
+        }
+      );
+
+    }
+
+
+    return card;
+
+  }
+
+
+  /* =========================================================
+     FORMAT TANGGAL LAHIR
+     ========================================================= */
+
+  function formatTanggalLahir(value) {
+
+    if (
+      !value ||
+      value === "-" ||
+      value === "null" ||
+      value === "undefined"
+    ) {
+      return "-";
+    }
+
+    const text =
+      String(value).trim();
+
+    /*
+     * Jika sudah berbentuk:
+     * 26 Agustus 2017
+     */
+
+    if (
+      /[A-Za-z]/.test(text)
+    ) {
+      return text;
+    }
+
+
+    /*
+     * Jika bentuk:
+     * 2017-08-26
+     */
+
+    const match =
+      text.match(
+        /^(\d{4})-(\d{1,2})-(\d{1,2})/
+      );
+
+    if (match) {
+
+      const tahun =
+        Number(match[1]);
+
+      const bulan =
+        Number(match[2]);
+
+      const hari =
+        Number(match[3]);
+
+      const namaBulan = [
+        "",
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember"
+      ];
+
+      return `${hari} ${
+        namaBulan[bulan] || ""
+      } ${tahun}`;
+
+    }
+
+
+    return text;
+
+  }
+
+
+  /* =========================================================
+     LOADING
+     ========================================================= */
+
+  function showLoading() {
+
+    if (!container) {
+      return;
+    }
+
+    container.innerHTML = `
+
+      <div style="
+        grid-column:1/-1;
+        background:white;
+        padding:40px;
+        text-align:center;
+        border-radius:10px;
+      ">
+
+        Memuat data siswa...
+
+      </div>
 
     `;
 
   }
 
 
-  /* =====================================================
-     BUAT QR
-  ===================================================== */
-
-  function buatQR(
-    siswa,
-    index
-  ) {
-
-
-    const element =
-      document.getElementById(
-        "qr_" +
-        index
-      );
-
-
-    if (!element) {
-
-      return;
-
-    }
-
-
-    /*
-     * QR hanya berisi data penting.
-     */
-
-    const data =
-      JSON.stringify({
-
-        id:
-          String(
-            siswa.ID ||
-            ""
-          ),
-
-        nisn:
-          String(
-            siswa.NISN ||
-            ""
-          )
-
-      });
-
-
-    /*
-     * Kalau library QRCode belum ada,
-     * load otomatis.
-     */
-
-    if (
-      typeof QRCode ===
-      "undefined"
-    ) {
-
-      loadQRCodeLibrary(
-        function () {
-
-          buatQR(
-            siswa,
-            index
-          );
-
-        }
-      );
-
-      return;
-
-    }
-
-
-    element.innerHTML =
-      "";
-
-
-    new QRCode(
-      element,
-      {
-
-        text:
-          data,
-
-        width:
-          160,
-
-        height:
-          160,
-
-        colorDark:
-          "#000000",
-
-        colorLight:
-          "#ffffff",
-
-        correctLevel:
-          QRCode.CorrectLevel.M
-
-      }
-    );
-
-  }
-
-
-  /* =====================================================
-     LOAD QR LIBRARY
-  ===================================================== */
-
-  let qrLibraryLoading =
-    false;
-
-  const qrCallbacks =
-    [];
-
-
-  function loadQRCodeLibrary(
-    callback
-  ) {
-
-
-    if (
-      typeof QRCode !==
-      "undefined"
-    ) {
-
-      callback();
-
-      return;
-
-    }
-
-
-    qrCallbacks.push(
-      callback
-    );
-
-
-    if (
-      qrLibraryLoading
-    ) {
-
-      return;
-
-    }
-
-
-    qrLibraryLoading =
-      true;
-
-
-    const script =
-      document.createElement(
-        "script"
-      );
-
-
-    script.src =
-      "https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js";
-
-
-    script.onload =
-      function () {
-
-
-        qrLibraryLoading =
-          false;
-
-
-        const callbacks =
-          qrCallbacks.splice(
-            0
-          );
-
-
-        callbacks.forEach(
-          cb =>
-            cb()
-        );
-
-      };
-
-
-    script.onerror =
-      function () {
-
-
-        qrLibraryLoading =
-          false;
-
-
-        console.error(
-          "Library QRCode gagal dimuat."
-        );
-
-
-        qrCallbacks.length =
-          0;
-
-      };
-
-
-    document.head.appendChild(
-      script
-    );
-
-  }
-
-
-  /* =====================================================
-     CETAK
-  ===================================================== */
-
-  function cetak() {
-
-
-    if (
-      !siswaTampil.length
-    ) {
-
-      alert(
-        "Tidak ada kartu yang dapat dicetak."
-      );
-
-      return;
-
-    }
-
-
-    window.print();
-
-  }
-
-
-  /* =====================================================
+  /* =========================================================
      ESCAPE HTML
-  ===================================================== */
+     ========================================================= */
 
-  function escapeHTML(
-    value
-  ) {
+  function escapeHTML(value) {
 
-    return String(
-      value ?? ""
-    )
-      .replace(
-        /&/g,
-        "&amp;"
-      )
-      .replace(
-        /</g,
-        "&lt;"
-      )
-      .replace(
-        />/g,
-        "&gt;"
-      )
-      .replace(
-        /"/g,
-        "&quot;"
-      )
-      .replace(
-        /'/g,
-        "&#039;"
-      );
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
 
   }
 
 
-  function escapeAttr(
-    value
-  ) {
+  function escapeAttr(value) {
 
-    return escapeHTML(
-      value
-    );
+    return escapeHTML(value);
 
   }
 
