@@ -1,72 +1,66 @@
+"use strict";
+
 // ============================================================
-// MEMBUAT QR CODE SISWA
-// QR HANYA BERISI ID SISWA
+// TEST QR CODE
+// QR AKAN BERISI: 50001
 // ============================================================
 
 function buatQRCode(idSiswa, containerId) {
 
-  console.log("====================================");
-  console.log("MEMBUAT QR SISWA");
-  console.log("ID siswa:", idSiswa);
-  console.log("Container:", containerId);
+  console.log("=================================");
+  console.log("MEMBUAT QR CODE");
+  console.log("ID:", idSiswa);
+  console.log("CONTAINER:", containerId);
 
-  const container = document.getElementById(containerId);
+  const container =
+    document.getElementById(containerId);
 
   if (!container) {
 
     console.error(
-      "Container QR tidak ditemukan:",
+      "Container tidak ditemukan:",
       containerId
     );
 
     return false;
   }
 
-  // Bersihkan QR sebelumnya
   container.innerHTML = "";
 
-  // Ambil ID siswa
-  const id = String(idSiswa ?? "").trim();
+  const id =
+    String(idSiswa ?? "").trim();
 
-  console.log("Isi QR yang akan dibuat:", id);
-
-  // ID kosong
   if (!id) {
 
     container.innerHTML = `
       <div style="
         color:red;
-        font-size:10px;
+        font-size:12px;
         text-align:center;
-        padding:5px;
+        padding:10px;
       ">
         ID SISWA KOSONG
       </div>
     `;
 
-    console.error(
-      "QR tidak dibuat karena ID siswa kosong."
-    );
-
     return false;
   }
 
-  // Cek library
   if (typeof QRCode === "undefined") {
 
     container.innerHTML = `
       <div style="
         color:red;
-        font-size:10px;
+        font-size:12px;
         text-align:center;
-        padding:5px;
+        padding:10px;
       ">
-        QR LIBRARY TIDAK TERSEDIA
+        LIBRARY QR CODE TIDAK TERSEDIA
       </div>
     `;
 
     console.error(
-      "QRCode library belum dimuat."
+      "QRCode library tidak ditemukan."
     );
 
     return false;
@@ -74,45 +68,18 @@ function buatQRCode(idSiswa, containerId) {
 
   try {
 
-    // ========================================================
-    // BUAT QR
-    // ========================================================
-
     new QRCode(container, {
 
-      // INI ISI QR SEBENARNYA
       text: id,
 
-      // Ukuran besar supaya mudah dibaca kamera
-      width: 220,
-      height: 220,
+      width: 300,
 
-      // Error correction M
-      correctLevel: QRCode.CorrectLevel.M
+      height: 300,
+
+      correctLevel:
+        QRCode.CorrectLevel.M
 
     });
-
-
-    // ========================================================
-    // PASTIKAN HASIL QR ADA
-    // ========================================================
-
-    const canvas =
-      container.querySelector("canvas");
-
-    const image =
-      container.querySelector("img");
-
-
-    if (!canvas && !image) {
-
-      console.error(
-        "QRCode tidak menghasilkan canvas maupun image."
-      );
-
-      return false;
-    }
-
 
     console.log(
       "QR BERHASIL DIBUAT"
@@ -123,64 +90,96 @@ function buatQRCode(idSiswa, containerId) {
       id
     );
 
-    console.log(
-      "QR canvas:",
-      canvas
-    );
-
-    console.log(
-      "QR image:",
-      image
-    );
-
-    console.log(
-      "===================================="
-    );
-
     return true;
 
   } catch (error) {
 
     console.error(
-      "Gagal membuat QR:",
+      "ERROR QR:",
       error
     );
-
-    container.innerHTML = `
-      <div style="
-        color:red;
-        font-size:10px;
-        text-align:center;
-        padding:5px;
-      ">
-        QR GAGAL DIBUAT
-      </div>
-    `;
 
     return false;
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
 
-  const test = document.createElement("div");
+// ============================================================
+// JALANKAN TEST
+// ============================================================
 
-  test.id = "qr-test";
+function jalankanTestQR() {
 
-  test.style.cssText = `
-    position:fixed;
-    right:20px;
-    bottom:20px;
-    width:240px;
-    height:240px;
-    background:white;
-    padding:10px;
-    border:3px solid red;
-    z-index:99999;
-  `;
+  console.log(
+    "MENJALANKAN TEST QR..."
+  );
 
-  document.body.appendChild(test);
+  let test =
+    document.getElementById("qr-test");
 
-  buatQRCode("50001", "qr-test");
+  if (!test) {
 
-});
+    test =
+      document.createElement("div");
+
+    test.id = "qr-test";
+
+    test.style.cssText = `
+      position:fixed;
+      top:20px;
+      right:20px;
+
+      width:340px;
+      height:340px;
+
+      background:#ffffff;
+
+      padding:20px;
+
+      border:5px solid red;
+
+      border-radius:10px;
+
+      box-sizing:border-box;
+
+      z-index:999999;
+
+      display:flex;
+
+      align-items:center;
+
+      justify-content:center;
+
+      box-shadow:
+        0 5px 30px rgba(0,0,0,.35);
+    `;
+
+    document.body.appendChild(test);
+  }
+
+  buatQRCode(
+    "50001",
+    "qr-test"
+  );
+}
+
+
+// ============================================================
+// INIT
+// MENANGANI HALAMAN YANG SUDAH DIMUAT
+// ============================================================
+
+if (
+  document.readyState === "loading"
+) {
+
+  document.addEventListener(
+    "DOMContentLoaded",
+    jalankanTestQR
+  );
+
+} else {
+
+  jalankanTestQR();
+
+}
