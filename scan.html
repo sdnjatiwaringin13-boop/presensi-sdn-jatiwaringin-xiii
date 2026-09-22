@@ -10,43 +10,34 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>
-        Scan QR Presensi
-    </title>
-
-
-    <!-- FONT AWESOME -->
+    <title>Scan QR Presensi</title>
 
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     >
 
-
-    <!-- STYLE DASHBOARD -->
-
     <link
         rel="stylesheet"
         href="style.css"
     >
 
-
     <style>
 
-        /* =====================================================
-           SCAN PAGE
-        ===================================================== */
+        /* ==================================================
+           HALAMAN SCAN
+        ================================================== */
 
-        .scan-page {
+        .scan-wrapper {
             width: 100%;
         }
 
 
-        /* =====================================================
-           INFO GURU
-        ===================================================== */
+        /* ==================================================
+           INFORMASI GURU
+        ================================================== */
 
-        .scan-guru {
+        .scan-user-box {
 
             display: flex;
 
@@ -54,93 +45,99 @@
 
             gap: 12px;
 
-            padding: 14px 16px;
+            padding: 12px 15px;
 
-            margin-bottom: 18px;
+            margin-bottom: 15px;
 
             background: #f7fafc;
 
-            border: 1px solid #e5eaee;
+            border: 1px solid #e2e8ee;
 
-            border-radius: 8px;
+            border-radius: 7px;
+
         }
 
 
-        .scan-guru-icon {
+        .scan-user-icon {
 
-            width: 42px;
-            height: 42px;
+            width: 40px;
 
-            border-radius: 50%;
+            height: 40px;
+
+            flex-shrink: 0;
 
             display: flex;
 
             align-items: center;
+
             justify-content: center;
+
+            border-radius: 50%;
 
             background: #3b94bd;
 
-            color: white;
+            color: #fff;
 
-            flex-shrink: 0;
         }
 
 
-        .scan-guru-name {
+        .scan-user-name {
 
-            font-size: 14px;
+            font-size: 13px;
 
             font-weight: 800;
 
             color: #25313a;
+
         }
 
 
-        .scan-guru-role {
+        .scan-user-role {
 
-            margin-top: 3px;
+            margin-top: 2px;
 
-            font-size: 11px;
+            font-size: 10px;
 
-            color: #7b8790;
+            color: #7d8991;
+
         }
 
 
-        /* =====================================================
-           SCANNER
-        ===================================================== */
+        /* ==================================================
+           LAYOUT
+        ================================================== */
 
-        .scanner-layout {
+        .scan-grid {
 
             display: grid;
 
             grid-template-columns:
-                minmax(300px, 1fr)
-                minmax(280px, 380px);
+                minmax(0, 1fr)
+                330px;
 
-            gap: 20px;
+            gap: 15px;
 
             align-items: start;
+
         }
 
 
-        .scanner-box {
+        /* ==================================================
+           KAMERA
+        ================================================== */
+
+        .scanner-card {
+
+            width: 100%;
 
             background: #111;
 
-            border-radius: 10px;
+            border-radius: 8px;
 
-            padding: 12px;
+            padding: 10px;
 
-            min-height: 340px;
+            box-sizing: border-box;
 
-            display: flex;
-
-            align-items: center;
-
-            justify-content: center;
-
-            overflow: hidden;
         }
 
 
@@ -148,81 +145,237 @@
 
             width: 100%;
 
-            max-width: 520px;
+            min-height: 360px;
+
+            background: #111;
+
+            border-radius: 6px;
 
             overflow: hidden;
 
-            border-radius: 8px;
+            position: relative;
+
         }
 
 
         #reader video {
 
+            display: block !important;
+
             width: 100% !important;
+
+            max-width: 100% !important;
 
             height: auto !important;
 
-            border-radius: 8px;
+            min-height: 300px;
+
+            object-fit: cover;
+
+            border-radius: 6px;
+
         }
 
 
-        /* Hilangkan tampilan default html5-qrcode
-           yang terlalu ramai */
+        #reader canvas {
 
-        #reader img[alt="Info icon"] {
-            display: none !important;
+            max-width: 100% !important;
+
+        }
+
+
+        #reader__dashboard {
+
+            color: #fff !important;
+
+            padding: 8px !important;
+
+        }
+
+
+        #reader__dashboard_section_csr {
+
+            display: flex !important;
+
+            justify-content: center !important;
+
+            gap: 6px !important;
+
+            flex-wrap: wrap !important;
+
         }
 
 
         #reader__dashboard_section_csr button {
 
-            padding: 8px 12px !important;
-
             border: 0 !important;
 
-            border-radius: 6px !important;
+            border-radius: 5px !important;
+
+            padding: 7px 12px !important;
 
             background: #3b94bd !important;
 
             color: #fff !important;
 
-            cursor: pointer;
+            cursor: pointer !important;
+
         }
 
 
-        /* =====================================================
-           PANEL HASIL
-        ===================================================== */
+        #reader__scan_region {
 
-        .scan-result-panel {
+            border: 0 !important;
 
-            min-height: 340px;
+        }
 
-            border: 1px solid #e5eaee;
 
-            border-radius: 10px;
+        /* ==================================================
+           STATUS
+        ================================================== */
+
+        .scan-status {
+
+            margin-top: 10px;
+
+            padding: 10px 12px;
+
+            border-radius: 6px;
+
+            background: #e8f2ff;
+
+            color: #2563a6;
+
+            font-size: 11px;
+
+            font-weight: 600;
+
+        }
+
+
+        .scan-status.success {
+
+            background: #e9f8ef;
+
+            color: #18743b;
+
+        }
+
+
+        .scan-status.error {
+
+            background: #fdecec;
+
+            color: #b42318;
+
+        }
+
+
+        .scan-status.warning {
+
+            background: #fff7df;
+
+            color: #8a6500;
+
+        }
+
+
+        /* ==================================================
+           TOMBOL
+        ================================================== */
+
+        .scan-buttons {
+
+            display: flex;
+
+            gap: 7px;
+
+            margin-top: 10px;
+
+        }
+
+
+        .scan-buttons button {
+
+            border: 0;
+
+            border-radius: 5px;
+
+            padding: 9px 13px;
+
+            cursor: pointer;
+
+            font-family: inherit;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+        }
+
+
+        #startScanButton {
+
+            background: #3b94bd;
+
+            color: #fff;
+
+        }
+
+
+        #stopScanButton {
+
+            background: #edf1f4;
+
+            color: #56636c;
+
+        }
+
+
+        /* ==================================================
+           HASIL
+        ================================================== */
+
+        .result-card {
+
+            min-height: 390px;
 
             background: #fff;
 
-            padding: 20px;
+            border: 1px solid #e1e6ea;
+
+            border-radius: 8px;
+
+            overflow: hidden;
+
         }
 
 
-        .scan-result-title {
+        .result-header {
 
-            font-size: 14px;
+            padding: 12px 14px;
+
+            border-bottom: 1px solid #e7eaed;
+
+            font-size: 12px;
 
             font-weight: 800;
 
-            margin-bottom: 15px;
+            color: #27343c;
 
-            color: #26333b;
         }
 
 
-        .scan-empty {
+        .result-body {
 
-            min-height: 260px;
+            padding: 15px;
+
+        }
+
+
+        .result-empty {
+
+            min-height: 300px;
 
             display: flex;
 
@@ -234,211 +387,134 @@
 
             text-align: center;
 
-            color: #9aa4aa;
+            color: #9ba5ac;
+
+            font-size: 11px;
+
         }
 
 
-        .scan-empty i {
+        .result-empty i {
 
             font-size: 42px;
 
             margin-bottom: 12px;
 
-            color: #cbd2d6;
+            color: #d2d8dc;
+
         }
 
 
-        /* =====================================================
-           DATA SISWA
-        ===================================================== */
+        .student-success {
 
-        .student-result {
+            border: 1px solid #d8eee0;
 
-            border: 1px solid #e5eaee;
-
-            border-radius: 8px;
+            border-radius: 7px;
 
             overflow: hidden;
+
         }
 
 
-        .student-result-header {
+        .student-success-head {
 
-            padding: 14px;
+            background: #e9f8ef;
 
-            background: #3b94bd;
+            padding: 13px;
 
-            color: #fff;
         }
 
 
-        .student-result-header .status {
+        .student-success-status {
 
             font-size: 10px;
 
+            color: #218648;
+
+            font-weight: 800;
+
             text-transform: uppercase;
 
-            font-weight: 700;
-
-            opacity: .85;
         }
 
 
-        .student-result-header .name {
+        .student-success-name {
 
             margin-top: 4px;
 
-            font-size: 17px;
+            font-size: 16px;
 
             font-weight: 800;
+
+            color: #1e2d25;
+
         }
 
 
-        .student-result-body {
+        .student-info {
 
-            padding: 14px;
+            padding: 12px;
+
         }
 
 
-        .result-row {
+        .info-row {
 
             display: grid;
 
-            grid-template-columns:
-                90px 15px 1fr;
+            grid-template-columns: 75px 12px 1fr;
 
-            gap: 4px;
+            gap: 3px;
 
             padding: 6px 0;
 
             border-bottom: 1px solid #f0f2f3;
 
-            font-size: 12px;
+            font-size: 11px;
+
         }
 
 
-        .result-row:last-child {
+        .info-row:last-child {
 
             border-bottom: 0;
+
         }
 
 
-        .result-label {
+        .info-label {
 
             font-weight: 700;
 
-            color: #65727a;
+            color: #69767e;
+
         }
 
 
-        .result-colon {
-
-            text-align: center;
-        }
-
-
-        .result-value {
+        .info-value {
 
             font-weight: 600;
 
-            color: #202a30;
+            color: #27343c;
+
         }
 
 
-        /* =====================================================
-           STATUS
-        ===================================================== */
-
-        #scanStatus {
-
-            margin-top: 15px;
-
-            border-radius: 7px;
-
-            padding: 11px 14px;
-
-            font-size: 12px;
-
-            font-weight: 600;
-        }
-
-
-        /* =====================================================
-           BUTTON
-        ===================================================== */
-
-        .scan-actions {
-
-            display: flex;
-
-            gap: 8px;
-
-            margin-top: 15px;
-        }
-
-
-        .scan-actions button {
-
-            height: 38px;
-
-            padding: 0 14px;
-
-            border: 0;
-
-            border-radius: 6px;
-
-            cursor: pointer;
-
-            font-family: inherit;
-
-            font-size: 12px;
-
-            font-weight: 700;
-        }
-
-
-        #startScanButton {
-
-            background: #3b94bd;
-
-            color: #fff;
-        }
-
-
-        #stopScanButton {
-
-            background: #eef2f4;
-
-            color: #53616a;
-        }
-
-
-        /* =====================================================
+        /* ==================================================
            RESPONSIVE
-        ===================================================== */
+        ================================================== */
 
-        @media screen and (max-width: 800px) {
+        @media (max-width: 800px) {
 
-            .scanner-layout {
+            .scan-grid {
 
                 grid-template-columns: 1fr;
 
             }
 
-        }
+            #reader {
 
-
-        /* =====================================================
-           PRINT
-        ===================================================== */
-
-        @media print {
-
-            .scan-page {
-
-                box-shadow: none !important;
-
-                border: 0 !important;
+                min-height: 300px;
 
             }
 
@@ -451,13 +527,7 @@
 
 <body>
 
-
-    <!-- =====================================================
-         CARD DASHBOARD
-    ===================================================== -->
-
-    <div class="card scan-page">
-
+    <div class="card scan-wrapper">
 
         <!-- HEADER -->
 
@@ -479,18 +549,13 @@
         <div class="card-body">
 
 
-            <!-- =================================================
-                 INFO GURU
-            ================================================= -->
+            <!-- USER -->
 
-            <div
-                id="guruInfo"
-                class="scan-guru"
-            >
+            <div class="scan-user-box">
 
-                <div class="scan-guru-icon">
+                <div class="scan-user-icon">
 
-                    <i class="fa-solid fa-user-tie"></i>
+                    <i class="fa-solid fa-user"></i>
 
                 </div>
 
@@ -499,15 +564,15 @@
 
                     <div
                         id="guruNama"
-                        class="scan-guru-name"
+                        class="scan-user-name"
                     >
-                        Memuat pengguna...
+                        Memuat...
                     </div>
 
 
                     <div
                         id="guruRole"
-                        class="scan-guru-role"
+                        class="scan-user-role"
                     >
                         -
                     </div>
@@ -517,19 +582,19 @@
             </div>
 
 
-            <!-- =================================================
-                 SCANNER + HASIL
-            ================================================= -->
+            <!-- GRID -->
 
-            <div class="scanner-layout">
+            <div class="scan-grid">
 
 
-                <!-- CAMERA -->
+                <!-- =================================================
+                     KAMERA
+                ================================================== -->
 
                 <div>
 
 
-                    <div class="scanner-box">
+                    <div class="scanner-card">
 
                         <div id="reader"></div>
 
@@ -538,15 +603,13 @@
 
                     <div
                         id="scanStatus"
-                        class="alert alert-info"
+                        class="scan-status"
                     >
-
                         Menyiapkan kamera...
-
                     </div>
 
 
-                    <div class="scan-actions">
+                    <div class="scan-buttons">
 
                         <button
                             type="button"
@@ -577,19 +640,17 @@
 
                     </div>
 
-
                 </div>
 
 
-                <!-- HASIL -->
+                <!-- =================================================
+                     HASIL
+                ================================================== -->
 
-                <div
-                    class="scan-result-panel"
-                >
+                <div class="result-card">
 
-                    <div
-                        class="scan-result-title"
-                    >
+
+                    <div class="result-header">
 
                         <i
                             class="fa-solid fa-user-check"
@@ -602,16 +663,22 @@
 
                     <div
                         id="result"
-                        class="scan-empty"
+                        class="result-body"
                     >
 
-                        <i
-                            class="fa-solid fa-qrcode"
-                        ></i>
+                        <div class="result-empty">
 
-                        <div>
-                            Arahkan QR kartu siswa
-                            ke kamera.
+                            <i
+                                class="fa-solid fa-qrcode"
+                            ></i>
+
+                            <div>
+
+                                Arahkan QR kartu siswa
+                                ke kamera.
+
+                            </div>
+
                         </div>
 
                     </div>
@@ -621,18 +688,17 @@
 
             </div>
 
-
         </div>
 
     </div>
 
 
-    <!-- =====================================================
-         LIBRARY QR
-    ===================================================== -->
+    <!-- ==================================================
+         QR SCANNER LIBRARY
+    ================================================== -->
 
     <script
-        src="https://unpkg.com/html5-qrcode"
+        src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
     ></script>
 
 
@@ -659,7 +725,6 @@
     <!-- PWA -->
 
     <script src="pwa.js"></script>
-
 
 </body>
 
