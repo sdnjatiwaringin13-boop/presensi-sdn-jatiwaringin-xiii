@@ -342,19 +342,19 @@
     ) {
 
         const id =
-            siswa.ID || "";
+            siswa.ID || siswa.id || "";
 
 
         const nama =
-            siswa.NAMA || "-";
+            siswa.NAMA || siswa.nama || "-";
 
 
         const nisn =
-            siswa.NISN || "-";
+            siswa.NISN || siswa.nisn || "-";
 
 
         const tanggalLahir =
-            siswa.TANGGAL_LAHIR || "-";
+            siswa.TANGGAL_LAHIR || siswa.tanggalLahir || "-";
 
 
         const card =
@@ -525,15 +525,7 @@
                 {
 
                     text:
-                        JSON.stringify({
-
-                            id:
-                                String(id),
-
-                            nisn:
-                                String(nisn)
-
-                        }),
+                        String(id || nisn),
 
                     width: 180,
 
@@ -550,6 +542,19 @@
 
                 }
             );
+
+            // qrcodejs pada sebagian browser membuat canvas + img.
+            // Tampilkan hanya satu agar QR tidak terlihat dobel.
+            setTimeout(function () {
+                const img = qr.querySelector("img");
+                const canvas = qr.querySelector("canvas");
+                if (img && img.getAttribute("src")) {
+                    img.style.display = "block";
+                    if (canvas) canvas.style.display = "none";
+                } else if (canvas) {
+                    canvas.style.display = "block";
+                }
+            }, 30);
 
         }
 
