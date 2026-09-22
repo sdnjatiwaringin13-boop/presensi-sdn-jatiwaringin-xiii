@@ -446,34 +446,31 @@
         }
 
 
-        .student-card .qr-code canvas {
+        .student-card .qr-code {
+    width: 26mm;
+    height: 26mm;
 
-            display: block !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-            width: 24mm !important;
-            height: 24mm !important;
-
-            max-width: none !important;
-            max-height: none !important;
-
-            margin: 0 !important;
-            padding: 0 !important;
-        }
+    background: #fff;
+    overflow: hidden;
+}
 
 
         .student-card .qr-code img {
+    display: block !important;
 
-            display: block !important;
+    width: 26mm !important;
+    height: 26mm !important;
 
-            width: 24mm !important;
-            height: 24mm !important;
+    max-width: none !important;
+    max-height: none !important;
 
-            max-width: none !important;
-            max-height: none !important;
-
-            margin: 0 !important;
-            padding: 0 !important;
-        }
+    margin: 0 !important;
+    padding: 0 !important;
+}
 
 
         /* =====================================================
@@ -814,10 +811,17 @@
 
 
             .student-card .qr-code canvas {
+    display: block !important;
 
-                width: 24mm !important;
-                height: 24mm !important;
-            }
+    width: 26mm !important;
+    height: 26mm !important;
+
+    max-width: none !important;
+    max-height: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+}
 
 
             @page {
