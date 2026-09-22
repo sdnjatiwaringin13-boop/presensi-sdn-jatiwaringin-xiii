@@ -160,3 +160,27 @@ function buatQRCode(idSiswa, containerId) {
     return false;
   }
 }
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const test = document.createElement("div");
+
+  test.id = "qr-test";
+
+  test.style.cssText = `
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    width:240px;
+    height:240px;
+    background:white;
+    padding:10px;
+    border:3px solid red;
+    z-index:99999;
+  `;
+
+  document.body.appendChild(test);
+
+  buatQRCode("50001", "qr-test");
+
+});
