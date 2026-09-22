@@ -1,57 +1,143 @@
 // ============================================================
 // MEMBUAT QR CODE SISWA
+// QR HANYA BERISI ID SISWA
 // ============================================================
 
 function buatQRCode(idSiswa, containerId) {
 
+  console.log("====================================");
+  console.log("MEMBUAT QR SISWA");
+  console.log("ID siswa:", idSiswa);
+  console.log("Container:", containerId);
+
   const container = document.getElementById(containerId);
 
   if (!container) {
-    console.error("Container QR tidak ditemukan:", containerId);
-    return;
+
+    console.error(
+      "Container QR tidak ditemukan:",
+      containerId
+    );
+
+    return false;
   }
 
-  // Bersihkan QR lama
+  // Bersihkan QR sebelumnya
   container.innerHTML = "";
 
-  // Pastikan ID ada
-  const id = String(idSiswa || "").trim();
+  // Ambil ID siswa
+  const id = String(idSiswa ?? "").trim();
 
+  console.log("Isi QR yang akan dibuat:", id);
+
+  // ID kosong
   if (!id) {
-    container.innerHTML =
-      '<div style="color:red;font-size:11px;">ID siswa kosong</div>';
-    return;
+
+    container.innerHTML = `
+      <div style="
+        color:red;
+        font-size:10px;
+        text-align:center;
+        padding:5px;
+      ">
+        ID SISWA KOSONG
+      </div>
+    `;
+
+    console.error(
+      "QR tidak dibuat karena ID siswa kosong."
+    );
+
+    return false;
   }
 
-  // Pastikan library QRCode tersedia
+  // Cek library
   if (typeof QRCode === "undefined") {
 
-    container.innerHTML =
-      '<div style="color:red;font-size:11px;">Library QRCode belum dimuat.</div>';
+    container.innerHTML = `
+      <div style="
+        color:red;
+        font-size:10px;
+        text-align:center;
+        padding:5px;
+      ">
+        QR LIBRARY TIDAK TERSEDIA
+      </div>
+    `;
 
-    console.error("QRCode library belum tersedia.");
+    console.error(
+      "QRCode library belum dimuat."
+    );
 
-    return;
+    return false;
   }
 
   try {
 
+    // ========================================================
+    // BUAT QR
+    // ========================================================
+
     new QRCode(container, {
 
+      // INI ISI QR SEBENARNYA
       text: id,
 
-      width: 180,
+      // Ukuran besar supaya mudah dibaca kamera
+      width: 220,
+      height: 220,
 
-      height: 180,
-
+      // Error correction M
       correctLevel: QRCode.CorrectLevel.M
 
     });
 
+
+    // ========================================================
+    // PASTIKAN HASIL QR ADA
+    // ========================================================
+
+    const canvas =
+      container.querySelector("canvas");
+
+    const image =
+      container.querySelector("img");
+
+
+    if (!canvas && !image) {
+
+      console.error(
+        "QRCode tidak menghasilkan canvas maupun image."
+      );
+
+      return false;
+    }
+
+
     console.log(
-      "QR berhasil dibuat. Isi QR:",
+      "QR BERHASIL DIBUAT"
+    );
+
+    console.log(
+      "ISI QR:",
       id
     );
+
+    console.log(
+      "QR canvas:",
+      canvas
+    );
+
+    console.log(
+      "QR image:",
+      image
+    );
+
+    console.log(
+      "===================================="
+    );
+
+    return true;
 
   } catch (error) {
 
@@ -60,8 +146,17 @@ function buatQRCode(idSiswa, containerId) {
       error
     );
 
-    container.innerHTML =
-      '<div style="color:red;font-size:11px;">QR gagal dibuat.</div>';
+    container.innerHTML = `
+      <div style="
+        color:red;
+        font-size:10px;
+        text-align:center;
+        padding:5px;
+      ">
+        QR GAGAL DIBUAT
+      </div>
+    `;
 
+    return false;
   }
 }
