@@ -1,136 +1,272 @@
+// ============================================================
+// KARTU SISWA - QR CODE TEST
+// ============================================================
+
 function buatQRCode(idSiswa, containerId) {
-  const container = document.getElementById(containerId);
 
-  if (!container) {
-    console.error("Container QR tidak ditemukan:", containerId);
-    return;
-  }
+    const container = document.getElementById(containerId);
 
-  if (typeof QRCode === "undefined") {
-    container.innerHTML = `
-      <div style="
+    if (!container) {
+        console.error("Container QR tidak ditemukan:", containerId);
+        return;
+    }
+
+    // Pastikan library QR tersedia
+    if (typeof QRCode === "undefined") {
+
+        console.error("Library QRCode tidak tersedia.");
+
+        container.innerHTML = `
+            <div style="
+                padding:20px;
+                background:#fff;
+                color:#b00000;
+                border:2px solid #b00000;
+                font-weight:bold;
+                text-align:center;
+            ">
+                Library QR Code tidak ditemukan.
+            </div>
+        `;
+
+        return;
+    }
+
+    const id = String(idSiswa ?? "").trim();
+
+    if (!id) {
+
+        container.innerHTML = `
+            <div style="
+                padding:20px;
+                color:red;
+                font-weight:bold;
+            ">
+                ID siswa kosong
+            </div>
+        `;
+
+        return;
+    }
+
+    // Bersihkan container
+    container.innerHTML = "";
+
+    // Container putih
+    container.style.cssText = `
+        width:340px;
+        height:340px;
         padding:20px;
-        color:red;
-        background:#fff;
-        border:1px solid red;
-      ">
-        Library QRCode tidak ditemukan.
-      </div>
+        box-sizing:border-box;
+        background:#ffffff;
+        display:flex;
+        align-items:center;
+        justify-content:center;
     `;
-    return;
-  }
 
-  const id = String(idSiswa ?? "").trim();
+    // Canvas QR
+    const canvas = document.createElement("canvas");
 
-  if (!id) {
-    container.innerHTML = "ID siswa kosong";
-    return;
-  }
+    canvas.width = 300;
+    canvas.height = 300;
 
-  container.innerHTML = "";
+    canvas.style.width = "300px";
+    canvas.style.height = "300px";
 
-  // Kotak putih khusus QR
-  container.style.cssText = `
-    width:320px;
-    height:320px;
-    padding:20px;
-    box-sizing:border-box;
-    background:#fff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  `;
+    container.appendChild(canvas);
 
-  new QRCode(container, {
-    text: id,
-    width: 280,
-    height: 280,
-    correctLevel: QRCode.CorrectLevel.H
-  });
+    // Buat QR
+    QRCode.toCanvas(
+        canvas,
+        id,
+        {
+            errorCorrectionLevel: "H",
+            margin: 4,
+            width: 300,
+            color: {
+                dark: "#000000",
+                light: "#ffffff"
+            }
+        },
+        function(error) {
 
-  console.log("QR dibuat dengan data:", id);
+            if (error) {
+
+                console.error(
+                    "Gagal membuat QR:",
+                    error
+                );
+
+                container.innerHTML = `
+                    <div style="
+                        padding:20px;
+                        color:red;
+                        font-weight:bold;
+                        text-align:center;
+                    ">
+                        Gagal membuat QR Code
+                    </div>
+                `;
+
+                return;
+            }
+
+            console.log(
+                "QR BERHASIL DIBUAT"
+            );
+
+            console.log(
+                "Isi QR:",
+                id
+            );
+
+        }
+    );
 }
 
 
-// =====================================================
+// ============================================================
 // TES QR
-// =====================================================
+// ============================================================
 
-function jalankanTesQR() {
-  console.log("Memulai tes QR...");
+function tesQRCode() {
 
-  let test = document.getElementById("qr-test");
+    console.log(
+        "=== MULAI TES QR ==="
+    );
 
-  if (!test) {
-    test = document.createElement("div");
+    let box = document.getElementById(
+        "qr-test"
+    );
 
-    test.id = "qr-test";
+    if (!box) {
 
-    test.style.cssText = `
-      position:fixed;
-      z-index:999999;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      width:360px;
-      min-height:420px;
-      padding:20px;
-      box-sizing:border-box;
-      background:#fff;
-      border:3px solid #000;
-      border-radius:10px;
-      text-align:center;
-      box-shadow:0 10px 40px rgba(0,0,0,.4);
+        box = document.createElement("div");
+
+        box.id = "qr-test";
+
+        box.style.cssText = `
+            position:fixed;
+            z-index:999999;
+            left:50%;
+            top:50%;
+            transform:translate(-50%,-50%);
+
+            width:400px;
+            min-height:500px;
+
+            padding:25px;
+
+            box-sizing:border-box;
+
+            background:#ffffff;
+
+            border:4px solid #000000;
+
+            border-radius:12px;
+
+            text-align:center;
+
+            box-shadow:
+                0 15px 50px
+                rgba(0,0,0,.45);
+        `;
+
+        document.body.appendChild(box);
+    }
+
+    box.innerHTML = `
+
+        <div style="
+            font-size:24px;
+            font-weight:800;
+            margin-bottom:20px;
+        ">
+            TES QR CODE
+        </div>
+
+        <div
+            id="qr-test-code"
+            style="
+                width:340px;
+                height:340px;
+                margin:auto;
+                background:#ffffff;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+            "
+        ></div>
+
+        <div style="
+            margin-top:20px;
+            font-size:22px;
+            font-weight:800;
+        ">
+            DATA QR:
+        </div>
+
+        <div style="
+            margin-top:5px;
+            font-size:26px;
+            font-weight:900;
+        ">
+            50001
+        </div>
+
+        <div style="
+            margin-top:12px;
+            font-size:14px;
+            color:#555;
+            line-height:1.5;
+        ">
+            Silakan scan QR ini menggunakan
+            kamera HP atau Google Lens.
+        </div>
     `;
 
-    document.body.appendChild(test);
-  }
-
-  test.innerHTML = `
-    <div style="
-      font-size:20px;
-      font-weight:bold;
-      margin-bottom:15px;
-    ">
-      TES QR CODE
-    </div>
-
-    <div id="qr-test-code"></div>
-
-    <div style="
-      margin-top:15px;
-      font-size:18px;
-      font-weight:bold;
-    ">
-      DATA: 50001
-    </div>
-
-    <div style="
-      margin-top:10px;
-      font-size:13px;
-      color:#555;
-    ">
-      Coba scan QR ini menggunakan<br>
-      kamera HP atau Google Lens.
-    </div>
-  `;
-
-  buatQRCode("50001", "qr-test-code");
+    buatQRCode(
+        "50001",
+        "qr-test-code"
+    );
 }
 
 
-// =====================================================
-// JALANKAN SETELAH DOM SIAP
-// =====================================================
+// ============================================================
+// START
+// ============================================================
 
-if (document.readyState === "loading") {
+function mulaiKartu() {
 
-  document.addEventListener("DOMContentLoaded", function () {
-    jalankanTesQR();
-  });
+    console.log(
+        "kartu.js aktif"
+    );
+
+    console.log(
+        "QRCode library:",
+        typeof QRCode
+    );
+
+    tesQRCode();
+}
+
+
+// ============================================================
+// DOM READY
+// ============================================================
+
+if (
+    document.readyState ===
+    "loading"
+) {
+
+    document.addEventListener(
+        "DOMContentLoaded",
+        mulaiKartu
+    );
 
 } else {
 
-  jalankanTesQR();
+    mulaiKartu();
 
 }
