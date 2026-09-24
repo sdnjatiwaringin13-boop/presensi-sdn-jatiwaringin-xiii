@@ -1,5 +1,5 @@
 // ============================================================
-// KARTU SISWA - QR CODE TEST
+// KARTU SISWA - TEST QR
 // ============================================================
 
 function buatQRCode(idSiswa, containerId) {
@@ -7,14 +7,19 @@ function buatQRCode(idSiswa, containerId) {
     const container = document.getElementById(containerId);
 
     if (!container) {
-        console.error("Container QR tidak ditemukan:", containerId);
+        console.error(
+            "Container QR tidak ditemukan:",
+            containerId
+        );
         return;
     }
 
-    // Pastikan library QR tersedia
+    // Cek library
     if (typeof QRCode === "undefined") {
 
-        console.error("Library QRCode tidak tersedia.");
+        console.error(
+            "QRCode library TIDAK tersedia."
+        );
 
         container.innerHTML = `
             <div style="
@@ -35,24 +40,12 @@ function buatQRCode(idSiswa, containerId) {
     const id = String(idSiswa ?? "").trim();
 
     if (!id) {
-
-        container.innerHTML = `
-            <div style="
-                padding:20px;
-                color:red;
-                font-weight:bold;
-            ">
-                ID siswa kosong
-            </div>
-        `;
-
+        container.innerHTML = "ID siswa kosong.";
         return;
     }
 
-    // Bersihkan container
     container.innerHTML = "";
 
-    // Container putih
     container.style.cssText = `
         width:340px;
         height:340px;
@@ -64,116 +57,62 @@ function buatQRCode(idSiswa, containerId) {
         justify-content:center;
     `;
 
-    // Canvas QR
-    const canvas = document.createElement("canvas");
+    new QRCode(container, {
+        text: id,
+        width: 300,
+        height: 300,
+        correctLevel: QRCode.CorrectLevel.H
+    });
 
-    canvas.width = 300;
-    canvas.height = 300;
+    console.log(
+        "QR BERHASIL DIBUAT"
+    );
 
-    canvas.style.width = "300px";
-    canvas.style.height = "300px";
-
-    container.appendChild(canvas);
-
-    // Buat QR
-    QRCode.toCanvas(
-        canvas,
-        id,
-        {
-            errorCorrectionLevel: "H",
-            margin: 4,
-            width: 300,
-            color: {
-                dark: "#000000",
-                light: "#ffffff"
-            }
-        },
-        function(error) {
-
-            if (error) {
-
-                console.error(
-                    "Gagal membuat QR:",
-                    error
-                );
-
-                container.innerHTML = `
-                    <div style="
-                        padding:20px;
-                        color:red;
-                        font-weight:bold;
-                        text-align:center;
-                    ">
-                        Gagal membuat QR Code
-                    </div>
-                `;
-
-                return;
-            }
-
-            console.log(
-                "QR BERHASIL DIBUAT"
-            );
-
-            console.log(
-                "Isi QR:",
-                id
-            );
-
-        }
+    console.log(
+        "Data QR:",
+        id
     );
 }
 
 
 // ============================================================
-// TES QR
+// TES QR 50001
 // ============================================================
 
 function tesQRCode() {
 
-    console.log(
-        "=== MULAI TES QR ==="
-    );
+    const box = document.createElement("div");
 
-    let box = document.getElementById(
-        "qr-test"
-    );
+    box.id = "qr-test";
 
-    if (!box) {
+    box.style.cssText = `
+        position:fixed;
+        z-index:999999;
 
-        box = document.createElement("div");
+        left:50%;
+        top:50%;
 
-        box.id = "qr-test";
+        transform:translate(-50%,-50%);
 
-        box.style.cssText = `
-            position:fixed;
-            z-index:999999;
-            left:50%;
-            top:50%;
-            transform:translate(-50%,-50%);
+        width:400px;
+        min-height:500px;
 
-            width:400px;
-            min-height:500px;
+        padding:25px;
 
-            padding:25px;
+        box-sizing:border-box;
 
-            box-sizing:border-box;
+        background:#ffffff;
 
-            background:#ffffff;
+        border:4px solid #000000;
 
-            border:4px solid #000000;
+        border-radius:12px;
 
-            border-radius:12px;
+        text-align:center;
 
-            text-align:center;
-
-            box-shadow:
-                0 15px 50px
-                rgba(0,0,0,.45);
-        `;
-
-        document.body.appendChild(box);
-    }
+        box-shadow:
+            0 15px 50px
+            rgba(0,0,0,.45);
+    `;
 
     box.innerHTML = `
 
@@ -192,6 +131,7 @@ function tesQRCode() {
                 height:340px;
                 margin:auto;
                 background:#ffffff;
+
                 display:flex;
                 align-items:center;
                 justify-content:center;
@@ -200,15 +140,15 @@ function tesQRCode() {
 
         <div style="
             margin-top:20px;
-            font-size:22px;
-            font-weight:800;
+            font-size:16px;
+            font-weight:700;
         ">
-            DATA QR:
+            DATA QR
         </div>
 
         <div style="
             margin-top:5px;
-            font-size:26px;
+            font-size:28px;
             font-weight:900;
         ">
             50001
@@ -216,14 +156,15 @@ function tesQRCode() {
 
         <div style="
             margin-top:12px;
-            font-size:14px;
+            font-size:13px;
             color:#555;
-            line-height:1.5;
         ">
-            Silakan scan QR ini menggunakan
-            kamera HP atau Google Lens.
+            Scan menggunakan kamera HP
+            atau Google Lens.
         </div>
     `;
+
+    document.body.appendChild(box);
 
     buatQRCode(
         "50001",
@@ -238,14 +179,19 @@ function tesQRCode() {
 
 function mulaiKartu() {
 
-    console.log(
-        "kartu.js aktif"
-    );
+    console.log("================================");
+    console.log("KARTU.JS AKTIF");
+    console.log("QRCode:", typeof QRCode);
+    console.log("================================");
 
-    console.log(
-        "QRCode library:",
-        typeof QRCode
-    );
+    if (typeof QRCode === "undefined") {
+
+        alert(
+            "Library QRCode belum berhasil dimuat."
+        );
+
+        return;
+    }
 
     tesQRCode();
 }
@@ -255,10 +201,7 @@ function mulaiKartu() {
 // DOM READY
 // ============================================================
 
-if (
-    document.readyState ===
-    "loading"
-) {
+if (document.readyState === "loading") {
 
     document.addEventListener(
         "DOMContentLoaded",
