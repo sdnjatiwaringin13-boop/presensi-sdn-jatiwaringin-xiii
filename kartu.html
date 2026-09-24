@@ -431,46 +431,30 @@
 
 
         .student-card .qr-code {
-
-            width: 24mm;
-            height: 24mm;
-
+            width: 25mm;
+            height: 25mm;
             display: flex;
-
             align-items: center;
             justify-content: center;
-
             background: #fff;
-
             overflow: hidden;
         }
 
+        .student-card .qr-code .qr-image-wrapper,
+        .student-card .qr-code .qr-image {
+            display: block !important;
+        }
 
-        .student-card .qr-code {
-    width: 26mm;
-    height: 26mm;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    background: #fff;
-    overflow: hidden;
-}
-
-
-        .student-card .qr-code img {
-    display: block !important;
-
-    width: 26mm !important;
-    height: 26mm !important;
-
-    max-width: none !important;
-    max-height: none !important;
-
-    margin: 0 !important;
-    padding: 0 !important;
-}
+        .student-card .qr-code .qr-image {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            max-height: none !important;
+            object-fit: contain !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+        }
 
 
         /* =====================================================
@@ -810,18 +794,23 @@
             }
 
 
-            .student-card .qr-code canvas {
-    display: block !important;
+            .student-card .qr-code,
+            .student-card .qr-code .qr-image-wrapper,
+            .student-card .qr-code .qr-image {
+                display: flex !important;
+                width: 25mm !important;
+                height: 25mm !important;
+                max-width: none !important;
+                max-height: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                object-fit: contain !important;
+                background: #fff !important;
+            }
 
-    width: 26mm !important;
-    height: 26mm !important;
-
-    max-width: none !important;
-    max-height: none !important;
-
-    margin: 0 !important;
-    padding: 0 !important;
-}
+            .student-card .qr-code .qr-image {
+                display: block !important;
+            }
 
 
             @page {
@@ -980,10 +969,9 @@
     <script src="layout.js"></script>
 
 
-    <!-- SATU-SATUNYA QR LIBRARY -->
-
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-<script src="kartu.js"></script>
+    <!-- KARTU JS -->
+    <!-- QR dibuat sebagai gambar, tidak bergantung pada library QR CDN. -->
+    <script src="kartu.js"></script>
 
 
     <!-- PWA -->

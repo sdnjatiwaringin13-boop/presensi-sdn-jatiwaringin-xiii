@@ -370,19 +370,19 @@
 
                         width:
                             Math.max(
-                                220,
+                                180,
                                 Math.min(
                                     ukuran,
-                                    450
+                                    360
                                 )
                             ),
 
                         height:
                             Math.max(
-                                220,
+                                180,
                                 Math.min(
                                     ukuran,
-                                    450
+                                    360
                                 )
                             )
 
