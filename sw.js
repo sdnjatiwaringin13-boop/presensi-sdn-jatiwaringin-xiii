@@ -1,5 +1,5 @@
 "use strict";
-const CACHE_NAME="presensi-sdn-jatiwaringin-xiii-v12";
+const CACHE_NAME="presensi-sdn-jatiwaringin-xiii-v13";
 const STATIC=["./","./index.html","./api.js","./auth.js","./script.js","./layout.js","./style.css","./dashboard.html","./dashboard.js","./admin.html","./admin.js","./siswa.html","./siswa.js","./guru.html","./guru.js","./kelas.html","./kelas.js","./presensi.html","./presensi.js","./scan.html","./scan.js","./kartu.html","./kartu.js","./absen-bulanan.html","./absen-bulanan.js","./pengaturan.html","./pengaturan.js","./manifest.json"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(STATIC).catch(()=>{})));self.skipWaiting();});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))));self.clients.claim();});

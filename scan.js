@@ -56,6 +56,15 @@
 
     function init() {
 
+        const user =
+            typeof Auth !== "undefined" && Auth.requireRole
+                ? Auth.requireRole(["ADMIN", "GURU"])
+                : null;
+
+        if (!user && typeof Auth !== "undefined") {
+            return;
+        }
+
         console.log("================================");
         console.log("SCAN PRESENSI FINAL");
         console.log("================================");

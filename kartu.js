@@ -72,7 +72,12 @@ function urlQRCode(id, provider) {
     return `https://quickchart.io/qr?text=${data}&size=${size}&margin=8&ecLevel=H`;
   }
 
-  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=16&ecc=H&data=${data}`;
+  if (provider === "qrserver") {
+    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&margin=16&ecc=H&data=${data}`;
+  }
+
+  // Provider terakhir untuk berjaga-jaga jika salah satu CDN/API gagal.
+  return `https://quickchart.io/qr?text=${data}&size=${size}&margin=12&ecLevel=H&type=png`;
 }
 
 function buatQRCode(idSiswa, containerId) {
@@ -108,6 +113,8 @@ function buatQRCode(idSiswa, containerId) {
   img.decoding = "sync";
   img.loading = "eager";
   img.referrerPolicy = "no-referrer";
+  img.dataset.qrReady = "false";
+  img.dataset.qrId = id;
   img.style.cssText = `
     display:block;
     width:100%;
@@ -117,17 +124,33 @@ function buatQRCode(idSiswa, containerId) {
     image-rendering:auto;
   `;
 
-  let provider = "qrserver";
-  let fallbackUsed = false;
+  // Coba provider satu per satu. Tidak ada QR kosong yang dianggap siap cetak.
+  const providers = ["qrserver", "quickchart"];
+  let providerIndex = 0;
+
+  const setSource = () => {
+    const provider = providers[providerIndex];
+    img.dataset.qrProvider = provider;
+    img.dataset.qrReady = "false";
+    img.src = urlQRCode(id, provider);
+  };
+
+  img.onload = function () {
+    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+      img.dataset.qrReady = "true";
+      console.log("QR siap:", id, providerIndex === 0 ? "QRServer" : "QuickChart");
+    }
+  };
 
   img.onerror = function () {
-    if (!fallbackUsed) {
-      fallbackUsed = true;
-      provider = "quickchart";
-      img.src = urlQRCode(id, provider);
+    providerIndex += 1;
+
+    if (providerIndex < providers.length) {
+      setSource();
       return;
     }
 
+    img.dataset.qrReady = "false";
     wrapper.innerHTML = `
       <div style="
         text-align:center;
@@ -144,9 +167,7 @@ function buatQRCode(idSiswa, containerId) {
 
   wrapper.appendChild(img);
   container.appendChild(wrapper);
-  img.src = urlQRCode(id, provider);
-
-  console.log("QR dibuat:", id);
+  setSource();
 }
 
 function buatHTMLKartu(siswa, index) {
@@ -356,7 +377,11 @@ async function cetakKartu() {
     return;
   }
 
-  const belumSiap = images.filter(img => !img.complete || img.naturalWidth === 0);
+  const belumSiap = images.filter(img =>
+    img.dataset.qrReady !== "true" ||
+    !img.complete ||
+    img.naturalWidth === 0
+  );
 
   if (belumSiap.length) {
     const button = document.getElementById("printButton");
@@ -368,7 +393,9 @@ async function cetakKartu() {
 
     try {
       await Promise.all(images.map(img => {
-        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        if (img.dataset.qrReady === "true" && img.complete && img.naturalWidth > 0) {
+          return Promise.resolve();
+        }
         return new Promise(resolve => {
           const selesai = () => {
             img.removeEventListener("load", selesai);
@@ -377,8 +404,14 @@ async function cetakKartu() {
           };
           img.addEventListener("load", selesai, { once: true });
           img.addEventListener("error", selesai, { once: true });
+          setTimeout(selesai, 8000);
         });
       }));
+
+      const gagal = images.filter(img => img.dataset.qrReady !== "true");
+      if (gagal.length) {
+        throw new Error(`Ada ${gagal.length} QR yang belum berhasil dimuat. Pastikan internet aktif lalu klik Refresh.`);
+      }
     } finally {
       if (button) {
         button.disabled = false;
@@ -408,11 +441,31 @@ function pasangEventSearch() {
 
   document.getElementById("printButton")?.addEventListener(
     "click",
-    cetakKartu
+    () => {
+      cetakKartu().catch(error => {
+        console.error("CETAK KARTU:", error);
+        alert(error.message || "QR belum siap dicetak.");
+      });
+    }
   );
 }
 
 function initKartu() {
+  const user = typeof Auth !== "undefined" && Auth.getCurrentUser
+    ? Auth.getCurrentUser()
+    : null;
+
+  if (!user) {
+    location.replace("index.html");
+    return;
+  }
+
+  if (String(user.role || "").toUpperCase() !== "ADMIN") {
+    alert("Halaman Kartu Siswa hanya dapat diakses Administrator.");
+    location.replace("dashboard.html");
+    return;
+  }
+
   console.log("KARTU.JS FINAL AKTIF");
   console.log("callAPI:", typeof callAPI);
   pasangEventSearch();

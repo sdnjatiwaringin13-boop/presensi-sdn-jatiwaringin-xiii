@@ -37,6 +37,11 @@
 
   function initHalaman() {
 
+    if (typeof Auth !== "undefined" && Auth.requireRole) {
+      currentUser = Auth.requireRole(["ADMIN", "GURU"]);
+      if (!currentUser) return;
+    }
+
     setDefaultTanggal();
 
     ambilUserLogin();
@@ -63,14 +68,20 @@
 
       let user = null;
 
+      // auth.js adalah sumber utama user login aplikasi ini.
+      if (typeof Auth !== "undefined" && Auth.getCurrentUser) {
+        user = Auth.getCurrentUser();
+      }
+
       const kandidat = [
+        "presensiUser",
         "user",
         "currentUser",
         "loggedUser",
         "loginUser"
       ];
 
-      for (let i = 0; i < kandidat.length; i++) {
+      for (let i = 0; i < kandidat.length && !user; i++) {
 
         const value = localStorage.getItem(kandidat[i]);
 
