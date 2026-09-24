@@ -1,13 +1,24 @@
 /* =========================================================
-   KARTU SISWA
+   KARTU SISWA - FINAL
    SD NEGERI JATIWARINGIN XIII
+
+   QR CODE:
+   HANYA MENYIMPAN ID SISWA
+
+   Contoh:
+   ID = 50001
+
+   Isi QR:
+   50001
    ========================================================= */
 
 (function () {
+
     "use strict";
 
     let semuaSiswa = [];
     let siswaTampil = [];
+
 
     /* =====================================================
        INIT
@@ -15,151 +26,254 @@
 
     function init() {
 
-        console.log("KARTU SISWA: init");
+        console.log("================================");
+        console.log("KARTU SISWA FINAL");
+        console.log("================================");
 
-        const searchInput = document.getElementById("searchInput");
-        const kelasFilter = document.getElementById("kelasFilter");
-        const refreshButton = document.getElementById("refreshButton");
-        const printButton = document.getElementById("printButton");
+        const searchInput =
+            document.getElementById("searchInput");
+
+        const kelasFilter =
+            document.getElementById("kelasFilter");
+
+        const refreshButton =
+            document.getElementById("refreshButton");
+
+        const printButton =
+            document.getElementById("printButton");
+
 
         if (searchInput) {
-            searchInput.addEventListener("input", filterSiswa);
+
+            searchInput.addEventListener(
+                "input",
+                filterSiswa
+            );
+
         }
+
 
         if (kelasFilter) {
-            kelasFilter.addEventListener("change", filterSiswa);
+
+            kelasFilter.addEventListener(
+                "change",
+                filterSiswa
+            );
+
         }
+
 
         if (refreshButton) {
-            refreshButton.addEventListener("click", loadSiswa);
+
+            refreshButton.addEventListener(
+                "click",
+                loadSiswa
+            );
+
         }
+
 
         if (printButton) {
-            printButton.addEventListener("click", function () {
-                window.print();
-            });
+
+            printButton.addEventListener(
+                "click",
+                function () {
+
+                    window.print();
+
+                }
+            );
+
         }
 
+
         loadSiswa();
+
     }
 
 
     /* =====================================================
-       LOAD SISWA
+       LOAD DATA SISWA
        ===================================================== */
 
     async function loadSiswa() {
 
-        const container = document.getElementById("kartuContainer");
+        const container =
+            document.getElementById(
+                "kartuContainer"
+            );
 
         if (!container) {
-            console.error("Element #kartuContainer tidak ditemukan.");
+
+            console.error(
+                "kartuContainer tidak ditemukan."
+            );
+
             return;
         }
 
+
         container.innerHTML = `
             <div class="kartu-loading">
+
                 <i class="fa-solid fa-spinner fa-spin"></i>
+
                 Memuat kartu siswa...
+
             </div>
         `;
 
+
         try {
 
-            console.log("KARTU SISWA: mengambil data siswa...");
+            console.log(
+                "Mengambil data siswa..."
+            );
 
-            const response = await callAPI({
-                action: "getSiswa"
-            });
 
-            console.log("KARTU SISWA: response API", response);
+            if (
+                typeof callAPI !== "function"
+            ) {
+
+                throw new Error(
+                    "callAPI tidak ditemukan. Pastikan api.js dimuat."
+                );
+
+            }
+
+
+            const response =
+                await callAPI({
+                    action: "getSiswa"
+                });
+
+
+            console.log(
+                "Response getSiswa:",
+                response
+            );
+
 
             if (!response) {
-                throw new Error("Tidak ada response dari server.");
-            }
 
-            if (response.success === false) {
                 throw new Error(
-                    response.message || "Gagal mengambil data siswa."
+                    "Server tidak memberikan response."
                 );
+
             }
 
-            /*
-             * Menyesuaikan beberapa kemungkinan bentuk response:
-             *
-             * { success:true, data:[...] }
-             * { success:true, siswa:[...] }
-             * { success:true, rows:[...] }
-             * { success:true, data:{data:[...]} }
-             */
+
+            if (
+                response.success === false
+            ) {
+
+                throw new Error(
+                    response.message ||
+                    "Gagal mengambil data siswa."
+                );
+
+            }
+
 
             let data = [];
 
-            if (Array.isArray(response.data)) {
+
+            if (
+                Array.isArray(response.data)
+            ) {
+
                 data = response.data;
-            } else if (Array.isArray(response.siswa)) {
+
+            }
+            else if (
+                Array.isArray(response.siswa)
+            ) {
+
                 data = response.siswa;
-            } else if (Array.isArray(response.rows)) {
+
+            }
+            else if (
+                Array.isArray(response.rows)
+            ) {
+
                 data = response.rows;
-            } else if (
+
+            }
+            else if (
                 response.data &&
                 Array.isArray(response.data.data)
             ) {
+
                 data = response.data.data;
+
             }
 
-            if (!Array.isArray(data)) {
-                data = [];
-            }
 
-            /*
-             * Normalisasi data siswa
-             */
+            semuaSiswa =
+                data
+                    .map(normalisasiSiswa)
+                    .filter(function (siswa) {
 
-            semuaSiswa = data
-                .map(normalisasiSiswa)
-                .filter(function (siswa) {
+                        return (
+                            siswa.id !== ""
+                        );
 
-                    /*
-                     * ID wajib ada karena QR menggunakan ID.
-                     */
+                    });
 
-                    return siswa.id !== "";
-                });
 
             console.log(
-                "KARTU SISWA: jumlah siswa =",
+                "Jumlah siswa:",
                 semuaSiswa.length
             );
 
+
             buatFilterKelas();
 
-            siswaTampil = semuaSiswa.slice();
+
+            siswaTampil =
+                semuaSiswa.slice();
+
 
             renderKartu();
 
-        } catch (error) {
+        }
+        catch (error) {
 
             console.error(
-                "KARTU SISWA: gagal mengambil data",
+                "Gagal load siswa:",
                 error
             );
 
+
             container.innerHTML = `
+
                 <div class="kartu-empty">
 
                     <i
                         class="fa-solid fa-triangle-exclamation"
-                        style="font-size:28px;margin-bottom:10px;"
+                        style="
+                            font-size:28px;
+                            margin-bottom:10px;
+                        "
                     ></i>
 
-                    <div style="font-weight:700;">
+                    <div
+                        style="
+                            font-weight:700;
+                        "
+                    >
                         Gagal memuat data siswa
                     </div>
 
-                    <div style="margin-top:6px;font-size:12px;">
+                    <div
+                        style="
+                            margin-top:6px;
+                            font-size:12px;
+                        "
+                    >
                         ${escapeHTML(
-                            error.message || "Terjadi kesalahan."
+                            error.message ||
+                            "Terjadi kesalahan."
                         )}
                     </div>
 
@@ -183,6 +297,7 @@
                 </div>
             `;
         }
+
     }
 
 
@@ -194,7 +309,12 @@
 
         item = item || {};
 
+
         return {
+
+            /*
+             * ID INILAH YANG MASUK QR
+             */
 
             id: ambilNilai(
                 item,
@@ -206,6 +326,7 @@
                 ]
             ),
 
+
             nisn: ambilNilai(
                 item,
                 [
@@ -213,6 +334,7 @@
                     "NISN"
                 ]
             ),
+
 
             nama: ambilNilai(
                 item,
@@ -224,6 +346,7 @@
                 ]
             ),
 
+
             kelas: ambilNilai(
                 item,
                 [
@@ -232,15 +355,6 @@
                 ]
             ),
 
-            jk: ambilNilai(
-                item,
-                [
-                    "jk",
-                    "JK",
-                    "jenisKelamin",
-                    "JENIS_KELAMIN"
-                ]
-            ),
 
             tanggalLahir: ambilNilai(
                 item,
@@ -250,36 +364,46 @@
                     "tglLahir",
                     "TGL_LAHIR"
                 ]
-            ),
-
-            status: ambilNilai(
-                item,
-                [
-                    "status",
-                    "STATUS"
-                ]
             )
+
         };
+
     }
 
 
-    function ambilNilai(obj, keys) {
+    function ambilNilai(
+        object,
+        keys
+    ) {
 
-        for (let i = 0; i < keys.length; i++) {
+        for (
+            let i = 0;
+            i < keys.length;
+            i++
+        ) {
 
             const key = keys[i];
 
+
             if (
-                Object.prototype.hasOwnProperty.call(obj, key) &&
-                obj[key] !== null &&
-                obj[key] !== undefined
+                Object.prototype
+                    .hasOwnProperty
+                    .call(object, key) &&
+                object[key] !== null &&
+                object[key] !== undefined
             ) {
 
-                return String(obj[key]).trim();
+                return String(
+                    object[key]
+                ).trim();
+
             }
+
         }
 
+
         return "";
+
     }
 
 
@@ -289,138 +413,215 @@
 
     function buatFilterKelas() {
 
-        const select = document.getElementById("kelasFilter");
+        const select =
+            document.getElementById(
+                "kelasFilter"
+            );
+
 
         if (!select) return;
 
-        const kelasSet = new Set();
 
-        semuaSiswa.forEach(function (siswa) {
+        const setKelas =
+            new Set();
 
-            if (siswa.kelas) {
-                kelasSet.add(siswa.kelas);
-            }
-        });
 
-        const daftarKelas = Array.from(kelasSet);
+        semuaSiswa.forEach(
+            function (siswa) {
 
-        daftarKelas.sort(function (a, b) {
+                if (siswa.kelas) {
 
-            return a.localeCompare(
-                b,
-                "id",
-                {
-                    numeric: true,
-                    sensitivity: "base"
+                    setKelas.add(
+                        siswa.kelas
+                    );
+
                 }
-            );
-        });
 
-        select.innerHTML = `
-            <option value="">Semua Kelas</option>
-        `;
+            }
+        );
 
-        daftarKelas.forEach(function (kelas) {
 
-            const option = document.createElement("option");
+        const daftarKelas =
+            Array.from(setKelas);
 
-            option.value = kelas;
-            option.textContent = kelas;
 
-            select.appendChild(option);
-        });
+        daftarKelas.sort(
+            function (a, b) {
+
+                return a.localeCompare(
+                    b,
+                    "id",
+                    {
+                        numeric: true,
+                        sensitivity: "base"
+                    }
+                );
+
+            }
+        );
+
+
+        select.innerHTML =
+            `<option value="">Semua Kelas</option>`;
+
+
+        daftarKelas.forEach(
+            function (kelas) {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value = kelas;
+
+                option.textContent =
+                    kelas;
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
     }
 
 
     /* =====================================================
-       FILTER SISWA
+       FILTER
        ===================================================== */
 
     function filterSiswa() {
 
         const searchInput =
-            document.getElementById("searchInput");
+            document.getElementById(
+                "searchInput"
+            );
 
         const kelasFilter =
-            document.getElementById("kelasFilter");
+            document.getElementById(
+                "kelasFilter"
+            );
 
-        const keyword = (
-            searchInput
-                ? searchInput.value
-                : ""
-        )
-            .trim()
-            .toLowerCase();
 
-        const kelas = (
-            kelasFilter
-                ? kelasFilter.value
-                : ""
-        ).trim();
+        const keyword =
+            (
+                searchInput
+                    ? searchInput.value
+                    : ""
+            )
+                .trim()
+                .toLowerCase();
 
-        siswaTampil = semuaSiswa.filter(function (siswa) {
 
-            const cocokKataKunci =
-                !keyword ||
-                siswa.nama.toLowerCase().includes(keyword) ||
-                siswa.nisn.toLowerCase().includes(keyword) ||
-                siswa.id.toLowerCase().includes(keyword);
+        const kelas =
+            (
+                kelasFilter
+                    ? kelasFilter.value
+                    : ""
+            )
+                .trim();
 
-            const cocokKelas =
-                !kelas ||
-                siswa.kelas === kelas;
 
-            return cocokKataKunci && cocokKelas;
-        });
+        siswaTampil =
+            semuaSiswa.filter(
+                function (siswa) {
+
+                    const cocokKeyword =
+                        !keyword ||
+                        siswa.nama
+                            .toLowerCase()
+                            .includes(keyword) ||
+                        siswa.nisn
+                            .toLowerCase()
+                            .includes(keyword) ||
+                        siswa.id
+                            .toLowerCase()
+                            .includes(keyword);
+
+
+                    const cocokKelas =
+                        !kelas ||
+                        siswa.kelas === kelas;
+
+
+                    return (
+                        cocokKeyword &&
+                        cocokKelas
+                    );
+
+                }
+            );
+
 
         renderKartu();
+
     }
 
 
     /* =====================================================
-       RENDER KARTU
+       RENDER
        ===================================================== */
 
     function renderKartu() {
 
         const container =
-            document.getElementById("kartuContainer");
+            document.getElementById(
+                "kartuContainer"
+            );
+
 
         if (!container) return;
+
 
         if (!siswaTampil.length) {
 
             container.innerHTML = `
+
                 <div class="kartu-empty">
 
                     <i
                         class="fa-solid fa-id-card"
-                        style="font-size:28px;margin-bottom:10px;"
+                        style="
+                            font-size:28px;
+                            margin-bottom:10px;
+                        "
                     ></i>
 
-                    <div style="font-weight:700;">
+                    <div
+                        style="font-weight:700;"
+                    >
                         Data siswa tidak ditemukan
-                    </div>
-
-                    <div style="margin-top:5px;font-size:12px;">
-                        Silakan ubah pencarian atau filter kelas.
                     </div>
 
                 </div>
             `;
 
             return;
+
         }
+
 
         container.innerHTML = "";
 
-        siswaTampil.forEach(function (siswa, index) {
 
-            const card =
-                buatKartu(siswa, index);
+        siswaTampil.forEach(
+            function (siswa, index) {
 
-            container.appendChild(card);
-        });
+                const card =
+                    buatKartu(
+                        siswa,
+                        index
+                    );
+
+                container.appendChild(
+                    card
+                );
+
+            }
+        );
+
     }
 
 
@@ -428,23 +629,35 @@
        BUAT KARTU
        ===================================================== */
 
-    function buatKartu(siswa, index) {
+    function buatKartu(
+        siswa,
+        index
+    ) {
 
         const card =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
-        card.className = "student-card";
 
-        /*
-         * ID kartu dibuat unik.
-         */
+        card.className =
+            "student-card";
+
+
+        const safeId =
+            String(siswa.id)
+                .replace(
+                    /[^a-zA-Z0-9_-]/g,
+                    ""
+                );
+
 
         const qrId =
             "qr-" +
             index +
             "-" +
-            String(siswa.id)
-                .replace(/[^a-zA-Z0-9_-]/g, "");
+            safeId;
+
 
         card.innerHTML = `
 
@@ -454,22 +667,32 @@
 
             <div class="card-yellow"></div>
 
+
             <div class="card-circles">
                 <span></span>
                 <span></span>
                 <span></span>
             </div>
 
+
             <div class="card-dots"></div>
+
 
             <div class="school-name">
                 SD NEGERI<br>
                 JATIWARINGIN XIII
             </div>
 
+
             <div class="card-heading">
                 KARTU SISWA
             </div>
+
+
+            <!-- =============================
+                 QR CODE
+                 HANYA ID SISWA
+                 ============================= -->
 
             <div class="qr-box">
 
@@ -480,9 +703,15 @@
 
             </div>
 
+
+            <!-- =============================
+                 DATA SISWA
+                 ============================= -->
+
             <div class="student-data">
 
                 <div class="data-row">
+
                     <div class="data-label">
                         NISN
                     </div>
@@ -492,12 +721,16 @@
                     </div>
 
                     <div class="data-value">
-                        ${escapeHTML(siswa.nisn || "-")}
+                        ${escapeHTML(
+                            siswa.nisn || "-"
+                        )}
                     </div>
+
                 </div>
 
 
                 <div class="data-row">
+
                     <div class="data-label">
                         Nama
                     </div>
@@ -507,12 +740,16 @@
                     </div>
 
                     <div class="data-value">
-                        ${escapeHTML(siswa.nama || "-")}
+                        ${escapeHTML(
+                            siswa.nama || "-"
+                        )}
                     </div>
+
                 </div>
 
 
                 <div class="data-row">
+
                     <div class="data-label">
                         Kelas
                     </div>
@@ -522,12 +759,16 @@
                     </div>
 
                     <div class="data-value">
-                        ${escapeHTML(siswa.kelas || "-")}
+                        ${escapeHTML(
+                            siswa.kelas || "-"
+                        )}
                     </div>
+
                 </div>
 
 
                 <div class="data-row">
+
                     <div class="data-label">
                         Tgl. Lahir
                     </div>
@@ -543,6 +784,7 @@
                             ) || "-"
                         )}
                     </div>
+
                 </div>
 
             </div>
@@ -552,121 +794,133 @@
 
             <div class="card-footer-yellow"></div>
 
+
             <div class="card-chevron">
+
                 <span></span>
                 <span></span>
                 <span></span>
+
             </div>
         `;
 
+
         /*
-         * QR dibuat setelah elemen masuk DOM.
+         * Buat QR setelah card masuk DOM.
          */
 
-        setTimeout(function () {
+        setTimeout(
+            function () {
 
-            buatQRCode(
-                siswa.id,
-                qrId
-            );
+                buatQRCode(
+                    siswa.id,
+                    qrId
+                );
 
-        }, 0);
+            },
+            0
+        );
+
 
         return card;
+
     }
 
 
     /* =====================================================
-       QR CODE
+       QR CODE FINAL
        ===================================================== */
 
-    function buatQRCode(idSiswa, containerId) {
+    function buatQRCode(
+        idSiswa,
+        containerId
+    ) {
 
         const container =
-            document.getElementById(containerId);
+            document.getElementById(
+                containerId
+            );
+
 
         if (!container) {
 
             console.error(
-                "QR container tidak ditemukan:",
+                "Container QR tidak ditemukan:",
                 containerId
             );
 
             return;
+
         }
 
-        /*
-         * Bersihkan QR lama.
-         * Ini mencegah QR menjadi dobel.
-         */
 
         container.innerHTML = "";
 
+
+        /*
+         * ID SISWA SAJA
+         */
+
         const id =
-            String(idSiswa ?? "").trim();
+            String(
+                idSiswa ?? ""
+            ).trim();
+
 
         if (!id) {
 
             container.innerHTML = `
                 <span
                     style="
-                        font-size:9px;
-                        color:#c00;
-                        text-align:center;
+                        font-size:8px;
+                        color:#d00;
                     "
                 >
-                    ID kosong
+                    ID KOSONG
                 </span>
             `;
 
             return;
+
         }
 
-        /*
-         * Pastikan library QR tersedia.
-         */
 
         if (
             typeof QRCode === "undefined"
         ) {
 
-            console.error(
-                "Library QRCode tidak tersedia."
-            );
-
             container.innerHTML = `
                 <span
                     style="
                         font-size:8px;
-                        color:#c00;
-                        text-align:center;
+                        color:#d00;
                     "
                 >
                     QR ERROR
                 </span>
             `;
 
+            console.error(
+                "QRCode library tidak ditemukan."
+            );
+
             return;
+
         }
 
+
         console.log(
-            "Membuat QR siswa:",
+            "QR SISWA:",
             id
         );
 
+
         /*
-         * PENTING:
+         * QR:
          *
-         * QR HANYA berisi ID siswa.
-         *
-         * Contoh:
          * 50001
          *
-         * Bukan:
-         * JSON
-         * NISN
-         * nama
-         * kelas
+         * HANYA ID.
          */
 
         new QRCode(
@@ -674,53 +928,78 @@
             {
                 text: id,
 
-                width: 240,
-                height: 240,
+                width: 300,
+
+                height: 300,
 
                 /*
-                 * L = lebih sederhana / lebih mudah
-                 * dibaca scanner karena data sangat sedikit.
+                 * Level M cukup untuk ID siswa
+                 * dan tetap punya toleransi kerusakan.
                  */
+
                 correctLevel:
-                    QRCode.CorrectLevel.L
+                    QRCode.CorrectLevel.M
             }
         );
 
-        /*
-         * Pastikan hasil QR tidak terlalu kecil.
-         */
 
-        setTimeout(function () {
+        setTimeout(
+            function () {
 
-            const canvas =
-                container.querySelector("canvas");
+                const canvas =
+                    container.querySelector(
+                        "canvas"
+                    );
 
-            const image =
-                container.querySelector("img");
+                const img =
+                    container.querySelector(
+                        "img"
+                    );
 
-            if (canvas) {
 
-                canvas.style.width = "24mm";
-                canvas.style.height = "24mm";
+                if (canvas) {
 
-                canvas.style.display = "block";
+                    canvas.style.display =
+                        "block";
 
-                canvas.style.margin = "0";
-                canvas.style.padding = "0";
-            }
+                    canvas.style.width =
+                        "26mm";
 
-            if (image) {
+                    canvas.style.height =
+                        "26mm";
 
-                image.style.width = "24mm";
-                image.style.height = "24mm";
+                    canvas.style.margin =
+                        "0";
 
-                image.style.display = "block";
+                    canvas.style.padding =
+                        "0";
 
-                image.style.margin = "0";
-                image.style.padding = "0";
-            }
+                }
 
-        }, 50);
+
+                if (img) {
+
+                    img.style.display =
+                        "block";
+
+                    img.style.width =
+                        "26mm";
+
+                    img.style.height =
+                        "26mm";
+
+                    img.style.margin =
+                        "0";
+
+                    img.style.padding =
+                        "0";
+
+                }
+
+            },
+            100
+        );
+
     }
 
 
@@ -732,110 +1011,125 @@
 
         if (!value) return "";
 
+
         const text =
             String(value).trim();
 
+
         if (!text) return "";
 
-        /*
-         * Jika sudah dalam format Indonesia.
-         */
 
         if (
-            /^\d{2}[-/]\d{2}[-/]\d{4}$/.test(text)
+            /^\d{2}[-/]\d{2}[-/]\d{4}$/
+                .test(text)
         ) {
-            return text.replace(/-/g, "/");
+
+            return text.replace(
+                /-/g,
+                "/"
+            );
+
         }
 
-        /*
-         * YYYY-MM-DD
-         */
 
         const match =
             text.match(
                 /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/
             );
 
+
         if (match) {
 
-            const tahun = match[1];
-            const bulan =
-                String(match[2]).padStart(2, "0");
-            const tanggal =
-                String(match[3]).padStart(2, "0");
-
             return (
-                tanggal +
+                match[3].padStart(2, "0") +
                 "/" +
-                bulan +
+                match[2].padStart(2, "0") +
                 "/" +
-                tahun
+                match[1]
             );
+
         }
 
-        /*
-         * Jika Apps Script mengirim
-         * timestamp / Date string.
-         */
 
         const date =
             new Date(text);
 
-        if (!isNaN(date.getTime())) {
 
-            const tanggal =
-                String(
-                    date.getDate()
-                ).padStart(2, "0");
-
-            const bulan =
-                String(
-                    date.getMonth() + 1
-                ).padStart(2, "0");
-
-            const tahun =
-                date.getFullYear();
+        if (
+            !isNaN(
+                date.getTime()
+            )
+        ) {
 
             return (
-                tanggal +
+                String(
+                    date.getDate()
+                ).padStart(2, "0") +
                 "/" +
-                bulan +
+                String(
+                    date.getMonth() + 1
+                ).padStart(2, "0") +
                 "/" +
-                tahun
+                date.getFullYear()
             );
+
         }
 
+
         return text;
+
     }
 
 
     /* =====================================================
-       ESCAPE HTML
+       ESCAPE
        ===================================================== */
 
     function escapeHTML(value) {
 
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+        return String(
+            value ?? ""
+        )
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+            .replace(
+                /</g,
+                "&lt;"
+            )
+            .replace(
+                />/g,
+                "&gt;"
+            )
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+
     }
 
 
     function escapeAttr(value) {
 
         return escapeHTML(value);
+
     }
 
 
     /* =====================================================
-       EXPORT GLOBAL
+       GLOBAL
        ===================================================== */
 
-    window.buatQRCode = buatQRCode;
-    window.loadKartuSiswa = loadSiswa;
+    window.buatQRCode =
+        buatQRCode;
+
+    window.loadKartuSiswa =
+        loadSiswa;
 
 
     /* =====================================================
@@ -843,7 +1137,8 @@
        ===================================================== */
 
     if (
-        document.readyState === "loading"
+        document.readyState ===
+        "loading"
     ) {
 
         document.addEventListener(
@@ -851,14 +1146,11 @@
             init
         );
 
-    } else {
-
-        /*
-         * Kalau kartu.js dimuat setelah
-         * DOMContentLoaded, init tetap dijalankan.
-         */
+    }
+    else {
 
         init();
+
     }
 
 })();
